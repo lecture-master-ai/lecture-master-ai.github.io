@@ -154,7 +154,7 @@
   .initials-avatar{
     width:48px;height:48px;border-radius:50%;flex-shrink:0;
     display:flex;align-items:center;justify-content:center;
-    background:var(--none-bg);color:#9AA5B1;font-size:15px;font-weight:800;
+    background:#EEF2F6;color:#475467;font-size:15px;font-weight:800;
   }
   .mcard{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.03);}
   .mcard .mname{font-size:18px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:5px;flex-wrap:nowrap;white-space:nowrap;overflow-x:auto;}
@@ -362,7 +362,7 @@
 </div>
 
 <div id="app" style="display:none;">
-<nav class="gnav" aria-label="주 메뉴"><div class="gnav-in"><span class="gnav-brand">○○소방학교 강의 마스터</span><a class="gnav-i" href="home.html">홈</a><a class="gnav-i" href="lecture-assignment.html#v=table">강의배정</a><a class="gnav-i on" aria-current="page" href="instructor-dashboard.html">강사관리</a><a class="gnav-i" id="gnavRoom" href="lecture-assignment.html#v=room">강의실</a><span class="gnav-i off" aria-disabled="true">설정<small>준비 중</small></span></div></nav>
+<nav class="gnav" aria-label="주 메뉴"><div class="gnav-in"><span class="gnav-brand">○○소방학교 강의 마스터</span><a class="gnav-i" href="home.html">홈</a><a class="gnav-i" href="lecture-assignment.html#v=table">강의배정</a><a class="gnav-i on" aria-current="page" href="instructor-dashboard.html">강사관리</a><a class="gnav-i" id="gnavRoom" href="lecture-assignment.html#v=room">강의실</a><!-- 대회용: 설정(준비 중) 메뉴 숨김 --></div></nav>
 <div class="wrap">
   <div class="crumb"><a href="home.html">홈</a><span class="sep">›</span><span class="cur">강사 조회·검색</span></div>
 
@@ -773,7 +773,7 @@
     var st = document.createElement('style');
     st.textContent = '.cx-rl{display:block;margin-top:4px;font-size:12px;color:#475467;font-weight:600}.cx-stars{font-size:13px;letter-spacing:1px;background:linear-gradient(90deg,#E8A317 var(--p),#D0D5DD var(--p));-webkit-background-clip:text;background-clip:text;color:transparent}' +
       '.cx-rl .w{background:#FEF0C7;color:#93370D;border-radius:999px;padding:1px 7px;font-size:11px}.cx-rl .h{background:#DCFAE6;color:#067647;border-radius:999px;padding:1px 7px;font-size:11px;margin-left:4px}' +
-      '.cx-ev{margin-top:20px;border:1px solid #CDE7E0;background:#F4FBF9;border-radius:10px;padding:12px 14px}.cx-ev h4{margin:0 0 8px;font-size:13px;color:#0B4A3F}.cx-ev table{width:100%;border-collapse:collapse;font-size:12.5px}.cx-ev td,.cx-ev th{padding:5px 4px;border-bottom:1px solid #E3EFEB;text-align:left}' +
+      '.cx-ev{margin:0 0 18px;border:1px solid #CDE7E0;background:#F4FBF9;border-radius:10px;padding:12px 14px}.cx-ev h4{margin:0 0 8px;font-size:13px;color:#0B4A3F}.cx-ev table{width:100%;border-collapse:collapse;font-size:12.5px}.cx-ev td,.cx-ev th{padding:5px 4px;border-bottom:1px solid #E3EFEB;text-align:left}' +
       '.cx-toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#101828;color:#fff;border-radius:10px;padding:10px 14px;font-size:13px;z-index:3000;display:flex;gap:10px;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,.25)}.cx-toast button{background:#fff;color:#101828;border:none;border-radius:6px;height:28px;padding:0 10px;font-weight:700;cursor:pointer;font-family:inherit}' +
       '.cx-ov{position:fixed;inset:0;background:rgba(16,24,40,.5);z-index:3100;display:flex;align-items:center;justify-content:center;padding:16px}.cx-md{background:#fff;border-radius:12px;max-width:760px;width:100%;max-height:86vh;overflow:auto;padding:20px;position:relative}.cx-md h3{margin:0 0 10px;font-size:17px}.cx-x{position:absolute;top:10px;right:12px;border:none;background:none;font-size:22px;cursor:pointer}.cx-mail{border:1px solid #EAECF0;border-radius:8px;padding:10px;margin-bottom:10px}.cx-mail pre{white-space:pre-wrap;font-family:inherit;font-size:12.5px;margin:6px 0 0;line-height:1.55}';
     document.head.appendChild(st);
@@ -870,7 +870,7 @@
       tr.className = 'row';
       var thumb = d.사진링크
         ? '<img class="thumb" src="' + esc(photoUrl(d.사진링크,'thumb')) + '" alt="">'
-        : '<div class="thumb"></div>';
+        : '<div class="thumb initials-avatar" style="width:36px;height:36px;font-size:12px;">' + esc((d.성명||'').replace(/[^가-힣A-Za-z]/g,'').slice(-2) || '?') + '</div>';
       tr.innerHTML =
         '<td>' + esc(d.소속||'') + '</td>' +
         '<td>' + thumb + '</td>' +
@@ -986,6 +986,7 @@
         '</div>' +
         photoHtml +
       '</div>' +
+      cxEvalBox(d) +   // 대회용: 평가(랭크)를 이름 바로 아래에
       '<div class="field-grid">' +
         '<div class="fi"><div class="fk">생년월일</div><div class="fv">' + birthDisplay + '</div></div>' +
         '<div class="fi"><div class="fk">연락처</div><div class="fv" style="white-space:nowrap;">' + (d.연락처 ? '<a href="tel:' + String(d.연락처).replace(/[^0-9+]/g,'') + '" style="color:var(--navy);font-weight:700;">' + esc(d.연락처) + '</a>' : '-') + '</div></div>' +
@@ -1003,7 +1004,7 @@
         '<div class="fi full"><div class="fk">강사카드</div><div class="fv">' + profileLinkHtml + '</div></div>' +
         '<div class="fi full"><div class="fk">개인정보 동의서</div><div class="fv">' + consentLinkHtml + '</div></div>' +
       '</div>' +
-      docReplaceBoxHtml(d, isViewer) + cxEvalBox(d) +
+      docReplaceBoxHtml(d, isViewer) +
       (!isViewer && (d.상태 === '승인대기' || d.상태 === '보류중')
         ? '<div id="approvalActions" style="display:flex;gap:10px;margin-top:20px;">' +
             '<button id="approveBtn" style="flex:1;height:44px;border:none;border-radius:6px;background:var(--navy);color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">승인</button>' +

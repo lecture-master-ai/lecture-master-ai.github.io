@@ -67,6 +67,18 @@
   }
   input::placeholder, textarea::placeholder { color: #b0b0b0; }
 
+  /* 대회용: 강의 불가 일정 입력(누르기 쉬운 칸, 다른 입력칸과 같은 모양) */
+  #cxUnav { display:grid; grid-template-columns:52px repeat(5, minmax(40px, 64px)); gap:6px; font-size:13px; align-items:center; }
+  #cxUnav b { text-align:center; font-weight:700; color:var(--text); }
+  #cxUnav span { color:var(--text); font-weight:600; }
+  #cxUnav input[type=checkbox] { -webkit-appearance:none; appearance:none; margin:0; width:100%; height:38px; border:1px solid var(--border-input); border-radius:8px; background:#fff center/18px no-repeat; cursor:pointer; transition:background-color .15s ease-out, border-color .15s ease-out; }
+  #cxUnav input[type=checkbox]:hover { border-color:var(--navy); }
+  #cxUnav input[type=checkbox]:checked { background-color:var(--navy); border-color:var(--navy); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6L6 18M6 6l12 12'/%3E%3C/svg%3E"); }
+  #cxUnav input[type=checkbox]:focus-visible { outline:2px solid var(--navy); outline-offset:2px; }
+  .cx-unrange { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:12px; font-size:13px; }
+  .cx-unlbl { font-weight:600; color:var(--text); }
+  .cx-unrange input[type=date] { height:44px; border:1px solid var(--border-input); border-radius:8px; padding:0 12px; font-size:14px; font-family:inherit; color:var(--text); background:#fff; width:auto; min-width:150px; }
+  @media (max-width:480px) { #cxUnav { grid-template-columns:44px repeat(5, 1fr); } .cx-unrange .cx-unlbl { flex-basis:100%; } .cx-unrange input[type=date] { flex:1; min-width:0; } }
   input[type=file] {
     width: 100%; font-size: 14px; padding: 12px; border: 1px dashed var(--border-input);
     border-radius: 8px; background: #fafafa; cursor: pointer; color: var(--text-sub);
@@ -186,9 +198,9 @@
   </div>
 
   <form id="regForm">
-    <div class="card" id="cxDemoCard" style="border:1.5px solid #0E6B5C;background:#F4FBF9;">
+    <div class="card" id="cxDemoCard" style="border:1px solid #9FCFC3;background:#F4FBF9;">
       <div style="display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;">
-        <div style="font-size:13.5px;line-height:1.5;color:#0B4A3F;"><b>심사 체험용 안내</b><br>실제 개인정보를 넣지 마시고, 오른쪽 버튼으로 <b>모의 정보</b>를 채워 신청해 보세요. 첨부 파일은 대회용 사본에서 선택 항목입니다.</div>
+        <div style="flex:1 1 300px;font-size:13.5px;line-height:1.5;color:#0B4A3F;"><b>심사 체험용 안내</b><br>실제 개인정보를 넣지 마시고, [모의 정보 채우기] 버튼으로 <b>모의 정보</b>를 채워 신청해 보세요. 첨부 파일은 대회용 사본에서 선택 항목입니다.</div>
         <button type="button" id="cxFill" style="background:#0E6B5C;color:#fff;border:none;border-radius:8px;height:40px;padding:0 16px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;">모의 정보 채우기</button>
       </div>
     </div>
@@ -296,13 +308,13 @@
       </div>
       <div class="field">
         <label>강의가 어려운 요일·시간 <span style="font-weight:500;color:#667085;">(선택 · 배정할 때 자동으로 제외됩니다)</span></label>
-        <div id="cxUnav" style="display:grid;grid-template-columns:60px repeat(5,1fr);gap:4px;max-width:420px;font-size:13px;align-items:center;">
+        <div id="cxUnav">
           <span></span><b style="text-align:center;">월</b><b style="text-align:center;">화</b><b style="text-align:center;">수</b><b style="text-align:center;">목</b><b style="text-align:center;">금</b>
           <span>오전</span><input type="checkbox" data-d="월" data-h="오전"><input type="checkbox" data-d="화" data-h="오전"><input type="checkbox" data-d="수" data-h="오전"><input type="checkbox" data-d="목" data-h="오전"><input type="checkbox" data-d="금" data-h="오전">
           <span>오후</span><input type="checkbox" data-d="월" data-h="오후"><input type="checkbox" data-d="화" data-h="오후"><input type="checkbox" data-d="수" data-h="오후"><input type="checkbox" data-d="목" data-h="오후"><input type="checkbox" data-d="금" data-h="오후">
         </div>
-        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:8px;font-size:13px;">
-          <span>강의가 어려운 기간</span><input type="date" id="cxUnFrom" style="width:auto;"> ~ <input type="date" id="cxUnTo" style="width:auto;">
+        <div class="cx-unrange">
+          <span class="cx-unlbl">강의가 어려운 기간</span><input type="date" id="cxUnFrom" aria-label="강의가 어려운 기간 시작일"><span>~</span><input type="date" id="cxUnTo" aria-label="강의가 어려운 기간 끝 날짜">
         </div>
         <div class="hint" id="cxUnHint"></div>
       </div>
