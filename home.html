@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>○○소방학교 강의 마스터 · 홈</title>
+<title>소방학교 외래강사 ON(JFSA) · 홈</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/nanum-myeongjo@5.3.0/korean-800.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/nanum-myeongjo@5.3.0/latin-800.css">
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
   :root{
@@ -11,7 +12,7 @@
     --text:#2C2C2A;
     --text-sub:#4A4946;
     --text-muted:#5F6877;
-    --border:#EFEDE7;
+    --border:#D5DCE6;
     --border-input:#D9D6CF;
     --ok-bg:#E3F1E4; --ok-fg:#1F6B2B;
     --warn-bg:#FFF2C9; --warn-fg:#7A5B00;
@@ -20,14 +21,25 @@
     --info-bg:#E3EBF5; --info-fg:#1B3A5F;
     /* C4: 공통 색 변수(2026-10-09) */
     --bg-hover:#F4F7FA;
-    --bg-soft:#F7F8FA;
-    --line:#E5E8EC;
+    --bg-soft:#F3F6FA;
+    --line:#D5DCE6;
   }
   *{box-sizing:border-box;}
-  body{margin:0;font-family:'Pretendard','Malgun Gothic','Apple SD Gothic Neo',sans-serif;background:#F0F2F5;color:var(--text);-webkit-font-smoothing:antialiased;}
+  body{margin:0;font-family:'Pretendard','Malgun Gothic','Apple SD Gothic Neo',sans-serif;background:#E3E8EF;color:var(--text);-webkit-font-smoothing:antialiased;}
   .wrap{max-width:1280px;margin:0 auto;padding:20px 16px 60px 16px;}
   header{padding:18px 22px;background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.05);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;}
   header .title{font-size:20px;font-weight:800;color:var(--navy);}
+  /* 시스템 명칭 배너(홈 상단) */
+  .serifname{font-family:'Nanum Myeongjo','Noto Serif KR','Batang','AppleMyungjo',serif;font-weight:800;}
+  header.brandhead{padding:26px 30px;background:linear-gradient(100deg,#1B3A5F 0%,#2B5C8F 100%);color:#fff;}
+  .brandhead .bh-name{font-size:36px;line-height:1.2;letter-spacing:-.5px;}
+  .brandhead .bh-name .on{color:#FFB38A;}
+  .brandhead .bh-name small{font-family:'Pretendard','Malgun Gothic',sans-serif;font-weight:700;font-size:15px;opacity:.75;margin-left:8px;letter-spacing:1px;vertical-align:middle;}
+  .brandhead .bh-sub{font-size:15px;font-weight:700;opacity:.92;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.3);display:inline-block;letter-spacing:.3px;}
+  .brandhead .sub{color:rgba(255,255,255,.72);margin-top:8px;}
+  .brandhead .btn{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.4);}
+  .brandhead .btn:hover{background:rgba(255,255,255,.22);}
+  @media (max-width:640px){ header.brandhead{padding:18px 16px;flex-direction:column;align-items:flex-start;} header.brandhead>div:first-child{width:100%;} .brandhead .bh-name{font-size:26px;} .brandhead .bh-name small{font-size:12px;display:block;margin:4px 0 0;} .brandhead .bh-sub{font-size:13px;} }
   header .sub{font-size:13px;color:var(--text-sub);margin-top:3px;font-weight:600;}
   @media (max-width:640px){
     /* M1: 휴대폰에서 새로고침을 제목 오른쪽 위 작은 버튼으로 */
@@ -61,7 +73,8 @@
   #loginMsg{display:none;color:var(--err-fg);font-size:13px;margin-top:12px;}
 
   /* 공통 상단 메뉴 */
-  .gnav{background:var(--navy);color:#fff;}
+  .gnav{background:#10263F;color:#fff;}
+  .gnav-brand .on{color:#FFB38A;margin-left:.3em;}
   .gnav-in{display:flex;align-items:stretch;gap:2px;padding:0 20px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
   .gnav-in::-webkit-scrollbar{display:none;}
   .gnav-brand{display:flex;align-items:center;font-size:13px;font-weight:800;letter-spacing:-0.2px;padding-right:18px;margin-right:6px;border-right:1px solid rgba(255,255,255,0.22);white-space:nowrap;}
@@ -97,7 +110,7 @@
   @media (max-width:980px){ .grid2{grid-template-columns:minmax(0,1fr);} .grid2 #cRoom{grid-column:auto;} }
   .col{display:flex;flex-direction:column;gap:16px;min-width:0;}
   @media (max-width:980px){ .grid{grid-template-columns:minmax(0,1fr);} }
-  .card{background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.05);padding:16px 18px;word-break:keep-all;overflow-wrap:break-word;}
+  .card{background:#fff;border-radius:12px;border:1px solid #CBD4E0;padding:16px 18px;word-break:keep-all;overflow-wrap:break-word;}
   .card h2{margin:0;font-size:16px;font-weight:800;color:var(--navy);}
   .card .chead{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
   .card .chead .meta{font-size:13px;color:var(--text-muted);font-weight:600;}
@@ -273,7 +286,8 @@
 
 <div id="loginScreen">
   <div id="loginCard">
-    <div class="title">○○소방학교 강의 마스터</div>
+    <div class="title serifname" style="font-size:24px;line-height:1.25;">소방학교 외래강사 <span style="color:#E8590C;">ON</span></div>
+    <div class="sub" style="margin-bottom:4px;font-weight:700;">○○소방학교 교육운영 관리 시스템</div>
     <div class="sub">담당자 전용 · 비밀번호를 입력해 주세요</div>
     <form id="loginForm">
       <div style="display:flex;gap:10px;justify-content:center;margin-bottom:16px;">
@@ -289,12 +303,13 @@
 </div>
 
 <div id="app" style="display:none;">
-<nav class="gnav" aria-label="주 메뉴"><div class="gnav-in"><span class="gnav-brand">○○소방학교 강의 마스터</span><a class="gnav-i on" aria-current="page" href="home.html">홈</a><a class="gnav-i" href="lecture-assignment.html#v=table">강의배정</a><a class="gnav-i" href="instructor-dashboard.html">강사관리</a><a class="gnav-i" data-v="room" href="lecture-assignment.html#v=room">강의실</a><!-- 대회용: 설정(준비 중) 메뉴 숨김 --></div></nav>
+<nav class="gnav" aria-label="주 메뉴"><div class="gnav-in"><span class="gnav-brand">소방학교 외래강사 <span class="on">ON</span></span><a class="gnav-i on" aria-current="page" href="home.html">홈</a><a class="gnav-i" href="lecture-assignment.html#v=table">강의배정</a><a class="gnav-i" href="instructor-dashboard.html">강사관리</a><a class="gnav-i" data-v="room" href="lecture-assignment.html#v=room">강의실</a><!-- 대회용: 설정(준비 중) 메뉴 숨김 --></div></nav>
 <div class="wrap">
   <div class="crumb" id="crumb"></div>
-  <header>
+  <header class="brandhead">
     <div>
-      <div class="title">홈</div>
+      <div class="bh-name serifname">소방학교 외래강사 <span class="on">ON</span><small>(JFSA)</small></div>
+      <div class="bh-sub">○○소방학교 교육운영 관리 시스템</div>
       <div class="sub" id="clock"></div>
     </div>
     <div style="display:flex;gap:8px;align-items:center;">
@@ -328,7 +343,7 @@
   </div>
 
   <section class="card" id="cYear" style="display:none;margin-top:16px;"></section>
-  <div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:18px 0 0;">화면 버전 2026-10-10 홈 72</div>
+  <div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:18px 0 0;">화면 버전 2026-10-14 홈 80</div>
 </div>
 </div>
 
@@ -520,7 +535,9 @@
   function courseBg(name){ return 'hsl(' + courseHue(name) + ',58%,92%)'; }
   function courseName(key){ var p = planByKey(key); return String(p && p['과정명'] || key); }
   function typeCls(t){ t = String(t || ''); return 'ct-' + (['기본', '전문', '특별', '민관'].indexOf(t) > -1 ? t : '기타'); }
-  function courseLink(key, label, date){ return '<a href="lecture-assignment.html#c=' + encodeURIComponent(key) + (date ? '&d=' + date : '') + '&from=home" title="누르면 이 과정의 교과목 편성 화면이 열립니다">' + esc(label) + '</a>'; }
+  /* 편성 화면으로 넘길 출발지: 상세 화면(교과목 없는 과정 전체 등)에서 눌렀으면 그 화면 이름도 함께 넘겨 돌아올 수 있게 함 */
+  function fromQ(){ var k = (typeof curDetail === 'string') ? curDetail : ''; return '&from=home' + (/^(todo(:[a-z]+)?|nosubj|month)$/.test(k) ? '&b=' + k : ''); }
+  function courseLink(key, label, date){ return '<a href="lecture-assignment.html#c=' + encodeURIComponent(key) + (date ? '&d=' + date : '') + fromQ() + '" title="누르면 이 과정의 교과목 편성 화면이 열립니다">' + esc(label) + '</a>'; }
 
   /* ---------- 오늘 수업 ---------- */
   function sessionsOn(date){
@@ -744,7 +761,7 @@
       var st = '';
       if (o.subj) st += '<span class="tag t-none">이번 주 교과목 ' + o.subj + '개</span>' + (o.un ? '<span class="tag t-warn">강사 미지정 ' + o.un + '</span>' : '<span class="tag t-ok">강사 모두 배정</span>');
       else st += '<span class="tag t-none">교과목 없음</span>';
-      return '<li style="border-left:5px solid ' + courseColor(String(o.p['과정명'] || '')) + ';padding-left:10px;"><div><span class="tag ' + typeCls(o.p['구분']) + '">' + esc(o.p['구분'] || '기타') + '</span> <a class="cn" href="lecture-assignment.html#c=' + encodeURIComponent(o.key) + '&from=home">' + esc(nameOf(o.key)) + '<span class="go">교과목 편성' + ic('arrowR', 'r') + '</span></a>' +
+      return '<li style="border-left:5px solid ' + courseColor(String(o.p['과정명'] || '')) + ';padding-left:10px;"><div><span class="tag ' + typeCls(o.p['구분']) + '">' + esc(o.p['구분'] || '기타') + '</span> <a class="cn" href="lecture-assignment.html#c=' + encodeURIComponent(o.key) + fromQ() + '">' + esc(nameOf(o.key)) + '<span class="go">교과목 편성' + ic('arrowR', 'r') + '</span></a>' +
         '<div class="ds">' + esc(seg) + (rm ? ' · ' + esc(rm) : '') + '</div></div><div class="st">' + st + '</div></li>';
     }).join('') + '</ul>' +
       '<div style="margin-top:10px;"><a class="btn sm primary" href="lecture-assignment.html#v=table&w=' + base + '">교과목 편성하기</a></div>';
@@ -1138,7 +1155,7 @@
     return '<div class="dtx"><table class="dtt"><thead><tr>' + cols.map(function(c){ return '<th>' + esc(c) + '</th>'; }).join('') + '</tr></thead><tbody>' +
       rows.map(function(r){ return '<tr>' + r.map(function(c){ return '<td>' + c + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table></div>';
   }
-  function cLink(key, txt){ return '<a href="lecture-assignment.html#c=' + encodeURIComponent(key) + '&from=home">' + esc(txt == null ? nameOf(key) : txt) + '</a>'; }
+  function cLink(key, txt){ return '<a href="lecture-assignment.html#c=' + encodeURIComponent(key) + fromQ() + '">' + esc(txt == null ? nameOf(key) : txt) + '</a>'; }
   function planRow(p, extra){
     var key = String(p['과정+기수'] || ''), a = normYmd(p['입교 시작일']), b = normYmd(p['입교 종료일']) || a, today = todayStr();
     var st = dateOver(b) ? '종료' : a <= today ? '진행 중' : 'D-' + dayDiff(today, a);
@@ -1159,7 +1176,7 @@
       var n = o.gaps.reduce(function(a, g){ return a + g.nums.length; }, 0), cf = courseFill(o.p, gapIndex());
       return [cLink(String(o.p['과정+기수'])), esc(ipgyoLine(o.p).replace(/^입교 /, '')), esc(cf.filled + '/' + cf.total + '교시 편성' + (cf.done ? ' (비워둠 ' + cf.done + ')' : '')), esc(n + '교시 · ' + o.gaps.length + '일'), det];
     });
-    return '<div class="dsec">빈 교시가 있는 과정 (교과목 없는 교시)<small>' + gc.length + '과정</small></div><div class="hint" style="margin-bottom:6px;">교과목이 한 건도 없으면 위의 "교과목 없는 과정", 일부만 편성되어 군데군데 비어 있으면 "빈 교시"로 구분합니다. ' + esc(scope) + ' 중, 입교 기간 평일(실습 기간 제외)의 수업 교시에 교과목이 없는 칸이며 빈 날짜가 오늘부터 7일 이내인 것만 셉니다. 입교 기간이 5주를 넘는 과정은 제외합니다. 일부러 비운 칸은 "비워둠 처리"하면 빈 교시에서 빠지고 아래 "비워둠 처리한 칸"에 남습니다.</div>' +
+    return '<div class="dsec">빈 교시가 있는 과정 (교과목 없는 교시)<small>' + gc.length + '과정</small></div><div class="hint" style="margin-bottom:6px;">교과목이 일부만 편성되어 비어 있는 과정입니다(한 건도 없으면 위 목록). ' + esc(scope) + ' 중 빈 날짜가 7일 이내인 칸만 표시하며, 5주 넘는 과정은 제외합니다. 일부러 비운 칸은 "비워둠 처리"하세요.</div>' +
       dtTable(['과정 · 기수', '입교 기간', '편성 현황(전체)', '빈 교시(7일 이내)', '날짜별 빈 교시'], rows, '빈 교시가 있는 과정이 없습니다.') + gapDoneSection(homeViewer());
   }
   /* 입교 시작일 기준 월별로 끊어서 표시(월 제목 띠 + 월별 표, 맨 위에 월별 건수 요약) */
@@ -1252,13 +1269,13 @@
       unas: function(){
         return '<div class="dsec">교과목 강사 미지정<small>' + unas.length + '건 · 교과목은 있고 강사가 비어 있음 · 강의일 14일 이내</small></div>' +
           dtTable(['강의일까지', '강의일', '과정 · 기수', '교과목 (교시)', '강의실', ''], unas.map(function(o){
-            return [esc(dl(o.d)), '<span class="nw">' + esc(md(o.date)) + '</span>', cLink(String(o.r['개설키'])), esc(o.r['교과목'] || '') + ' (' + esc(per(o.r)) + ')', esc(o.r['강의실'] || '미정'), viewer ? '' : '<a class="btn sm" href="lecture-assignment.html#c=' + encodeURIComponent(String(o.r['개설키'])) + '&d=' + o.date + '&from=home">강사 지정</a>'];
+            return [esc(dl(o.d)), '<span class="nw">' + esc(md(o.date)) + '</span>', cLink(String(o.r['개설키'])), esc(o.r['교과목'] || '') + ' (' + esc(per(o.r)) + ')', esc(o.r['강의실'] || '미정'), viewer ? '' : '<a class="btn sm" href="lecture-assignment.html#c=' + encodeURIComponent(String(o.r['개설키'])) + '&d=' + o.date + fromQ() + '">강사 지정</a>'];
           }), '해당하는 건이 없습니다.') + '<div class="hint">"강사 지정"을 누르면 해당 과정의 교과목 편성 화면이 열립니다.</div>';
       },
       resv: function(){
         return '<div class="dsec">교과목 미정 (사전확보 교시)<small>' + rv.length + '건 · 교시·강의실만 잡아 둔 건 · 예약일 14일 이내</small></div>' +
           dtTable(['예약일까지', '예약일', '과정 · 기수', '교시', '강의실', ''], rv.map(function(o){
-            return [esc(dl(o.d)), '<span class="nw">' + esc(md(normYmd(o.r['일자']))) + '</span>', cLink(String(o.r['개설키'])), esc(per(o.r)), esc(o.r['강의실'] || ''), viewer ? '' : '<a class="btn sm" href="lecture-assignment.html#c=' + encodeURIComponent(String(o.r['개설키'])) + '&d=' + normYmd(o.r['일자']) + '&from=home">교과목 편성</a>'];
+            return [esc(dl(o.d)), '<span class="nw">' + esc(md(normYmd(o.r['일자']))) + '</span>', cLink(String(o.r['개설키'])), esc(per(o.r)), esc(o.r['강의실'] || ''), viewer ? '' : '<a class="btn sm" href="lecture-assignment.html#c=' + encodeURIComponent(String(o.r['개설키'])) + '&d=' + normYmd(o.r['일자']) + fromQ() + '">교과목 편성</a>'];
           }), '해당하는 건이 없습니다.');
       },
       rvreq: function(){
@@ -1304,7 +1321,7 @@
       gap: function(){
         return '<div class="dsec">빈 교시가 있는 과정<small>' + g7.length + '과정 · ' + gapRows.length + '일 · 빈 날짜가 7일 이내</small></div>' +
           dtTable(['날짜까지', '날짜', '과정 · 기수', '빈 교시', ''], gapRows.map(function(g){
-            var btn = viewer ? '' : '<button type="button" class="btn sm" data-hgap="' + esc(g.key) + '|' + esc(g.date) + '">비워둠 처리</button> <a class="btn sm" href="lecture-assignment.html#c=' + encodeURIComponent(g.key) + '&d=' + g.date + '&from=home">교과목 편성</a>';
+            var btn = viewer ? '' : '<button type="button" class="btn sm" data-hgap="' + esc(g.key) + '|' + esc(g.date) + '">비워둠 처리</button> <a class="btn sm" href="lecture-assignment.html#c=' + encodeURIComponent(g.key) + '&d=' + g.date + fromQ() + '">교과목 편성</a>';
             return [esc(dl(dayDiff(today, g.date))), '<span class="nw">' + esc(md(g.date)) + '</span>', cLink(g.key), esc(gapNumText(g.nums)), btn];
           }), '해당하는 건이 없습니다.') + '<div class="hint">교과목·강사를 못 구해 일부러 비워 둔 칸은 "비워둠 처리"로 사유를 남기면 위 목록에서 빠지고, 아래 "비워둠 처리한 칸"에 계속 표시됩니다(처리 취소 가능). 나중에 교과목을 편성하면 자동으로 빠집니다.</div>' + gapDoneSection(viewer);
       }
@@ -1388,7 +1405,8 @@
   function renderCrumb(){
     var el = $('crumb'); if (!el) return;
     var sep = '<span class="sep">›</span>', k = curDetail || '';
-    if (!k) { el.innerHTML = '<span class="cur">홈</span>'; return; }
+    if (!k) { el.innerHTML = ''; el.style.display = 'none'; return; }   // 홈 첫 화면: 상단 메뉴에 홈이 이미 있으므로 경로 줄을 숨김(상세 화면에서만 표시)
+    el.style.display = '';
     var out = '<a data-dt="">홈</a>' + sep;
     if (k.indexOf('todo:') === 0) {
       out += '<a data-dt="todo">처리할 일</a>' + sep + '<span class="cur">' + esc(CRUMB_NAME[k.split(':')[1]] || '상세') + '</span>';

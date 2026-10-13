@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>○○소방학교 강사관리</title>
+<title>소방학교 외래강사 ON(JFSA) · 강사관리</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
   :root{
@@ -11,12 +11,12 @@
     --text:#2C2C2A;
     --text-sub:#4A4946;
     --text-muted:#5F6877;
-    --border:#EFEDE7;
+    --border:#D5DCE6;
     --border-input:#D9D6CF;
     /* C4: 공통 색 변수(2026-10-09) */
     --bg-hover:#F4F7FA;
-    --bg-soft:#F7F8FA;
-    --line:#E5E8EC;
+    --bg-soft:#F3F6FA;
+    --line:#D5DCE6;
     --none-bg:#ECEEF1;
     --text-faint:#8A8F98;
   }
@@ -24,7 +24,7 @@
   body{
     margin:0;
     font-family:'Pretendard','Malgun Gothic','Apple SD Gothic Neo',sans-serif;
-    background:#F0F2F5;
+    background:#E3E8EF;
     color:var(--text);
     -webkit-font-smoothing:antialiased;
     -moz-osx-font-smoothing:grayscale;
@@ -74,10 +74,10 @@
   /* 요약 카드: 강의배정·홈과 같은 모양(숫자가 위, 설명이 아래). 마크업 순서는 그대로 두고 표시 순서만 바꿈 */
   .card{
     background:#fff;
-    border:1px solid transparent;
+    border:1px solid #CBD4E0;
     border-radius:10px;
     padding:14px 16px;
-    box-shadow:0 2px 8px rgba(0,0,0,0.05);
+    box-shadow:none;
     display:flex;flex-direction:column-reverse;
     transition:border-color .15s ease, background-color .15s ease;
   }
@@ -308,7 +308,8 @@
   }
 
   /* 공통 상단 메뉴 (강사 조회·강의배정 페이지 동일) */
-  .gnav{background:var(--navy);color:#fff;}
+  .gnav{background:#10263F;color:#fff;}
+  .gnav-brand .on{color:#FFB38A;margin-left:.3em;}
   .gnav-in{display:flex;align-items:stretch;gap:2px;padding:0 20px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
   .gnav-in::-webkit-scrollbar{display:none;}
   .gnav-brand{display:flex;align-items:center;font-size:13px;font-weight:800;letter-spacing:-0.2px;padding-right:18px;margin-right:6px;border-right:1px solid rgba(255,255,255,0.22);white-space:nowrap;}
@@ -363,7 +364,7 @@
 </div>
 
 <div id="app" style="display:none;">
-<nav class="gnav" aria-label="주 메뉴"><div class="gnav-in"><span class="gnav-brand">○○소방학교 강의 마스터</span><a class="gnav-i" href="home.html">홈</a><a class="gnav-i" href="lecture-assignment.html#v=table">강의배정</a><a class="gnav-i on" aria-current="page" href="instructor-dashboard.html">강사관리</a><a class="gnav-i" id="gnavRoom" href="lecture-assignment.html#v=room">강의실</a><!-- 대회용: 설정(준비 중) 메뉴 숨김 --></div></nav>
+<nav class="gnav" aria-label="주 메뉴"><div class="gnav-in"><span class="gnav-brand">소방학교 외래강사 <span class="on">ON</span></span><a class="gnav-i" href="home.html">홈</a><a class="gnav-i" href="lecture-assignment.html#v=table">강의배정</a><a class="gnav-i on" aria-current="page" href="instructor-dashboard.html">강사관리</a><a class="gnav-i" id="gnavRoom" href="lecture-assignment.html#v=room">강의실</a><!-- 대회용: 설정(준비 중) 메뉴 숨김 --></div></nav>
 <div class="wrap">
   <div class="crumb"><a href="home.html">홈</a><span class="sep">›</span><span class="cur">강사 조회·검색</span></div>
 
@@ -521,7 +522,7 @@
       <div id="schoolMsg" style="margin-top:12px;font-size:13px;display:none;"></div>
     </form>
   </div>
-  <div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:18px 0 0;">화면 버전 2026-10-10 강사관리 4</div>
+  <div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:18px 0 0;">화면 버전 2026-10-14 강사관리 11</div>
 </div>
 
 <script>
@@ -1210,8 +1211,10 @@
           : displayLabel === '취소됨' ? 'background:#FCEBEB;color:#A32D2D;'
           : 'background:#FAEEDA;color:#633806;';
         var roleBadge = isSubRole ? '<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:8px;white-space:nowrap;background:#F2F1EC;color:#5F5E5A;margin-left:6px;">보조</span>' : '';
-        var missedSubmitBadge = (!isCancelled && !isSubRole && !h.계획서링크)
-          ? '<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:8px;white-space:nowrap;background:#FCEBEB;color:#A32D2D;margin-left:6px;">계획서 미제출</span>'
+        var missedSubmitBadge = (!isCancelled && !isSubRole && !h.계획서링크 && h.계획서불필요)
+          ? '<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:8px;white-space:nowrap;background:#F2F1EC;color:#5F5E5A;margin-left:6px;">강의계획서 불필요</span>'
+          : (!isCancelled && !isSubRole && !h.계획서링크)
+          ? '<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:8px;white-space:nowrap;background:#FCEBEB;color:#A32D2D;margin-left:6px;">강의계획서 미제출</span>'
           : '';
         var when = (h.교시 ? h.교시 : '') + (h.시간 ? (h.교시 ? ' (' + h.시간 + ')' : h.시간) : '');
         var openUrl = 'lecture-assignment.html#c=' + encodeURIComponent(h.강의명 || '') + '&from=dash';

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>○○소방학교 강의배정</title>
+<title>소방학교 외래강사 ON(JFSA) · 강의배정</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
   :root{
@@ -11,7 +11,7 @@
     --text:#2C2C2A;
     --text-sub:#4A4946;
     --text-muted:#5F6877;
-    --border:#EFEDE7;
+    --border:#D5DCE6;
     --border-input:#D9D6CF;
     --ok-bg:#E3F1E4; --ok-fg:#1F6B2B;
     --warn-bg:#FFF2C9; --warn-fg:#7A5B00;
@@ -20,15 +20,15 @@
     --info-bg:#E3EBF5; --info-fg:#1B3A5F;
     /* C4: 공통 색 변수(2026-10-09) */
     --bg-hover:#F4F7FA;
-    --bg-soft:#F7F8FA;
-    --line:#E5E8EC;
+    --bg-soft:#F3F6FA;
+    --line:#D5DCE6;
     --text-faint:#8A8F98;
   }
   *{box-sizing:border-box;}
   body{
     margin:0;
     font-family:'Pretendard','Malgun Gothic','Apple SD Gothic Neo',sans-serif;
-    background:#F0F2F5;
+    background:#E3E8EF;
     color:var(--text);
     -webkit-font-smoothing:antialiased;
   }
@@ -78,7 +78,7 @@
 
   /* 카드·필터 */
   .cards{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px;}
-  .card{background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.05);padding:14px 16px;}
+  .card{background:#fff;border-radius:10px;border:1px solid #CBD4E0;padding:14px 16px;}
   .card .n{font-size:26px;font-weight:800;color:var(--navy);line-height:1.1;}
   .card .n .u{font-size:13px;font-weight:700;color:var(--text-muted);margin-left:2px;}
   .card .l{font-size:13px;color:var(--text-sub);margin-top:6px;line-height:1.4;}
@@ -340,7 +340,8 @@
   }
 
   /* 공통 상단 메뉴 (강사 조회·강의배정 페이지 동일) */
-  .gnav{background:var(--navy);color:#fff;}
+  .gnav{background:#10263F;color:#fff;}
+  .gnav-brand .on{color:#FFB38A;margin-left:.3em;}
   .gnav-in{display:flex;align-items:stretch;gap:2px;padding:0 20px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
   .gnav-in::-webkit-scrollbar{display:none;}
   .gnav-brand{display:flex;align-items:center;font-size:13px;font-weight:800;letter-spacing:-0.2px;padding-right:18px;margin-right:6px;border-right:1px solid rgba(255,255,255,0.22);white-space:nowrap;}
@@ -616,6 +617,7 @@
   .gc .t{font-size:11px;color:var(--text-muted);}
   .gc .i{margin-top:2px;display:flex;align-items:center;gap:3px;flex-wrap:wrap;}
   .gc .r{margin-top:2px;font-size:12px;color:var(--text-sub);}
+  .gc .n{margin-top:3px;padding-top:2px;border-top:1px dashed #9fb4cf;font-size:11.5px;font-weight:700;color:#7A3E00;word-break:keep-all;}
   .gc.none{background:#fff;border:1.5px dashed #c9a400;}
   .gc.none .i{color:var(--warn-fg);font-weight:700;}
   .gc.err{background:var(--err-bg);border:2px solid #D8574B;}
@@ -659,6 +661,13 @@
     .vtabs{float:none;display:flex;margin-top:8px;}
     .vtabs button{flex:1;}
   }
+  #gAllPrint{display:none;}
+  @media print{
+    body.pgrid.pgall #sGridWrap{display:none !important;}
+    body.pgrid.pgall #gAllPrint{display:block !important;}
+    body.pgall .gap{break-after:page;page-break-after:always;}
+    body.pgall .gap:last-child{break-after:auto;page-break-after:auto;}
+  }
   .gprinthead{display:none;}
   .pprinthead{display:none;}
   @media print{
@@ -693,7 +702,19 @@
     body.pgrid #sListPanel{box-shadow:none;padding:0;}
     body.pgrid #sGridWrap{display:block !important;}
     body.pgrid .gscroll{overflow:visible;}
-    body.pgrid table.g{min-width:0;font-size:10.5px;}
+    body.pgrid table.g{min-width:0;font-size:10.5px;border-collapse:collapse;border:1.5px solid #222;page-break-inside:avoid;break-inside:avoid;}
+    body.pgrid table.g th,body.pgrid table.g td{border:1px solid #444 !important;}
+    body.pgrid table.g thead th{background:#DDE3EA !important;color:#000;border-bottom:1.5px solid #222 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    body.pgrid table.g th.pc{background:#EEF1F5 !important;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    body.pgrid table.g tr.lunch td{background:#E4E4E4 !important;color:#222;border-top:1.5px solid #222 !important;border-bottom:1.5px solid #222 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    body.pgrid .gc{border:1px solid #555;background:#fff !important;border-radius:3px;}
+    body.pgrid .gc .n{border-top:1px dashed #666;color:#000;}
+    body.pgrid .gc .s{color:#000;}
+    body.pgrid .gprinthead,body.pgrid .gcourses,body.pgrid .glegend{page-break-inside:avoid;break-inside:avoid;}
+    body.pgrid.ppt table.g td.c{height:auto;min-height:20mm;}
+    body.pgrid.ppt table.g{font-size:10px;} body.pgrid.ppt .gc{font-size:10px;padding:3px 5px;} body.pgrid.ppt table.g th.pc{width:64px;} body.pgrid.ppt table.g th.pc small{font-size:8px;white-space:nowrap;}
+    body.pgrid .docleg{display:none !important;}
+    body.pgrid #navBar,body.pgrid .navbar,body.plist #navBar,body.plist .navbar{display:none !important;}
   }
 
   /* 저장된 로그인이 있으면 로그인 화면(배경)을 보여주지 않고 바로 불러오기 */
@@ -701,6 +722,9 @@
   html.autologin #loginScreen{display:none !important;}
   html.autologin #boot{display:block;padding:90px 20px;text-align:center;color:var(--text-muted);font-size:14px;}
 
+  .navbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:14px 0 4px;padding:12px 14px;background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.05);}
+  .navbar .nlab{font-size:13px;font-weight:800;color:var(--navy);margin-right:4px;}
+  @media (max-width:640px){ .navbar .btn{height:auto;min-height:36px;padding:6px 12px;white-space:normal;text-align:left;} }
   .crumb{display:flex;flex-wrap:wrap;align-items:center;gap:2px 0;font-size:16px;color:var(--text-muted);margin:2px 0 12px;font-weight:600;}
   .crumb a{color:var(--navy);text-decoration:none;font-weight:800;padding:5px 9px;border-radius:8px;}
   .crumb a:hover{background:#E4ECF5;text-decoration:none;}
@@ -734,7 +758,7 @@
 </div>
 
 <div id="app" style="display:none;">
-<nav class="gnav" aria-label="주 메뉴"><div class="gnav-in"><span class="gnav-brand">○○소방학교 강의 마스터</span><a class="gnav-i" href="home.html">홈</a><a class="gnav-i on" id="gnavAssign" aria-current="page" href="lecture-assignment.html#v=table">강의배정</a><a class="gnav-i" href="instructor-dashboard.html">강사관리</a><a class="gnav-i" id="gnavRoom" href="lecture-assignment.html#v=room">강의실</a><!-- 대회용: 설정(준비 중) 메뉴 숨김 --></div></nav>
+<nav class="gnav" aria-label="주 메뉴"><div class="gnav-in"><span class="gnav-brand">소방학교 외래강사 <span class="on">ON</span></span><a class="gnav-i" href="home.html">홈</a><a class="gnav-i on" id="gnavAssign" aria-current="page" href="lecture-assignment.html#v=table">강의배정</a><a class="gnav-i" href="instructor-dashboard.html">강사관리</a><a class="gnav-i" id="gnavRoom" href="lecture-assignment.html#v=room">강의실</a><!-- 대회용: 설정(준비 중) 메뉴 숨김 --></div></nav>
 <div class="wrap">
   <div class="crumb" id="crumb"></div>
   <header>
@@ -824,6 +848,7 @@
       <div id="sCards"></div>
       <div id="sEmpty" class="empty" style="display:none;"></div>
     </div>
+    <div id="navBar" class="navbar" style="display:none;"></div>
   </div>
 </div>
 </div>
@@ -832,7 +857,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="이전 기수에서 복사"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-10 배정 71</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-14 배정 84</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -1701,12 +1726,16 @@
     closeBrowse(); closeInstructor(); closeChange(); closeCopy(); closeFormModal();
     $('editView').style.display = 'none';
     $('planView').style.display = '';
-    cameFrom = '';
+    cameFrom = ''; cameBack = '';
     applyPlanHead();
     applyFilters();
   }
   /* 화면 이동 출발지(홈·강사관리에서 링크로 들어온 경우만), 현재 위치 표시 */
   var cameFrom = (/[#&]from=(home|dash)(?:&|$)/.exec(location.hash || '') || [])[1] || '';   // 주소의 &from= 값으로 출발지 전달(저장소 미사용)
+  var cameBack = (/[#&]b=(todo(?::[a-z]+)?|nosubj|month)(?:&|$)/.exec(location.hash || '') || [])[1] || '';   // 홈의 어느 상세 화면에서 왔는지(돌아가기용)
+  var BACK_NAME = { 'todo': '처리할 일', 'nosubj': '교과목 없는 과정', 'month': '이번 달 교육 현황', 'todo:plan': '강의계획서 제출 기한 임박 과정', 'todo:unas': '교과목 강사 미지정', 'todo:resv': '교과목 미정 (사전확보 교시)', 'todo:gap': '빈 교시가 있는 과정', 'todo:rvreq': '강의실 대관 승인 대기', 'todo:docreq': '강사 서류 교체 승인 대기', 'todo:lodge': '강사 숙소 신청 확인 대기', 'todo:chg': '최근 7일 일정 변경' };
+  function backHref(){ return 'home.html' + (cameBack ? '#d=' + cameBack : ''); }
+  function backLabel(){ return cameBack ? (BACK_NAME[cameBack] || '이전 목록') + ' 목록으로' : '홈으로'; }
   var listShown = false;   // 이 화면에서 목록(표·캘린더·빈 강의실)을 한 번이라도 보여준 뒤에만 경로에 목록 단계를 넣음
   /* 현재 목록 화면의 제목·안내·되돌아갈 주소 */
   function headInfo(){
@@ -1732,7 +1761,8 @@
     var sep = '<span class="sep">›</span>', out = '<a href="home.html">홈</a>' + sep;
     if (currentKey) {
       var p = planByKey(currentKey);
-      if (listShown && lastList) out += '<a href="lecture-assignment.html' + lastList.h + '">' + esc(lastList.t) + '</a>' + sep;
+      if (cameFrom === 'home') { if (cameBack) out += '<a href="' + backHref() + '">' + esc(BACK_NAME[cameBack] || '이전 목록') + '</a>' + sep; }   // 홈에서 링크로 들어온 경우: 홈의 그 목록으로 돌아가는 경로
+      else if (listShown && lastList) out += '<a href="lecture-assignment.html' + lastList.h + '">' + esc(lastList.t) + '</a>' + sep;
       out += '<span class="cur">교과목 편성' + (p ? ' · ' + esc(String(p['과정명'] || '') + ' ' + String(p['기수'] || '')) : '') + '</span>';
     } else {
       var h = headInfo(); lastList = h; listShown = true;
@@ -1749,6 +1779,34 @@
     if (room) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
     if (room) a.removeAttribute('aria-current'); else a.setAttribute('aria-current', 'page');
   }
+  /* 홈 '교과목 없는 과정'과 같은 기준: 오늘부터 2개월 이내 시작, 아직 안 끝남, 취소 아님, 교과목 0건. 현재 과정은 제외, 시작일 빠른 순 */
+  function nextNoSubj(){
+    var today = ymd(new Date()), q = parseYmd(today), to2 = ymd(new Date(q.y, q.m + 1, q.d)), has = {};
+    allSessions.forEach(function(r){ has[String(r['개설키'] || '')] = true; });
+    var list = plans.filter(function(p){
+      var key = String(p['과정+기수'] || ''); if (!key || key === currentKey || isCancelled(p) || has[key]) return false;
+      var a = normYmd(p['입교 시작일']); if (!a) return false;
+      var b = normYmd(p['입교 종료일']) || a;
+      return b >= today && !sessEnded(b) && a <= to2;
+    }).sort(function(x, y){ var a = normYmd(x['입교 시작일']), b = normYmd(y['입교 시작일']); return a < b ? -1 : a > b ? 1 : 0; });
+    var cp = planByKey(currentKey), ca = cp ? normYmd(cp['입교 시작일']) : '';   // 현재 과정보다 시작일이 늦은 것부터 차례로, 없으면 맨 앞(건너뛰기만 해도 한 바퀴 돌 수 있게)
+    var after = list.filter(function(p){ var x = normYmd(p['입교 시작일']); return x > ca || (x === ca && String(p['과정+기수']) > currentKey); });
+    return { next: after[0] || list[0] || null, n: list.length };
+  }
+  /* 교과목 목록·격자 아래 이동 줄: 다음 교과목 없는 과정 / 교과목 없는 과정 전체 보기 / 홈으로 */
+  function renderBackBar(){
+    var nb = $('navBar'); if (!nb) return;
+    if (!currentKey) { nb.style.display = 'none'; nb.innerHTML = ''; return; }
+    var html = '<span class="nlab">이동</span>';
+    if (sessionsOk) {
+      var nx = nextNoSubj();
+      html += nx.next
+        ? '<a class="btn primary" href="#c=' + encodeURIComponent(String(nx.next['과정+기수'])) + '" title="교과목이 아직 없는 다음 과정의 편성 화면으로 이동합니다">다음 교과목 없는 과정 → ' + esc(String(nx.next['과정명'] || '') + ' ' + String(nx.next['기수'] || '')) + ' (남은 ' + nx.n + '과정)</a>'
+        : '<span class="btn" style="cursor:default;color:var(--text-muted);" aria-disabled="true">남은 교과목 없는 과정 없음</span>';
+    }
+    html += '<a class="btn" href="home.html#d=nosubj">교과목 없는 과정 전체 보기</a><a class="btn" href="home.html">홈으로</a>';
+    nb.style.display = ''; nb.innerHTML = html;
+  }
   function showEdit(key){
     var p = planByKey(key);
     currentKey = key;
@@ -1759,6 +1817,7 @@
     $('hTitle').textContent = '교과목 편성';
     $('hSub').textContent = '과정을 선택하면 교시 단위로 교과목·강사·강의실을 편성합니다.';
     renderCrumb();
+    renderBackBar();
     $('viewerNote').style.display = isViewer() ? 'block' : 'none';
     var blk = $('sBlock');
     if (!sessionsOk) { blk.style.display = 'block'; blk.textContent = '교과목 편성 목록을 불러오지 못해 저장할 수 없습니다. 새로고침 후 다시 시도해 주세요.'; }
@@ -1778,7 +1837,7 @@
   function refreshEditList(){
     var p = planByKey(currentKey);
     if (!p) { showPlan(); return; }
-    renderHead(p);
+    renderHead(p); renderBackBar();
     var fs0 = isViewer() ? 'viewer' : (isCancelled(p) ? 'cx' : 'ok');
     if (fs0 !== formState) { form = { id: '', iid: '', iname: '' }; renderForm(p); }
     renderSessionList();
@@ -1957,7 +2016,7 @@
       '<div class="span2"><label for="sNote" id="sNoteLbl">비고</label><input type="text" id="sNote" maxlength="200" placeholder="선택 입력"></div>' +
       '<div class="span3" id="sNoPlanWrap"><label for="sNoPlan" style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0;"><input type="checkbox" id="sNoPlan" style="width:auto;height:auto;margin:0;">' +
         '<span style="font-weight:700;">강의계획서 제출 불필요</span></label>' +
-        '<div class="hint" id="sNoPlanHint">체크하면 이 과정의 같은 이름 교과목 전체가 계획서 제출 대상에서 빠지고, 마감·미제출 집계와 강사 안내 메일에도 나오지 않습니다.</div></div>' +
+        '<div class="hint" id="sNoPlanHint">체크하면 이 과정의 같은 이름 교과목 전체가 강의계획서 제출 대상에서 빠지고, 마감·미제출 집계와 강사 안내 메일에도 나오지 않습니다.</div></div>' +
       '</div>' +
       '<div class="fbtn"><button type="button" class="btn primary" id="sSave">저장</button>' +
       '<button type="button" class="btn" id="sReset">입력 지우기</button>' +
@@ -3742,7 +3801,7 @@
     var plList = pl;
     function copyBtn(o){ return viewer ? '' : '<button type="button" class="btn sm" data-tplink="' + esc(o.st.sid) + '">안내 재발송</button>'; }
     D.plan = { label: '강의계획서 제출 기한 임박', n: pl.length, nOver: nOver, nSoon: pl.length - nOver,
-      sum: '기한 지남 <b style="color:var(--err-fg)">' + nOver + '건</b> · 14일 이내 임박 <b style="color:var(--warn-fg)">' + (pl.length - nOver) + '건</b> · 기한은 2027년 개강 과정부터 개강일 14일 전(책자 제작 기준), 그 전 과정은 강의일 7일 전 · 계획서 불필요로 표시한 교과목은 제외',
+      sum: '기한 지남 <b style="color:var(--err-fg)">' + nOver + '건</b> · 14일 이내 임박 <b style="color:var(--warn-fg)">' + (pl.length - nOver) + '건</b> · 기한은 2027년 개강 과정부터 개강일 14일 전(책자 제작 기준), 그 전 과정은 강의일 7일 전 · 강의계획서 불필요로 표시한 교과목은 제외',
       cols: ['상태', '기한', '과정 · 기수', '교과목 (강의일)', '강사', ''],
       items: plList.map(function(o){
         return { key: o.r['개설키'], cells: [todoPill(o.st), '<span class="nw">' + esc(md(o.st.due)) + '</span>', esc(o.r['개설키']), esc(o.st.subj) + ' (' + esc(md(o.st.date)) + ')', nameOf(o.r, o.r), copyBtn(o)],
@@ -3896,7 +3955,7 @@
       return;
     }
     if (todoFold && (total || nInfo)) {   // 대회용: 홈에서 구분·주·월로 들어온 경우 한 줄로 접어 과정 목록이 먼저 보이게
-      box.innerHTML = '<div class="th tfold"><h3>처리할 일</h3><span class="sum">' + (total ? total + '건' : '알림 ' + nInfo + '건') + ' · 선택한 조건의 과정 목록을 먼저 보여 드립니다</span><a data-tmore="unfold" class="tunfold">펼치기' + ic('chevD', 'r') + '</a></div>';
+      box.innerHTML = '<div class="th tfold" style="margin-bottom:0;"><h3>처리할 일</h3><span class="sum">' + (total ? '총 ' + total + '건' : '없음') + (nInfo ? ' · 알림 ' + nInfo + '건' : '') + '</span><button type="button" class="btn sm tunfold" data-tmore="unfold">펼쳐 보기</button></div>';
       return;
     }
     if (!todoCat || !D[todoCat]) todoCat = '';
@@ -3936,7 +3995,7 @@
     var a = ' data-doc="' + esc(x.id) + '"' + (row ? ' data-sid="' + esc(row['편성ID']) + '"' : '') + ' role="button" tabindex="0"';
     if (miss.length) return '<span class="db bad"' + a + ' title="' + esc(miss.join(', ')) + ' · 눌러서 보기">미비 ' + miss.length + '</span>';
     if (d.due) return '<span class="db wn"' + a + ' title="개인정보 보유기간 만료 임박(' + esc(d.ret.expire) + ') · 눌러서 보기">보유 임박</span>';
-    if (pend) return '<span class="db wn"' + a + ' title="강의계획서 미제출 · 기한 ' + esc(ps.due) + ' · 눌러서 보기">계획서 대기</span>';
+    if (pend) return '<span class="db wn"' + a + ' title="강의계획서 미제출 · 기한 ' + esc(ps.due) + ' · 눌러서 보기">강의계획서 대기</span>';
     return '<span class="db ok"' + a + ' title="강사카드·개인정보 동의서' + (ps && ps.done ? '·강의계획서' : '') + ' 제출됨 · 눌러서 보기">서류 완비</span>';
   }
   function instrCell(r){
@@ -3969,7 +4028,7 @@
     });
     return units;
   }
-  function noPlanTag(r){ return isNoPlan(r) && !isOps(r) ? ' <span class="tag t-none" style="font-size:11px;vertical-align:middle;">계획서 불필요</span>' : ''; }
+  function noPlanTag(r){ return isNoPlan(r) && !isOps(r) ? ' <span class="tag t-none" style="font-size:11px;vertical-align:middle;">강의계획서 불필요</span>' : ''; }
   function renderSessionList(){
     var p = planByKey(currentKey);
     var list = sessionsOf(currentKey);
@@ -4316,7 +4375,7 @@
       return '<div class="i">' + roleTag(x) + nm + eb + '</div>';
     }).join('');
     var body = (cx ? '<div class="gcn" style="color:' + cx.color + '">' + esc(cx.label) + '</div>' : '') + '<div class="s">' + klass + esc(r['교과목']) + (warns.length ? ' <span title="' + esc(warns.join(' / ')) + '">' + ic('alert') + '</span>' : '') + flag + '</div>' +
-      '<div class="t">' + esc(pt.txt) + '</div>' + ins + '<div class="r">' + esc(r['강의실'] || '강의실 미정') + '</div>';
+      '<div class="t">' + esc(pt.txt) + '</div>' + ins + '<div class="r">' + esc(r['강의실'] || '강의실 미정') + '</div>' + (!isOps(r) && String(r['비고'] || '').trim() ? '<div class="n">' + esc(String(r['비고']).trim()) + '</div>' : '');
     var other = cx && !cx.own;
     var act = canEdit ? ' data-act="edit" data-id="' + esc(r['편성ID']) + '"' : (other ? ' data-gopen="' + esc(cx.key) + '" title="누르면 이 과정의 교과목 편성 화면으로 이동합니다"' : '');
     var mvc = '';
@@ -4444,20 +4503,48 @@
       '<button type="button" class="btn sm" data-gw="today">이번 주</button>' +
       '<span class="wk">' + (wi + 1) + '주차 / ' + weeks.length + '주 · ' + esc(md(mon)) + ' ~ ' + esc(md(addDays(mon, 4))) + '</span>' +
       (all ? '' : (function(){ var cf = courseFill(p, gapIndex()); return cf.total ? '<span class="wk gfill">편성 현황 ' + cf.filled + '/' + cf.total + '교시' + (cf.done ? ' (비워둠 ' + cf.done + ')' : '') + '</span>' : ''; })()) +
-      '<span style="margin-left:auto;display:inline-flex;gap:6px;">' + (isViewer() ? '' : '<button type="button" class="btn sm mvm' + (mvOn() ? ' on' : '') + '" data-mvmode="1" title="켜면 칸마다 이동·맞바꾸기 버튼이 나타납니다">⇄ 이동 모드 ' + (mvOn() ? '끄기' : '켜기') + '</button>' + '<button type="button" class="btn sm mvm' + (gpOn() ? ' on' : '') + '" data-gpmode="1" title="켜면 빈 교시 칸마다 비워둠 처리 버튼이 나타납니다. 평소에는 숨겨 둡니다">비워둠 처리 ' + (gpOn() ? '끄기' : '켜기') + '</button>') + oriSelect('grid') + '<button type="button" class="btn sm" data-gw="print">인쇄</button></span></div>' + ctab +
+      '<span style="margin-left:auto;display:inline-flex;gap:6px;">' + (isViewer() ? '' : '<button type="button" class="btn sm mvm' + (mvOn() ? ' on' : '') + '" data-mvmode="1" title="켜면 칸마다 이동·맞바꾸기 버튼이 나타납니다">⇄ 이동 모드 ' + (mvOn() ? '끄기' : '켜기') + '</button>' + '<button type="button" class="btn sm mvm' + (gpOn() ? ' on' : '') + '" data-gpmode="1" title="켜면 빈 교시 칸마다 비워둠 처리 버튼이 나타납니다. 평소에는 숨겨 둡니다">비워둠 처리 ' + (gpOn() ? '끄기' : '켜기') + '</button>') + oriSelect('grid') + '<button type="button" class="btn sm" data-gw="print">인쇄</button>' + (all ? '' : '<button type="button" class="btn sm" data-gw="pdfall" title="이 과정의 모든 주차를 한 파일(주차당 1페이지)로 인쇄합니다. 인쇄창에서 PDF로 저장하면 파일명이 제N기 과정명으로 채워집니다">과정 전체 PDF</button>') + '</span></div>' + ctab +
       '<div class="glegend"><span><i style="background:#E3EBF5"></i>편성됨</span><span><i style="background:#fff;border:1.5px dashed #c9a400"></i>강사 미지정</span>' +
       '<span><i style="background:var(--err-bg);border-color:#D8574B"></i>겹침 경고</span><span><i style="background:#FFF2C9;border-color:#D9B100"></i>같은 반 겹침</span><span><i style="background:#F1F1EE"></i>확인됨</span><span><i style="background:repeating-linear-gradient(135deg,#FFF1BF,#FFF1BF 3px,#fff 3px,#fff 6px);border:1px solid #D9B100"></i>빈 교시</span><span><i style="background:repeating-linear-gradient(135deg,#D9DCE0,#D9DCE0 3px,var(--bg-hover) 3px,var(--bg-hover) 6px)"></i>비워둠 처리(편성 아님)</span>' +
-      '<span><span class="db ok">서류 완비</span> <span class="db bad">미비 N</span> <span class="db wn">보유 임박·계획서 대기</span> 강사카드·동의서·강의계획서</span></div>' +
+      '<span class="docleg"><span class="db ok">서류 완비</span> <span class="db bad">미비 N</span> <span class="db wn">보유 임박·계획서 대기</span> 강사카드·동의서·강의계획서</span></div>' +
       mvBarHtml() + empty + '<div class="gdays">' + dtabs + '</div>' +
       '<div class="gscroll"><table class="g"><thead>' + head + '</thead><tbody>' + body + '</tbody></table></div>' +
       '<div class="hint gnp" style="margin-top:8px;">' + (all ? '전체 보기에서는 현재 화면 과정의 칸만 수정창이 열리고, 다른 과정의 칸을 누르면 그 과정의 교과목 편성 화면으로 이동합니다. 새 교과목 추가는 "이 과정만"에서 빈 칸을 눌러 입력하세요.' : canEdit ? '칸을 누르면 수정창, 빈 칸을 누르면 일자·교시가 채워진 입력창이 열립니다. 교과목 시간을 옮기려면 위의 "이동 모드 켜기", 일부러 비워 두는 칸은 "비워둠 처리 켜기"를 누르세요. 강사 이름을 누르면 강사 정보가 열립니다.' : '강사 이름을 누르면 강사 정보가 열립니다.') + '</div>' +
       '<div class="hint gnp" style="margin-top:4px;">강의일 당일 17:50 이후는 종료된 일정으로 보며, 종료된 일정에는 교과목을 배정·수정할 수 없고 삭제만 할 수 있습니다.</div></div>';
+  }
+  /* 과정 전체(모든 주차)를 한 파일로: 주차마다 1페이지로 이어 붙여 인쇄. 파일명(브라우저 PDF 저장 기본값)은 "제N기 과정명" */
+  function courseFileName(p){
+    var m = String(p['기수'] || '').match(/\d+/), g = m ? '제' + m[0] + '기' : String(p['기수'] || '').trim();
+    return (g + ' ' + String(p['과정명'] || '').trim()).trim().replace(/[\\\/:*?"<>|]/g, '');
+  }
+  function printCourseAll(){
+    var p = planByKey(currentKey); if (!p) return;
+    var list = sessionsOf(currentKey), weeks = gridWeeksOf(p, list);
+    if (!weeks.length) { alert('인쇄할 기간이 없습니다.'); return; }
+    var keepW = gridWeek, keepD = gridDay, box = $('sGridWrap'), pages = [];
+    weeks.forEach(function(w){
+      gridWeek = w; gridDay = -1; renderGrid(p, list);
+      var h = box.querySelector('.gprinthead'), t = box.querySelector('.gscroll');
+      pages.push('<div class="gap">' + (h ? h.outerHTML : '') + (t ? t.outerHTML : '') + '</div>');
+    });
+    gridWeek = keepW; gridDay = keepD; renderGrid(p, list);
+    var c = $('gAllPrint');
+    if (!c) { c = document.createElement('div'); c.id = 'gAllPrint'; box.parentNode.insertBefore(c, box.nextSibling); }
+    c.innerHTML = pages.join('');
+    var oldTitle = document.title, name = courseFileName(p);
+    if (name) document.title = name;
+    document.body.classList.add('pgall');
+    var done = function(){ document.body.classList.remove('pgall'); document.title = oldTitle; c.innerHTML = ''; window.removeEventListener('afterprint', done); };
+    window.addEventListener('afterprint', done);
+    printWith('grid', 'pgrid');
+    setTimeout(done, 120000);
   }
   function gridNav(act){
     var p = planByKey(currentKey);
     var weeks = gridScope === 'all' ? gridAllWeeks(p) : gridWeeksOf(p, sessionsOf(currentKey));
     var wi = weeks.indexOf(gridWeek);
     if (act === 'print') { printWith('grid', 'pgrid'); return; }
+    if (act === 'pdfall') { printCourseAll(); return; }
     if (act === 'prev' && wi > 0) gridWeek = weeks[wi - 1];
     else if (act === 'next' && wi > -1 && wi < weeks.length - 1) gridWeek = weeks[wi + 1];
     else if (act === 'today') { var tw = mondayOf(ymd(new Date())); gridWeek = weeks.indexOf(tw) > -1 ? tw : gridWeek; }
@@ -5622,7 +5709,7 @@
       '.cx-md h3{margin:0 0 10px;font-size:17px}.cx-x{position:absolute;top:10px;right:12px;border:none;background:none;font-size:20px;cursor:pointer;color:#667085;width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:background-color .15s ease-out}.cx-x:hover{background:#F2F4F7}' +
       '.cx-tbl{width:100%;border-collapse:collapse;font-size:12.5px}.cx-tbl th,.cx-tbl td{border-bottom:1px solid #EAECF0;padding:6px;text-align:left;vertical-align:top}.cx-tbl th{background:#F9FAFB;font-weight:800}' +
       '.cx-mail{border:1px solid #EAECF0;border-radius:8px;padding:10px;margin-bottom:10px}.cx-mail pre{white-space:pre-wrap;font-family:inherit;font-size:12.5px;margin:6px 0 0;line-height:1.55}' +
-      '.rvl tr.rvgrp td{background:#F7FBFA}.rvl tr.rvsub td{font-size:12px;color:#475467;background:#FCFDFD}.rvtog{font-size:12px;margin-left:6px}.todo .tfold{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.todo .tfold .sum{font-size:13px;color:#475467}.todo .tunfold{cursor:pointer;color:#1B3A5F;font-weight:700;font-size:13px;margin-left:auto}.cx-survey{margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#F4FBF9;border:1px solid #CDE7E0;border-radius:8px;padding:8px 10px;font-size:12.5px}' +
+      '.rvl tr.rvgrp td{background:#F7FBFA}.rvl tr.rvsub td{font-size:12px;color:#475467;background:#FCFDFD}.rvtog{font-size:12px;margin-left:6px}.todo .tfold{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.todo .tfold .sum{font-size:13px;color:#475467}.todo .tunfold{margin-left:auto}.cx-survey{margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#F4FBF9;border:1px solid #CDE7E0;border-radius:8px;padding:8px 10px;font-size:12.5px}' +
       '@media(max-width:640px){.cx-card{flex-wrap:wrap}.cx-act{flex-direction:row}}';
     var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
   })();
