@@ -709,6 +709,7 @@
   @media (max-width:640px){ .crumb{font-size:14px;} .crumb a{padding:4px 7px;} .crumb .cur{padding:4px 9px;} }
 </style>
 <script src="contest-config.js"></script>
+<script src="cx-wait.js"></script>
 </head>
 <body>
 <script>try{if(sessionStorage.getItem('jsfa_dash_pw'))document.documentElement.classList.add('autologin');}catch(e){}window.__autoDone=function(){document.documentElement.classList.remove('autologin');};</script>
@@ -1679,7 +1680,10 @@
         if (vp.m && /^\d{1,2}$/.test(vp.m)) $('fMonth').value = String(Number(vp.m));   // 월 필터(목록에 없는 값이면 '전체 월'로 남음)
       }
       try { sessionStorage.setItem('jsfa_la_pmode', planMode); } catch (e) {}
-      showPlan(); return;
+      todoFold = planMode === 'table' && !!(vp.t || vp.y || vp.m || weekFilter);   // 대회용: 조건을 달고 들어오면 처리할 일 접기
+      showPlan();
+      if (todoFold) setTimeout(function(){ var el = $('todo'); if (el && el.getBoundingClientRect) window.scrollTo({ top: Math.max(0, el.getBoundingClientRect().top + window.pageYOffset - 80), behavior: 'smooth' }); }, 350);
+      return;
     }
     var p = key ? planByKey(key) : null;
     if (!p) { showPlan(); return; }
@@ -2961,6 +2965,7 @@
   }
 
   /* ---------- 강의실 예약(사전확보·대관) ---------- */
+  var todoFold = false;   // 대회용: 홈에서 조건 달고 들어올 때 처리할 일 접기
   var rvSt = { type: '사전확보', from: '', to: '', wkend: true, key: '', room: '', reason: '', contact: '', note: '', editId: '', busy: false, msg: '' };
   function rvPeriods(){ return periods.length ? periods.map(function(x){ return x.n; }) : [1, 2, 3, 4, 5, 6, 7]; }
   function rvDates(){
@@ -2976,6 +2981,30 @@
   function rvRowText(r){
     var q = parseYmd(normYmd(r['일자'])), a = Number(r['시작교시']), b = Number(r['끝교시']);
     return (q ? md(normYmd(r['일자'])) : r['일자']) + ' ' + (a === b ? a : a + '~' + b) + '교시 · ' + r['강의실'];
+  }
+  /* 대회용: 같은 예약을 여러 날 이어서 잡은 경우 한 줄로 묶어 표시(저장은 날짜별 그대로) */
+  var rvOpen = {};
+  function rvGroups(list){
+    var keyOf = function(r){ return [r['유형'], r['강의실'], r['시작교시'], r['끝교시'], r['개설키'], r['사유·사용부서'], r['담당자·연락처'], r['비고'], r['상태']].map(function(v){ return String(v || ''); }).join('|'); };
+    var nextDay = function(a, b){   // b가 a 다음 날이거나, 사이가 토·일뿐이면 이어진 것으로 봄
+      for (var d = addDays(a, 1), n = 0; d <= b && n < 4; d = addDays(d, 1), n++) {
+        if (d === b) return true;
+        var q = parseYmd(d); if (!q || (q.dow !== 0 && q.dow !== 6)) return false;
+      }
+      return false;
+    };
+    var groups = [], open = {};
+    list.forEach(function(r){
+      var k = keyOf(r), d = normYmd(r['일자']), g = open[k];
+      if (g && nextDay(normYmd(g[g.length - 1]['일자']), d)) { g.push(r); return; }
+      g = [r]; open[k] = g; groups.push(g);
+    });
+    return groups;
+  }
+  function rvGroupText(g){
+    var r = g[0], a = Number(r['시작교시']), b = Number(r['끝교시']), ps = rvPeriods();
+    var all = a === ps[0] && b === ps[ps.length - 1];
+    return md(normYmd(g[0]['일자'])) + ' ~ ' + md(normYmd(g[g.length - 1]['일자'])) + ' · ' + (all ? '종일' : (a === b ? a : a + '~' + b) + '교시') + ' · ' + r['강의실'] + ' · ' + g.length + '일';
   }
   function renderRvPanel(){
     var viewer = isViewer(), today = ymd(new Date());
@@ -3016,10 +3045,17 @@
         (rvSt.msg ? '<div class="hint" style="margin-top:6px;color:#9B1C12;">' + rvSt.msg + '</div>' : '') + '</div>';
     }
     var tbl = list.length ? '<div class="rvlw"><table class="rvl rvt"><thead><tr><th>유형</th><th>일자·교시·강의실</th><th>과정 / 사유·부서</th><th>연락처·비고</th>' + (viewer ? '' : '<th></th>') + '</tr></thead><tbody>' +
-      list.map(function(r){
-        var big = String(r['유형']) === '대관';
-        return '<tr><td>' + esc(r['유형']) + '</td><td>' + esc(rvRowText(r)) + '</td><td>' + esc(big ? r['사유·사용부서'] : r['개설키']) + '</td><td>' + esc([r['담당자·연락처'], r['비고']].filter(Boolean).join(' · ')) + '</td>' +
-          (viewer ? '' : '<td class="nw"><button type="button" class="btn sm" data-cm="rv:edit:' + esc(r['예약ID']) + '">수정</button> <button type="button" class="btn sm" data-cm="rv:cancel:' + esc(r['예약ID']) + '">취소</button></td>') + '</tr>';
+      rvGroups(list).map(function(g){
+        var r = g[0], big = String(r['유형']) === '대관';
+        var rowOf = function(x, sub){
+          return '<tr' + (sub ? ' class="rvsub"' : '') + '><td>' + (sub ? '' : esc(x['유형'])) + '</td><td>' + (sub ? '└ ' : '') + esc(rvRowText(x)) + '</td><td>' + (sub ? '' : esc(big ? x['사유·사용부서'] : x['개설키'])) + '</td><td>' + (sub ? '' : esc([x['담당자·연락처'], x['비고']].filter(Boolean).join(' · '))) + '</td>' +
+            (viewer ? '' : '<td class="nw"><button type="button" class="btn sm" data-cm="rv:edit:' + esc(x['예약ID']) + '">수정</button> <button type="button" class="btn sm" data-cm="rv:cancel:' + esc(x['예약ID']) + '">취소</button></td>') + '</tr>';
+        };
+        if (g.length === 1) return rowOf(r, false);
+        var gid = String(r['예약ID']), open = !!rvOpen[gid], ids = g.map(function(x){ return String(x['예약ID']); }).join(',');
+        var head = '<tr class="rvgrp"><td>' + esc(r['유형']) + '</td><td><b>' + esc(rvGroupText(g)) + '</b> <button type="button" class="cx-link rvtog" data-cm="rv:gtog:' + esc(gid) + '">' + (open ? '날짜별 접기' + ic('chevU', 'r') : '날짜별 보기' + ic('chevD', 'r')) + '</button></td><td>' + esc(big ? r['사유·사용부서'] : r['개설키']) + '</td><td>' + esc([r['담당자·연락처'], r['비고']].filter(Boolean).join(' · ')) + '</td>' +
+          (viewer ? '' : '<td class="nw"><button type="button" class="btn sm" data-cm="rv:gcancel:' + esc(ids) + '">전체 취소</button></td>') + '</tr>';
+        return head + (open ? g.map(function(x){ return rowOf(x, true); }).join('') : '');
       }).join('') + '</tbody></table></div>' : '<div class="tnone" style="padding:8px 0;">오늘 이후 예약이 없습니다.</div>';
     return form + '<div class="rmgrp" style="margin-top:14px;">예약 목록<small>오늘 이후 ' + list.length + '건 · 교과목을 편성하면 사전확보 예약은 해당 시간만 자동으로 편성으로 바뀌고, 편성을 지우거나 옮기면 예약으로 되돌아옵니다</small></div>' + tbl;
   }
@@ -3033,6 +3069,17 @@
       var r = resv.filter(function(x){ return String(x['예약ID']) === m[1]; })[0]; if (!r) return;
       rvSt = { type: String(r['유형']), from: normYmd(r['일자']), to: '', wkend: true, key: String(r['개설키'] || ''), room: String(r['강의실'] || ''), reason: String(r['사유·사용부서'] || ''), contact: String(r['담당자·연락처'] || ''), note: String(r['비고'] || ''), editId: m[1], busy: false, msg: '', s: Number(r['시작교시']), e: Number(r['끝교시']) };
       renderRoomFree(); var bx = document.querySelector('.rvbox'); if (bx && bx.scrollIntoView) bx.scrollIntoView({ block: 'center' });
+      return;
+    }
+    if ((m = /^rv:gtog:(.+)$/.exec(act))) { rvOpen[m[1]] = !rvOpen[m[1]]; renderRoomFree(); return; }
+    if ((m = /^rv:gcancel:(.+)$/.exec(act))) {
+      var gids = m[1].split(','), grs = resv.filter(function(x){ return gids.indexOf(String(x['예약ID'])) > -1; });
+      if (!grs.length) return;
+      if (!confirm('이 기간 예약 ' + grs.length + '일을 모두 취소할까요?\n' + rvGroupText(grs) + '\n' + (String(grs[0]['유형']) === '대관' ? grs[0]['사유·사용부서'] : grs[0]['개설키']))) return;
+      api({ action: 'cancelReservation', password: getPw(), 예약IDs: gids }).then(function(res){
+        if (res.status !== 'ok') { alert(res.message || '취소하지 못했습니다'); return; }
+        resv = resv.filter(function(x){ return gids.indexOf(String(x['예약ID'])) < 0; }); renderRoomFree();
+      }).catch(function(){ alert('서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.'); });
       return;
     }
     if ((m = /^rv:cancel:(.+)$/.exec(act))) {
@@ -3076,7 +3123,12 @@
     var id = t.id, v = t.value;
     if (t.name === 'rvType') { rvSt.type = v; rvSt.msg = ''; renderRoomFree(); return true; }
     if (id === 'rvFrom') { rvSt.from = normYmd(v) || ''; renderRoomFree(); return true; }
-    if (id === 'rvTo') { rvSt.to = normYmd(v) || ''; renderRoomFree(); return true; }
+    if (id === 'rvTo') {
+      var hadRange = !!(rvSt.to && rvSt.to > rvSt.from);
+      rvSt.to = normYmd(v) || '';
+      if (!hadRange && rvSt.to && rvSt.to > rvSt.from) { var ps0 = rvPeriods(); rvSt.s = ps0[0]; rvSt.e = ps0[ps0.length - 1]; }   // 대회용: 여러 날이면 교시 기본값을 종일로(바꿀 수 있음)
+      renderRoomFree(); return true;
+    }
     if (id === 'rvWk') { rvSt.wkend = !!t.checked; renderRoomFree(); return true; }
     if (id === 'rvS') { rvSt.s = Number(v); if (rvSt.e < rvSt.s) rvSt.e = rvSt.s; renderRoomFree(); return true; }
     if (id === 'rvE') { rvSt.e = Number(v); if (rvSt.e < rvSt.s) rvSt.s = rvSt.e; renderRoomFree(); return true; }
@@ -3841,6 +3893,10 @@
     var nInfo = D.chg.n + D.gapdone.n;
     if (!total && !nInfo && instructors !== null) {
       box.innerHTML = '<div class="th"><h3>처리할 일</h3></div><div class="tnone">처리할 일이 없습니다. 강의계획서 기한, 강사 미지정(' + TODO_DAYS + '일 이내), 겹침 경고, 강사 서류, 사전확보 미편성, 대관 신청, 서류 교체 요청, 빈 교시에 해당하는 항목이 없고 최근 7일 변경도 없습니다.</div>';
+      return;
+    }
+    if (todoFold && (total || nInfo)) {   // 대회용: 홈에서 구분·주·월로 들어온 경우 한 줄로 접어 과정 목록이 먼저 보이게
+      box.innerHTML = '<div class="th tfold"><h3>처리할 일</h3><span class="sum">' + (total ? total + '건' : '알림 ' + nInfo + '건') + ' · 선택한 조건의 과정 목록을 먼저 보여 드립니다</span><a data-tmore="unfold" class="tunfold">펼치기' + ic('chevD', 'r') + '</a></div>';
       return;
     }
     if (!todoCat || !D[todoCat]) todoCat = '';
@@ -5370,6 +5426,7 @@
     if (tcat) { todoCat = tcat; todoMore = false; renderTodo(); return; }
     var ttab = t.getAttribute('data-ttab');
     if (ttab) { todoTab = ttab; todoMore = false; renderTodo(); return; }
+    if (t.getAttribute('data-tmore') === 'unfold') { todoFold = false; renderTodo(); return; }
     if (t.getAttribute('data-tmore')) { todoMore = !todoMore; renderTodo(); return; }
     var tdo = t.getAttribute('data-todo');
     if (tdo) { openCourse(tdo); return; }
@@ -5565,7 +5622,7 @@
       '.cx-md h3{margin:0 0 10px;font-size:17px}.cx-x{position:absolute;top:10px;right:12px;border:none;background:none;font-size:20px;cursor:pointer;color:#667085;width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:background-color .15s ease-out}.cx-x:hover{background:#F2F4F7}' +
       '.cx-tbl{width:100%;border-collapse:collapse;font-size:12.5px}.cx-tbl th,.cx-tbl td{border-bottom:1px solid #EAECF0;padding:6px;text-align:left;vertical-align:top}.cx-tbl th{background:#F9FAFB;font-weight:800}' +
       '.cx-mail{border:1px solid #EAECF0;border-radius:8px;padding:10px;margin-bottom:10px}.cx-mail pre{white-space:pre-wrap;font-family:inherit;font-size:12.5px;margin:6px 0 0;line-height:1.55}' +
-      '.cx-survey{margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#F4FBF9;border:1px solid #CDE7E0;border-radius:8px;padding:8px 10px;font-size:12.5px}' +
+      '.rvl tr.rvgrp td{background:#F7FBFA}.rvl tr.rvsub td{font-size:12px;color:#475467;background:#FCFDFD}.rvtog{font-size:12px;margin-left:6px}.todo .tfold{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.todo .tfold .sum{font-size:13px;color:#475467}.todo .tunfold{cursor:pointer;color:#1B3A5F;font-weight:700;font-size:13px;margin-left:auto}.cx-survey{margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#F4FBF9;border:1px solid #CDE7E0;border-radius:8px;padding:8px 10px;font-size:12.5px}' +
       '@media(max-width:640px){.cx-card{flex-wrap:wrap}.cx-act{flex-direction:row}}';
     var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
   })();
