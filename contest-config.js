@@ -3,7 +3,7 @@
    - 운영 서버 주소를 넣지 마십시오. */
 window.CONTEST_CONFIG = {
   WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbzYdVSZsLnSw3JN01aIDuXa1Ubxh6ERWYC-0TEQxu6tRYrcI9-WNYEoKv3Cfk9qyUvJ/exec',
-  VERSION: '대회용 c6c',
+  VERSION: '대회용 c6d',
   ORG_NAME: '○○소방학교'
 };
 (function () {
