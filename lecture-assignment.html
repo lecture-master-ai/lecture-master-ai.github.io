@@ -5706,10 +5706,10 @@
       '.cx-ex div{padding:2px 0}.cx-link{background:none;border:none;color:#0E6B5C;font-weight:800;cursor:pointer;font-size:12.5px;padding:0}' +
       '.cx-ov{position:fixed;inset:0;background:rgba(16,24,40,.5);z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px}' +
       '.cx-md{background:#fff;border-radius:12px;max-width:880px;width:100%;max-height:88vh;overflow:auto;padding:20px;position:relative}' +
-      '.cx-md h3{margin:0 0 10px;font-size:17px}.cx-x{position:absolute;top:10px;right:12px;border:none;background:none;font-size:20px;cursor:pointer;color:#667085;width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:background-color .15s ease-out}.cx-x:hover{background:#F2F4F7}' +
+      '.cx-md h3{margin:0 0 10px;font-size:17px;padding-right:40px}.cx-x{position:absolute;top:10px;right:12px;border:none;background:none;font-size:20px;cursor:pointer;color:#667085;width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:background-color .15s ease-out}.cx-x:hover{background:#F2F4F7}' +
       '.cx-tbl{width:100%;border-collapse:collapse;font-size:12.5px}.cx-tbl th,.cx-tbl td{border-bottom:1px solid #EAECF0;padding:6px;text-align:left;vertical-align:top}.cx-tbl th{background:#F9FAFB;font-weight:800}' +
       '.cx-mail{border:1px solid #EAECF0;border-radius:8px;padding:10px;margin-bottom:10px}.cx-mail pre{white-space:pre-wrap;font-family:inherit;font-size:12.5px;margin:6px 0 0;line-height:1.55}' +
-      '.rvl tr.rvgrp td{background:#F7FBFA}.rvl tr.rvsub td{font-size:12px;color:#475467;background:#FCFDFD}.rvtog{font-size:12px;margin-left:6px}.todo .tfold{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.todo .tfold .sum{font-size:13px;color:#475467}.todo .tunfold{margin-left:auto}.cx-op{margin-top:14px;border-top:1px solid #D5DCE6;padding-top:12px}.cx-op-h{font-weight:800;color:#1B3A5F;margin-bottom:6px;font-size:14px}.cx-q{font-size:12.5px;color:#344054;margin:2px 0;line-height:1.45}.cx-opall{margin-top:8px}.cx-opall summary{cursor:pointer;color:#1B3A5F;font-weight:700;font-size:13px}.cx-survey{margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#F4FBF9;border:1px solid #CDE7E0;border-radius:8px;padding:8px 10px;font-size:12.5px}' +
+      '.rvl tr.rvgrp td{background:#F7FBFA}.rvl tr.rvsub td{font-size:12px;color:#475467;background:#FCFDFD}.rvtog{font-size:12px;margin-left:6px}.todo .tfold{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.todo .tfold .sum{font-size:13px;color:#475467}.todo .tunfold{margin-left:auto}.cx-flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:4px;margin:10px 0}.cx-flow span{flex:1 1 110px;background:#F3F6FA;border:1px solid #D5DCE6;border-radius:8px;padding:6px 8px;font-size:12.5px;font-weight:700;color:#1B3A5F;line-height:1.3}.cx-flow span b{display:inline-block;width:18px;height:18px;border-radius:50%;background:#1B3A5F;color:#fff;font-size:11px;text-align:center;line-height:18px;margin-right:5px}.cx-flow span small{display:block;font-weight:500;color:#667085;font-size:11.5px;margin-top:2px}.cx-flow span.ai{background:#EEF5FF;border-color:#B8C4D6}.cx-flow i{align-self:center;color:#98A2B3;font-style:normal}.cx-sample{background:#FFFBEB;border:1px solid #F3D88C;border-radius:8px;padding:8px 10px;font-size:13px;margin:0 0 10px}.cx-sample a{font-weight:700;color:#1B3A5F}@media (max-width:640px){.cx-flow i{display:none}.cx-flow span{flex-basis:45%}}.cx-op{margin-top:14px;border-top:1px solid #D5DCE6;padding-top:12px}.cx-op-h{font-weight:800;color:#1B3A5F;margin-bottom:6px;font-size:14px}.cx-q{font-size:12.5px;color:#344054;margin:2px 0;line-height:1.45}.cx-opall{margin-top:8px}.cx-opall summary{cursor:pointer;color:#1B3A5F;font-weight:700;font-size:13px}.cx-survey{margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#F4FBF9;border:1px solid #CDE7E0;border-radius:8px;padding:8px 10px;font-size:12.5px}' +
       '@media(max-width:640px){.cx-card{flex-wrap:wrap}.cx-act{flex-direction:row}}';
     var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
   })();
@@ -5937,11 +5937,26 @@
     ov.addEventListener('click', function(ev){ if (ev.target === ov || (ev.target.classList && ev.target.classList.contains('cx-x'))) close(); });
     return { el: ov, body: ov.querySelector('.cx-body'), close: close };
   }
+  /* 대회용: 심사위원이 바로 시험할 수 있도록 이 과정에 맞는 예시 설문 파일(모의)을 내려받게 함 */
+  var CX_SAMPLES = { '신임 관리자 리더십과정 16기': 'survey_leadership16', '구조역량 강화과정 13기': 'survey_rescue13' };
+  function cxSampleHtml(key){
+    var b = CX_SAMPLES[key];
+    if (!b) {
+      var ks = Object.keys(CX_SAMPLES);
+      return '<div class="cx-sample">시험용 예시 파일은 끝난 과정 <b>' + ks.map(esc).join('</b>, <b>') + '</b> 화면의 이 창에서 받을 수 있습니다.</div>';
+    }
+    var nm = '설문응답_' + key.replace(/\s+/g, '_') + '(모의)';
+    return '<div class="cx-sample"><b>시험용 예시 파일(모의 데이터)</b> 내려받은 뒤 아래 [파일 선택]으로 올려 보세요: ' +
+      '<a href="samples/' + b + '.csv" download="' + esc(nm) + '.csv">CSV 받기</a> · <a href="samples/' + b + '.xlsx" download="' + esc(nm) + '.xlsx">엑셀 받기</a>' +
+      (b === 'survey_leadership16' ? ' <span class="hint">(강사 이름 없는 문항 1개 포함 → AI 문항 연결 확인용)</span>' : '') + '</div>';
+  }
   function cxSurveyOpen(){
     var key = currentKey, p = planByKey(key);
     var m = cxModal('설문 결과 올리기 · ' + (p ? p['과정명'] + ' ' + (p['기수'] || '') : key),
       '<div class="cx-guide">구글폼·네이버 폼 등에서 내려받은 <b>설문 응답 파일(CSV 또는 엑셀)</b>을 올려 주세요(첫 줄 질문, 둘째 줄부터 응답). 5점 척도 문항은 규칙으로 집계하고, 문항이 어느 강사에 대한 것인지 애매하면 AI가 연결합니다. 저장 전에 결과를 확인합니다.</div>' +
-      '<input type="file" id="cxCsv" accept=".csv,text/csv,.xlsx,.xls"> <span class="hint">(CSV 또는 엑셀 · 시연용 예시: 모의데이터의 설문응답_…(모의).csv)</span><div id="cxSv" style="margin-top:12px;"></div>');
+      '<div class="cx-flow"><span><b>1</b>파일 올리기<small>CSV·엑셀</small></span><i>›</i><span><b>2</b>점수는 규칙 계산<small>강사별 5점 평균</small></span><i>›</i><span class="ai"><b>3</b>의견은 AI 분류·요약<small>8개 항목·칭찬/개선</small></span><i>›</i><span><b>4</b>확인 후 반영<small>담당자 결정</small></span><i>›</i><span><b>5</b>엑셀 내려받기<small>의견 분석</small></span></div>' +
+      cxSampleHtml(key) +
+      '<input type="file" id="cxCsv" accept=".csv,text/csv,.xlsx,.xls"> <span class="hint">CSV 또는 엑셀(첫 줄 질문, 둘째 줄부터 응답)</span><div id="cxSv" style="margin-top:12px;"></div>');
     var box = m.body.querySelector('#cxSv');
     m.body.querySelector('#cxCsv').addEventListener('change', function(ev){
       var f = ev.target.files && ev.target.files[0]; if (!f) return;
