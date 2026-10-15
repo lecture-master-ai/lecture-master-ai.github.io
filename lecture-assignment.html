@@ -5709,7 +5709,7 @@
       '.cx-md h3{margin:0 0 10px;font-size:17px}.cx-x{position:absolute;top:10px;right:12px;border:none;background:none;font-size:20px;cursor:pointer;color:#667085;width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:background-color .15s ease-out}.cx-x:hover{background:#F2F4F7}' +
       '.cx-tbl{width:100%;border-collapse:collapse;font-size:12.5px}.cx-tbl th,.cx-tbl td{border-bottom:1px solid #EAECF0;padding:6px;text-align:left;vertical-align:top}.cx-tbl th{background:#F9FAFB;font-weight:800}' +
       '.cx-mail{border:1px solid #EAECF0;border-radius:8px;padding:10px;margin-bottom:10px}.cx-mail pre{white-space:pre-wrap;font-family:inherit;font-size:12.5px;margin:6px 0 0;line-height:1.55}' +
-      '.rvl tr.rvgrp td{background:#F7FBFA}.rvl tr.rvsub td{font-size:12px;color:#475467;background:#FCFDFD}.rvtog{font-size:12px;margin-left:6px}.todo .tfold{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.todo .tfold .sum{font-size:13px;color:#475467}.todo .tunfold{margin-left:auto}.cx-survey{margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#F4FBF9;border:1px solid #CDE7E0;border-radius:8px;padding:8px 10px;font-size:12.5px}' +
+      '.rvl tr.rvgrp td{background:#F7FBFA}.rvl tr.rvsub td{font-size:12px;color:#475467;background:#FCFDFD}.rvtog{font-size:12px;margin-left:6px}.todo .tfold{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.todo .tfold .sum{font-size:13px;color:#475467}.todo .tunfold{margin-left:auto}.cx-op{margin-top:14px;border-top:1px solid #D5DCE6;padding-top:12px}.cx-op-h{font-weight:800;color:#1B3A5F;margin-bottom:6px;font-size:14px}.cx-q{font-size:12.5px;color:#344054;margin:2px 0;line-height:1.45}.cx-opall{margin-top:8px}.cx-opall summary{cursor:pointer;color:#1B3A5F;font-weight:700;font-size:13px}.cx-survey{margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#F4FBF9;border:1px solid #CDE7E0;border-radius:8px;padding:8px 10px;font-size:12.5px}' +
       '@media(max-width:640px){.cx-card{flex-wrap:wrap}.cx-act{flex-direction:row}}';
     var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
   })();
@@ -5926,8 +5926,8 @@
   function cxHeadHtml(p){
     if (!p || isCancelled(p)) return '';
     if (!cxEnded(p)) return '';
-    return '<div class="cx-survey"><b>교육이 끝난 과정입니다.</b> 구글폼 설문 응답을 CSV로 내려받아 올리면 강사별 만족도(5점 척도)와 의견 요약이 강의평가에 쌓이고 랭크에 반영됩니다.' +
-      (isViewer() ? '' : ' <button type="button" class="btn sm primary" data-cxsurvey="1">설문 결과 올리기(CSV)</button>') + '</div>';
+    return '<div class="cx-survey"><b>교육이 끝난 과정입니다.</b> 설문 응답 파일(CSV·엑셀)을 올리면 강사별 만족도(5점 척도)가 강의평가에 쌓여 랭크에 반영되고, 서술형 의견은 AI가 항목별로 분류·요약합니다.' +
+      (isViewer() ? '' : ' <button type="button" class="btn sm primary" data-cxsurvey="1">설문 결과 올리기(CSV·엑셀)</button>') + ' <button type="button" class="btn sm" data-cxopdl="1">의견 분석 내려받기</button></div>';
   }
   function cxModal(title, body){
     var ov = document.createElement('div'); ov.className = 'cx-ov';
@@ -5940,16 +5940,30 @@
   function cxSurveyOpen(){
     var key = currentKey, p = planByKey(key);
     var m = cxModal('설문 결과 올리기 · ' + (p ? p['과정명'] + ' ' + (p['기수'] || '') : key),
-      '<div class="cx-guide">구글폼 응답 화면에서 <b>응답 → 시트에서 보기 → 파일 → 다운로드 → CSV</b>로 받은 파일을 올려 주세요. 5점 척도 문항은 규칙으로 집계하고, 문항이 어느 강사에 대한 것인지 애매하면 AI가 연결합니다. 저장 전에 결과를 확인합니다.</div>' +
-      '<input type="file" id="cxCsv" accept=".csv,text/csv"> <span class="hint">(시연용 예시: 모의데이터의 설문응답_…(모의).csv)</span><div id="cxSv" style="margin-top:12px;"></div>');
+      '<div class="cx-guide">구글폼·네이버 폼 등에서 내려받은 <b>설문 응답 파일(CSV 또는 엑셀)</b>을 올려 주세요(첫 줄 질문, 둘째 줄부터 응답). 5점 척도 문항은 규칙으로 집계하고, 문항이 어느 강사에 대한 것인지 애매하면 AI가 연결합니다. 저장 전에 결과를 확인합니다.</div>' +
+      '<input type="file" id="cxCsv" accept=".csv,text/csv,.xlsx,.xls"> <span class="hint">(CSV 또는 엑셀 · 시연용 예시: 모의데이터의 설문응답_…(모의).csv)</span><div id="cxSv" style="margin-top:12px;"></div>');
     var box = m.body.querySelector('#cxSv');
     m.body.querySelector('#cxCsv').addEventListener('change', function(ev){
       var f = ev.target.files && ev.target.files[0]; if (!f) return;
       if (f.size > 2 * 1024 * 1024) { box.innerHTML = '<div class="note-err">파일이 너무 큽니다(2MB 이하).</div>'; return; }
+      var isXl = /\.(xlsx|xls)$/i.test(f.name);
       var rd = new FileReader();
       rd.onload = function(){
-        box.innerHTML = '<div class="info">파일을 읽고 강사별로 집계하는 중입니다…</div>';
-        api({ action: 'surveyPreview', password: getPw(), 개설키: key, csv: String(rd.result || ''), 모델: cx.modelPref }).then(function(j){
+        box.innerHTML = '<div class="info">파일을 읽고 강사별로 집계하는 중입니다… 서술형 의견은 AI가 항목별로 분류·요약합니다.</div>';
+        if (!isXl) { send(String(rd.result || '')); return; }
+        cxXlsx(function(ok){   // 대회용 c6: 엑셀(네이버 폼·구글폼 내려받기)도 같은 방식으로 처리 — 첫 시트를 CSV로 바꿔 보냄
+          if (!ok) { box.innerHTML = '<div class="note-err">엑셀을 읽는 도구를 불러오지 못했습니다. CSV로 저장해 올려 주세요.</div>'; return; }
+          try {
+            var wb = XLSX.read(new Uint8Array(rd.result), { type: 'array' }), ws = wb.Sheets[wb.SheetNames[0]];
+            var aoa = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '' });
+            while (aoa.length && aoa[0].filter(function(v){ return String(v).trim() !== ''; }).length < 2) aoa.shift();   // 맨 위 제목 줄 건너뜀
+            send(XLSX.utils.sheet_to_csv(XLSX.utils.aoa_to_sheet(aoa)));
+          } catch (e2) { box.innerHTML = '<div class="note-err">엑셀 파일을 읽지 못했습니다. 첫 시트 첫 줄이 질문, 둘째 줄부터 응답인지 확인해 주세요.</div>'; }
+        });
+      };
+      if (isXl) rd.readAsArrayBuffer(f); else rd.readAsText(f, 'utf-8');
+      function send(csvText){
+        api({ action: 'surveyPreview', password: getPw(), 개설키: key, csv: csvText, 모델: cx.modelPref }).then(function(j){
           if (j.status !== 'ok') { box.innerHTML = '<div class="note-err">' + esc(j.message || '처리하지 못했습니다') + '</div>'; return; }
           var d = j.data;
           var rows = d.items.map(function(it){
@@ -5960,6 +5974,7 @@
           }).join('');
           box.innerHTML = '<div class="hint" style="margin-bottom:6px;">응답자 ' + d.응답자 + '명 · 강사 문항 ' + d.items.length + '개' + (d.ai.요약 ? ' · 의견 요약 AI: ' + esc(d.ai.요약) : ' · 의견 요약: 원문 발췌(AI 미사용)') + (d.ai.연결 ? ' · 문항 연결 AI: ' + esc(d.ai.연결) : '') + '</div>' +
             '<div style="overflow:auto;"><table class="cx-tbl"><thead><tr><th>교과목</th><th>강사</th><th>응답</th><th>평균(5점)</th><th>분포</th><th>좋았던 점(요약)</th><th>개선할 점(요약)</th><th>연결</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+            cxOpinionHtml(d.의견) +
             (d.미연결.length ? '<div class="note-warn" style="margin-top:8px;">강사와 연결하지 못한 문항 ' + d.미연결.length + '개는 반영하지 않습니다: ' + esc(d.미연결.slice(0, 3).join(' / ')) + '</div>' : '') +
             '<div class="hint" style="margin-top:8px;">강사에게는 점수가 아닌 정중한 서술형 의견만 전달하며, 점수와 랭크는 관리자 화면에만 표시됩니다.</div>' +
             (d.이미반영 ? '<div class="note-warn" style="margin-top:10px;">이미 반영한 파일입니다. 같은 파일은 한 번만 반영됩니다.</div>'
@@ -5969,15 +5984,54 @@
             cm.disabled = true; cm.textContent = '반영하는 중…';
             api({ action: 'surveyCommit', password: getPw(), hash: d.hash, 파일명: f.name }).then(function(r){
               if (r.status !== 'ok') { box.insertAdjacentHTML('beforeend', '<div class="note-err" style="margin-top:8px;">' + esc(r.message || '반영하지 못했습니다') + '</div>'); cm.disabled = false; cm.textContent = '이 결과로 반영하기'; return; }
-              box.innerHTML = '<div class="note-ok">' + r.반영 + '건을 강의평가에 반영했습니다. 강사 랭크가 새 평가로 다시 계산됩니다.</div>';
+              box.innerHTML = '<div class="note-ok">' + r.반영 + '건을 강의평가에 반영했습니다. 강사 랭크가 새 평가로 다시 계산됩니다.' + (r.의견 ? ' 서술형 의견 ' + r.의견 + '건의 분류 결과도 저장했습니다.' : '') + '</div>' +
+                (r.의견 ? '<div style="margin-top:10px;"><button type="button" class="btn" data-cxopdl="1">의견 분석 내려받기(엑셀)</button></div>' : '');
               instructors = null; instrById = {}; ensureInstructors();
             }).catch(function(){ cm.disabled = false; cm.textContent = '이 결과로 반영하기'; box.insertAdjacentHTML('beforeend', '<div class="note-err">서버에 연결하지 못했습니다. 다시 시도해 주세요.</div>'); });
           });
           var cc = box.querySelector('#cxCancel'); if (cc) cc.addEventListener('click', m.close);
         }).catch(function(){ box.innerHTML = '<div class="note-err">서버에 연결하지 못했습니다. 다시 시도해 주세요.</div>'; });
-      };
-      rd.readAsText(f, 'utf-8');
+      }
     });
+  }
+  /* ----- 대회용 c6: 서술형 의견 AI 분류 결과 표시·엑셀 내려받기 ----- */
+  function cxXlsx(cb){
+    if (window.XLSX) { cb(true); return; }
+    var sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    sc.onload = function(){ cb(!!window.XLSX); }; sc.onerror = function(){ cb(false); }; document.head.appendChild(sc);
+  }
+  function cxOpinionHtml(op){
+    if (!op || !op.items || !op.items.length) return '';
+    var how = op.ai ? '<span class="cx-tag ai">AI 분류</span> ' + esc(op.ai) : '<span class="cx-tag">규칙 분류</span> AI가 응답하지 않아 낱말 규칙으로 분류했습니다';
+    var rows = op.cats.map(function(c){
+      return '<tr><td><b>' + esc(c.분류) + '</b></td><td style="white-space:nowrap;">' + c.의견수 + '건<br><span class="hint">좋음 ' + c.좋음 + ' · 개선 ' + c.개선 + '</span></td><td>' + esc(c.요약 || '-') + '</td><td>' +
+        c.대표.map(function(t){ return '<div class="cx-q">“' + esc(t) + '”</div>'; }).join('') + '</td></tr>';
+    }).join('');
+    var all = op.items.map(function(x){ return '<tr><td>' + esc(x.분류) + '</td><td>' + esc(x.구분) + '</td><td>' + esc(x.교과목 ? x.교과목 + (x.강사명 ? ' · ' + x.강사명 : '') : '과정 공통') + '</td><td>' + esc(x.의견) + '</td></tr>'; }).join('');
+    return '<div class="cx-op"><div class="cx-op-h">서술형 의견 자동 분류 <span class="hint">의견 ' + op.items.length + '건' + (op.전체 > op.items.length ? '(전체 ' + op.전체 + '건 중)' : '') + ' · ' + how + '</span></div>' +
+      '<div style="overflow:auto;"><table class="cx-tbl"><thead><tr><th>분류</th><th>의견 수</th><th>항목 요약</th><th>대표 의견</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      '<details class="cx-opall"><summary>분류된 의견 전체 보기 (' + op.items.length + '건)</summary><div style="overflow:auto;max-height:260px;"><table class="cx-tbl"><thead><tr><th>분류</th><th>구분</th><th>교과목·강사</th><th>의견</th></tr></thead><tbody>' + all + '</tbody></table></div></details>' +
+      '<div class="hint" style="margin-top:6px;">반영하면 분류 결과가 함께 저장되고, 과정 화면의 [의견 분석 내려받기]에서 엑셀로 받을 수 있습니다. 전화번호·메일은 가린 뒤 처리합니다.</div></div>';
+  }
+  function cxOpinionDownload(){
+    var key = currentKey, p = planByKey(key);
+    api({ action: 'listSurveyOpinions', password: getPw(), 개설키: key }).then(function(j){
+      if (!j || j.status !== 'ok') { alert((j && j.message) || '불러오지 못했습니다'); return; }
+      if (!j.의견.length) { alert('이 과정에 반영된 설문 의견이 없습니다. 먼저 [설문 결과 올리기]로 반영해 주세요.'); return; }
+      cxXlsx(function(ok){
+        if (!ok) { alert('엑셀 만드는 도구를 불러오지 못했습니다.'); return; }
+        var sumHead = ['분류', '의견 수', '좋았던 점 수', '개선할 점 수', '요약', '대표 의견', '분류방식', '반영일시'];
+        var opHead = ['분류', '구분', '교과목', '강사명', '의견', '분류방식', '원본파일', '반영일시'];
+        var title = (p ? p['과정명'] + ' ' + (p['기수'] || '') : key);
+        var a1 = [[title + ' 설문 서술형 의견 분석'], [], sumHead].concat(j.요약.map(function(r){ return sumHead.map(function(h){ return /수$/.test(h) ? (Number(r[h]) || 0) : r[h]; }); }));
+        var a2 = [opHead].concat(j.의견.map(function(r){ return opHead.map(function(h){ return h === '교과목' && !r[h] ? '과정 공통' : r[h]; }); }));
+        var ws1 = XLSX.utils.aoa_to_sheet(a1); ws1['!cols'] = [{ wch: 16 }, { wch: 8 }, { wch: 10 }, { wch: 10 }, { wch: 60 }, { wch: 70 }, { wch: 10 }, { wch: 17 }];
+        var ws2 = XLSX.utils.aoa_to_sheet(a2); ws2['!cols'] = [{ wch: 16 }, { wch: 10 }, { wch: 18 }, { wch: 10 }, { wch: 70 }, { wch: 10 }, { wch: 30 }, { wch: 17 }];
+        ws2['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: a2.length - 1, c: opHead.length - 1 } }) };
+        var wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws1, '항목별 요약'); XLSX.utils.book_append_sheet(wb, ws2, '분류된 의견 전체');
+        XLSX.writeFile(wb, '의견분석_' + title.replace(/[\\/:*?"<>|\s]+/g, '_') + '.xlsx');
+      });
+    }).catch(function(){ alert('서버에 연결하지 못했습니다. 다시 시도해 주세요.'); });
   }
 
   // ----- 시연 모드: 보낸 내용 보기 -----
@@ -5991,9 +6045,10 @@
     }).catch(function(){ m.body.innerHTML = '<div class="note-err">불러오지 못했습니다.</div>'; });
   }
   document.addEventListener('click', function(ev){
-    var t = ev.target && ev.target.closest ? ev.target.closest('[data-cxsurvey],[data-cxout]') : null;
+    var t = ev.target && ev.target.closest ? ev.target.closest('[data-cxsurvey],[data-cxout],[data-cxopdl]') : null;
     if (!t) return;
     if (t.getAttribute('data-cxsurvey')) cxSurveyOpen();
+    if (t.getAttribute('data-cxopdl')) cxOpinionDownload();
     if (t.getAttribute('data-cxout')) cxOutbox();
   });
 
