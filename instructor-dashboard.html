@@ -249,6 +249,8 @@
   #detail .field-grid .fk{font-size:12px;color:var(--text-muted);}
   #detail .field-grid .fv{font-size:14px;margin:2px 0 0 0;word-break:break-word;}
 
+  /* 대회용: 재동의 기록·휴면 처리 버튼과 재동의 정보 숨김(개인정보 보유기간 세부 관리 기능) */
+  #dormantBtn, #reconsentBtn, .fi-reconsent { display:none !important; }
   /* 로그인 화면 */
   #loginScreen{
     min-height:100vh;
@@ -1000,7 +1002,7 @@
         '<div class="fi"><div class="fk">강의회차</div><div class="fv">' + (d.강의회차 || 0) + '회</div></div>' +
         '<div class="fi"><div class="fk">등록일</div><div class="fv">' + esc(d.등록일||'-') + '</div></div>' +
         (isViewer ? '' : (function(){ var r = retentionInfo(d); return '<div class="fi"><div class="fk">보유기간 만료일 (3년)</div><div class="fv"' + (r.due ? ' style="color:#A32D2D;font-weight:700;"' : '') + '>' + esc(r.expire || '-') + (r.over ? ' (도래)' : (r.due ? ' (임박)' : '')) + '</div></div>' +
-          '<div class="fi"><div class="fk">재동의 확인</div><div class="fv">' + (d.재동의확인일 ? (esc(d.재동의확인일) + (d.재동의메모 ? '<br><span style="font-size:12px;font-weight:400;">' + esc(d.재동의메모) + '</span>' : '')) : '-') + '</div></div>'; })()) +
+          '<div class="fi fi-reconsent"><div class="fk">재동의 확인</div><div class="fv">' + (d.재동의확인일 ? (esc(d.재동의확인일) + (d.재동의메모 ? '<br><span style="font-size:12px;font-weight:400;">' + esc(d.재동의메모) + '</span>' : '')) : '-') + '</div></div>'; })()) +
         '<div class="fi full"><div class="fk">자격증·학위</div><div class="fv">' + esc(slashJoinLines(d.자격증학위) || '-') + '</div></div>' +
         '<div class="fi full"><div class="fk">약력</div><div class="fv">' + esc(slashJoinLines(d.약력) || '-') + '</div></div>' +
         '<div class="fi full"><div class="fk">강사카드</div><div class="fv">' + profileLinkHtml + '</div></div>' +
@@ -1590,7 +1592,7 @@
     document.getElementById('retentionFilterLabel').style.display = isViewerRole() ? 'none' : 'flex';
 
     allData = json.data || [];
-    if (!stale) setDocReplace(json.docReplace);
+    if (!stale) setDocReplace([]);   // 대회용: 서류 교체 승인은 화면에서 숨김(원래 json.docReplace)
     document.getElementById('loading').style.display = 'none';
 
     updateSummaryStats();

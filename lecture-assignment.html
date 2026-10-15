@@ -1434,7 +1434,7 @@
       history = a['변경이력'] || [];
       resv = a['강의실예약'] || [];
       reqsOk = Array.isArray(a['강의실신청']); reqs = reqsOk ? a['강의실신청'] : [];
-      docReqs = a['서류교체'] || [];
+      docReqs = [];   // 대회용: 서류 교체 승인 대기는 화면에서 숨김(원래 a['서류교체'])
       gapLoad(a['빈교시확인']);
       periods = (a['교시표'] || []).map(function(r){
         return { n: Number(r['교시']), start: String(r['시작'] || ''), end: String(r['종료'] || ''), kind: String(r['구분'] || '') };
@@ -3935,7 +3935,7 @@
       return o;
     }).sort(function(a, b){ return a.at < b.at ? 1 : a.at > b.at ? -1 : 0; });
   }
-  var TODO_ORDER = ['plan', 'unas', 'cfl', 'docs', 'resv', 'rvreq', 'docreq', 'gap', 'chg', 'gapdone'];
+  var TODO_ORDER = ['plan', 'unas', 'cfl', 'docs', 'resv', 'rvreq', 'gap', 'chg', 'gapdone'];   // 대회용: 'docreq'(서류 교체 승인) 숨김
   /* 강사 카드(위에 겹쳐 뜨는 화면)에서 서류 교체를 승인·반려하면 처리할 일에서도 바로 뺌 */
   window.addEventListener('jsfa-docreplace-done', function(e){
     docReqs = docReqs.filter(function(x){ return String(x['강사ID']) !== String(e.detail); });
