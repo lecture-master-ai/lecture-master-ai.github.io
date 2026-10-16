@@ -1094,7 +1094,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d2d</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d2e</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -1573,6 +1573,7 @@
   }
 
   /* ---- 첫 화면 시안: ?ui=a(공정 띠) / ?ui=b(단계별 보드) ---- */
+  var demoWasOn = false;
   var UIV = (/[?&]ui=([ab]|old)/.exec(location.search) || [])[1] || 'b'; if (UIV === 'old') UIV = '';   // 첫 화면: 단계별 보드(B) 기본
   var STEPS = [
     { t: '교과목 편성', d: '지난 기수 편성 불러오기', tl: [['ai', '지난 기수 강사 재검토'], ['', '지난 기수 편성 불러오기']] },
@@ -1587,7 +1588,7 @@
     var q = a.split('-'), n = Math.round((Date.UTC(+q[0], +q[1] - 1, +q[2]) - t) / 86400000);
     return n > 0 ? '개강 D-' + n : n === 0 ? '오늘 개강' : '진행 중';
   }
-  // 과정 위치: 1 교과목 편성 · 2 강사 배정 · 3 완료(안내 보류 중) · 4 일괄 발송(끝)
+  // 과정 위치: 1 교과목 편성 · 2 강사 배정 · 3 완료(안내 대기) · 4 일괄 발송(끝)
   function courseStage(key){
     var ss = sessionsOf(key), n = ss.length, empty = ss.filter(function(r){ return !String(r['강사ID'] || '') && !String(r['강사명'] || ''); }).length;
     var hd = ab.held[key]; if (hd === undefined && n && !empty) { ab.held[key] = { 칸: 0, 강사: 0 }; abHeldFetchDemo(key); }
@@ -1661,12 +1662,14 @@
     var box = $('demoBox'); if (!box) return;
     var on = SIMPLE && !currentKey && planMode === 'table';
     document.body.classList.toggle('demo-on', on);
+    if (on && !demoWasOn && $('msgBox').className === 'ok') showMsg('');   // 편성 화면에서 첫 화면으로 돌아오면 지난 완료 알림을 지움
+    demoWasOn = on;
     box.style.display = on ? '' : 'none';
     if (!on) return;
     var order = ['ai', 'copy', 'cell'];
     var demos = plans.filter(function(p){ return DEMO_KEYS[p['과정+기수']] && !isCancelled(p); });
     demos.sort(function(a, b){ return order.indexOf(DEMO_KEYS[a['과정+기수']]) - order.indexOf(DEMO_KEYS[b['과정+기수']]); });
-    if (UIV) { box.innerHTML = UIV === 'a' ? renderDemoA(demos) : renderDemoB(demos); $('hTitle').textContent = '강의배정'; $('hSub').textContent = '교과목에 맞는 강사를 찾아 배정합니다. 최종 결정은 담당자가 합니다.'; return; }
+    if (UIV) { box.innerHTML = UIV === 'a' ? renderDemoA(demos) : renderDemoB(demos); $('hTitle').textContent = '강의배정'; $('hSub').textContent = '편성이 필요한 과정이 단계별로 놓여 있습니다.'; return; }
     var h = '<div class="demo-h"><b>편성이 필요한 과정</b><span>다가오는 과정 중 강사 배정이 남은 과정입니다.</span></div>' +
       '<div class="ai-hint"><span class="ai-badge">AI 도움</span><b>AI 도움을 받을 수 있는 곳</b><span>강사 일괄 배정 · 지난 기수 강사 재검토 · 적합한 강사 찾기 · 강사카드 채우기 · 설문 의견 정리</span><span style="color:#667085">— AI는 근거를 제시하고, 적용은 담당자가 결정합니다.</span></div><div class="demo-grid">';
     demos.forEach(function(p){
@@ -1696,7 +1699,7 @@
         ab.held = {}; ab.copied = {}; ab.manual = null; ab.msg = ''; cxRes = {};
         instructors = null; instrById = {};
         bootClear();
-        return loadAll(getPw()).then(function(){ showMsg('ok', '처음 상태로 되돌렸습니다(' + Math.round((j.소요ms || 0) / 1000) + '초).'); });
+        return loadAll(getPw()).then(function(){ showMsg('ok', '처음 상태로 되돌렸습니다.'); });
       }).catch(function(){ t.disabled = false; t.textContent = '처음 상태로 되돌리기'; alert('서버에 연결하지 못했습니다.'); });
     }
   });
@@ -1784,11 +1787,14 @@
   }
 
   /* ---------- 불러오기 ---------- */
+  var msgTimer = null;
   function showMsg(kind, text){
     var b = $('msgBox');
+    clearTimeout(msgTimer);
     if (!text) { b.className = ''; b.textContent = ''; return; }
     b.className = kind;
     b.textContent = text;
+    if (SIMPLE && kind === 'ok') msgTimer = setTimeout(function(){ if (b.textContent === text) showMsg(''); }, 5000);   // 심사용: 완료 알림은 5초 뒤 사라짐
   }
 
   function loadAll(pw, quiet, skipSame){
@@ -4538,7 +4544,7 @@
       act = '<div class="ab-acts"><button type="button" class="btn primary ab-ai" data-ab="review"><span class="ab-tag">AI</span>' + (copied ? '지난 기수 강사 AI로 다시 검토' : 'AI로 강사 다시 검토') + '</button>' +
         '<span class="ab-note">' + (copied ? '지난 기수 강사를 그대로 불러왔습니다. 그동안 쌓인 설문 평가를 반영해 유지·교체를 칸마다 제안합니다.' : '지금 배정된 강사를 같은 기준(일정·평가·관련성)으로 다시 점검합니다.') + '</span></div>';
     }
-    if (held) act += '<div class="ab-held"><div><b>강사 안내 보류 중 · ' + held + '명(' + (ab.held[currentKey].칸 || 0) + '칸)</b><span>적용한 배정은 아직 강사에게 알리지 않았습니다. 확인을 마치면 강사별로 1통씩 보냅니다.</span></div>' +
+    if (held) act += '<div class="ab-held"><div><b>' + (empty ? '' : '배정 완료 · ') + '안내 대기 ' + held + '명</b><span>강사별로 1통씩 보냅니다.</span></div>' +
       '<button type="button" class="btn primary" data-ab="send">강의배정 자동 일괄 발송 (' + held + '명)</button></div>';
     if (ab.msg) act += '<div class="ab-msg">' + ab.msg + '</div>';
     box.innerHTML = h + act;
@@ -4716,7 +4722,7 @@
       });
       sessionsByKey = buildSessionMap(allSessions); refreshConflicts();
       var nDone = items.length - Object.keys(skip).length;
-      ab.msg = ic('check', 'l') + nDone + '칸을 적용했습니다' + (Object.keys(skip).length ? ' (건너뜀 ' + Object.keys(skip).length + '칸: ' + esc(Object.keys(skip).map(function(k){ return skip[k]; }).join(', ')) + ')' : '') + '. 강사 안내는 보류 중입니다.';
+      ab.msg = ic('check', 'l') + (ab.kind === 'draft' ? 'AI 초안 ' : 'AI 제안 ') + nDone + '칸을 적용했습니다' + (Object.keys(skip).length ? ' (건너뜀 ' + Object.keys(skip).length + '칸: ' + esc(Object.keys(skip).map(function(k){ return skip[k]; }).join(', ')) + ')' : '') + '.';
       if (ab.src === 'manual') ab.manual = null;
       if ((j.안내 || []).length) ab.msg += ' 바뀐 이전 강사 ' + j.안내.length + '명에게는 취소 안내를 보냈습니다.';
       ab.modal.close(); ab.modal = null;
@@ -4734,7 +4740,7 @@
       if (!j || j.status !== 'ok') { btn.disabled = false; btn.textContent = '강의배정 자동 일괄 발송'; alert((j && j.message) || '보내지 못했습니다'); return; }
       var n = (j.안내 || []).length;
       ab.held[key] = { 칸: 0, 강사: 0 }; ab.copied[key] = false;
-      ab.msg = ic('check', 'l') + '강사 ' + n + '명에게 배정 안내를 보냈습니다' + (j.시연모드 ? '(심사용 사본은 실제로 보내지 않고 발송 기록에만 남깁니다)' : '') + '. <button type="button" class="ab-lnk" data-cxout="1">보낸 내용 보기</button>';
+      ab.msg = ic('check', 'l') + '강사 ' + n + '명에게 강의배정 안내를 보냈습니다. <button type="button" class="ab-lnk" data-cxout="1">보낸 내용 보기</button>';
       abRender();
     }).catch(function(){ btn.disabled = false; btn.textContent = '강의배정 자동 일괄 발송'; alert('서버에 연결하지 못했습니다.'); });
   }
@@ -6004,9 +6010,10 @@
       var p = planByKey(currentKey);
       if (p) { renderHead(p); renderSessionList(); }
       var nIns = (j.data || []).filter(function(r){ return r['강사ID'] || r['강사명']; }).length;
-      showMsg('ok', courseLabel(srcKey) + '에서 교과목 ' + (j.개수 || good.length) + '줄을 복사했습니다. ' +
+      showMsg('ok', (SIMPLE ? (String(srcKey).split(' ').pop() || courseLabel(srcKey)) + ' 편성을 불러왔습니다 · 교과목 ' + (j.개수 || good.length) + '개' + (useInstr ? '' : ' · 강사는 비워 두었습니다') :
+        courseLabel(srcKey) + '에서 교과목 ' + (j.개수 || good.length) + '줄을 복사했습니다. ' +
         (useInstr ? '강사 ' + nIns + '줄은 원본 그대로 복사했으니, 달라지는 교과목은 "수정"에서 바꿔 주세요. ' : '강사는 비워 두었습니다("강사 지정"으로 입력). ') +
-        (useInstr ? '강사 안내는 보류했습니다. 아래 [강사 배정]에서 AI로 다시 검토한 뒤 [강의배정 자동 일괄 발송]으로 보냅니다. ' : '') +
+        (useInstr ? '강사 안내는 보류했습니다. 아래 [강사 배정]에서 AI로 다시 검토한 뒤 [강의배정 자동 일괄 발송]으로 보냅니다. ' : '')) +
         ((j.warnings || []).length ? ' 확인 필요: ' + j.warnings.join(' / ') + '.' : ''));
       window.scrollTo(0, 0);
     }).catch(function(){
