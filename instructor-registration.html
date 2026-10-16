@@ -167,6 +167,97 @@
     .row { grid-template-columns: 1fr; gap: 16px; }
     header h1 { font-size: 24px; }
   }
+
+  /* ===== d1 강사 등록: 단계 흐름·강사카드 창·AI 자동 채우기 ===== */
+  :root { --orange:#E8762B; --orange-bg:#FFF4EC; --ai:#2F6FB2; --ai-bg:#F3F8FE; --muted-bg:#F2F4F7; }
+  .regflow { display:flex; align-items:stretch; gap:6px; margin:0 0 20px; }
+  .regflow .st { flex:1; border-radius:10px; padding:10px 12px; border:2px solid transparent; display:flex; flex-direction:column; gap:2px; min-width:0; }
+  .regflow .st b { font-size:14px; white-space:nowrap; } .regflow .st span { font-size:12.5px; }
+  .regflow .st.df-done { background:var(--navy); color:#fff; }
+  .regflow .st.df-now { background:var(--orange-bg); color:#9A3D0A; border-color:var(--orange); }
+  .regflow .st.df-todo { background:var(--muted-bg); color:#98A2B3; }
+  .regflow .ar { align-self:center; color:#98A2B3; font-weight:800; }
+  .card-title { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .btn-sub { height:36px; padding:0 14px; border:1px solid var(--border-input); background:#fff; border-radius:8px; font-family:inherit; font-size:13px; font-weight:700; color:var(--text-sub); cursor:pointer; transition:border-color .15s ease-out, color .15s ease-out; white-space:nowrap; }
+  .btn-sub:hover { border-color:var(--navy); color:var(--navy); }
+  .btn-main { height:48px; padding:0 20px; border:none; background:var(--navy); color:#fff; border-radius:10px; font-family:inherit; font-size:16px; font-weight:700; cursor:pointer; transition:background-color .15s ease-out; }
+  .btn-main:hover { background:var(--navy-hover); }
+  .btn-main:disabled { background:#9AA5B1; cursor:not-allowed; }
+  .cardbox { border:1px dashed var(--border-input); border-radius:12px; padding:18px; display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
+  .cardbox.done { border-style:solid; border-color:#C9D6E5; background:#F8FAFD; }
+  .cardbox .txt { flex:1 1 260px; font-size:14px; color:var(--text-sub); line-height:1.6; }
+  .cardbox .txt b { color:var(--text); }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+  .chip { font-size:12.5px; font-weight:700; border-radius:999px; padding:3px 10px; background:var(--muted-bg); color:#344054; }
+  .chip.ai { background:var(--ai-bg); color:var(--ai); }
+  .chip.need { background:var(--orange-bg); color:#9A3D0A; }
+  /* 창 */
+  .mdl-back { position:fixed; inset:0; background:rgba(16,24,40,.45); display:none; align-items:flex-start; justify-content:center; z-index:50; padding:24px 12px; overflow:auto; }
+  .mdl-back.on { display:flex; }
+  .mdl { background:#fff; border-radius:16px; width:100%; max-width:780px; display:flex; flex-direction:column; max-height:calc(100vh - 48px); }
+  .mdl-h { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:18px 22px; border-bottom:1px solid var(--border); }
+  .mdl-h b { font-size:18px; color:var(--navy); }
+  .mdl-b { padding:18px 22px; overflow:auto; flex:1; }
+  .mdl-f { padding:14px 22px; border-top:1px solid var(--border); display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  .mdl-f .need-txt { flex:1 1 220px; font-size:13px; color:#9A3D0A; font-weight:600; }
+  .mdl-f .need-txt.ok { color:var(--success); }
+  @media (max-width:600px) { .mdl-back { padding:0; } .mdl { max-height:100vh; height:100vh; border-radius:0; } .regflow .st b { font-size:12.5px; } .regflow .st span { font-size:11.5px; } }
+  /* 파일 올리기(AI 자동 채우기) */
+  .up { border:2px solid var(--ai); background:var(--ai-bg); border-radius:12px; padding:16px 18px; margin-bottom:16px; }
+  .up-t { font-size:15px; font-weight:800; color:var(--ai); display:flex; align-items:center; gap:8px; }
+  .up-t .ai-tag { font-size:11px; background:var(--ai); color:#fff; border-radius:4px; padding:1px 6px; }
+  .up-d { font-size:13px; color:#344054; margin:6px 0 12px; line-height:1.55; }
+  .up-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .up-row label.filebtn { margin:0; display:inline-flex; align-items:center; height:42px; padding:0 16px; border-radius:8px; background:var(--ai); color:#fff; font-weight:700; font-size:14px; cursor:pointer; }
+  .up-row label.filebtn input { display:none; }
+  .up-row a { font-size:13px; color:var(--ai); font-weight:700; }
+  .up-steps { display:flex; gap:6px; margin-top:12px; }
+  .up-steps .s { flex:1; font-size:12px; font-weight:700; border-radius:8px; padding:6px 8px; background:#fff; color:#98A2B3; border:2px solid transparent; }
+  .up-steps .s.df-done { background:var(--ai); color:#fff; }
+  .up-steps .s.df-now { color:var(--ai); border-color:var(--ai); }
+  .up-res { margin-top:10px; font-size:13.5px; font-weight:600; color:#101828; line-height:1.55; }
+  .up-res.err { color:var(--danger); }
+  /* 접기/펴기 묶음 */
+  .sec { border:1px solid var(--border); border-radius:12px; margin-bottom:10px; overflow:hidden; }
+  .sec-h { width:100%; display:flex; align-items:center; gap:10px; padding:14px 16px; background:#fff; border:none; font-family:inherit; cursor:pointer; text-align:left; }
+  .sec-h .n { width:24px; height:24px; border-radius:50%; background:var(--navy); color:#fff; font-size:12.5px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .sec-h .t { font-size:15px; font-weight:800; color:var(--text); flex:1; }
+  .sec-h .pill { font-size:12px; font-weight:800; border-radius:999px; padding:2px 10px; }
+  .pill.ok { background:#E7F3EC; color:var(--success); } .pill.need { background:var(--orange-bg); color:#9A3D0A; } .pill.opt { background:var(--muted-bg); color:#667085; }
+  .sec-h .ch { color:#98A2B3; transition:transform .15s ease-out; }
+  .sec.open .sec-h .ch { transform:rotate(180deg); }
+  .sec-b { display:none; padding:4px 16px 16px; }
+  .sec.open .sec-b { display:block; }
+  .sec .field { margin-bottom:14px; }
+  .sec label .ai-tag, .field label .ai-tag { display:none; font-size:10.5px; font-weight:800; background:var(--ai); color:#fff; border-radius:4px; padding:1px 5px; margin-left:6px; vertical-align:1px; }
+  .is-ai + .ai-tag, label.has-ai .ai-tag { display:inline-block; }
+  input.is-ai, textarea.is-ai { border-color:#9DBCE0; background:var(--ai-bg); box-shadow:inset 3px 0 0 var(--ai); }
+  input.is-need, textarea.is-need { border-color:var(--orange); background:#FFFBF7; }
+  .rows .r { display:grid; gap:8px; margin-bottom:8px; align-items:center; }
+  .rows.car .r { grid-template-columns:150px 1fr 1fr 36px; }
+  .rows.lec .r { grid-template-columns:80px 1fr 1fr 80px 36px; }
+  .rows input { height:42px; font-size:14px; padding:0 10px; }
+  .rows .x { width:36px; height:36px; border:1px solid var(--border-input); border-radius:8px; background:#fff; color:#667085; cursor:pointer; font-size:16px; line-height:1; }
+  .rows .x:hover { border-color:var(--danger); color:var(--danger); }
+  .rows .r.is-ai input { border-color:#9DBCE0; background:var(--ai-bg); }
+  .add { height:36px; padding:0 12px; border:1px dashed var(--border-input); border-radius:8px; background:#fff; font-family:inherit; font-size:13px; font-weight:700; color:var(--navy); cursor:pointer; }
+  .opts { display:flex; flex-wrap:wrap; gap:8px; }
+  .opts label { margin:0; display:inline-flex; align-items:center; gap:6px; height:38px; padding:0 12px; border:1px solid var(--border-input); border-radius:999px; font-size:13.5px; font-weight:600; cursor:pointer; }
+  .opts input { margin:0; }
+  .opts label:has(input:checked) { border-color:var(--navy); background:#F4F7FA; color:var(--navy); }
+  .agree { display:flex; gap:10px; align-items:flex-start; padding:12px 14px; border:1px solid var(--border); border-radius:10px; margin-bottom:8px; font-size:14px; line-height:1.5; cursor:pointer; }
+  .agree input { width:20px; height:20px; margin:1px 0 0; flex-shrink:0; }
+  .agree.is-need { border-color:var(--orange); background:#FFFBF7; }
+  @media (max-width:600px) {
+    .rows.car .r, .rows.lec .r { grid-template-columns:1fr 1fr 36px; }
+    .rows.car .r input:nth-child(3), .rows.lec .r input:nth-child(3) { grid-column:1 / 3; }
+    .rows.lec .r input:nth-child(4) { grid-column:1 / 3; }
+  }
+  /* 최종 확인 */
+  .sum { width:100%; border-collapse:collapse; font-size:14px; }
+  .sum th { text-align:left; width:120px; color:#667085; font-weight:700; padding:8px 8px 8px 0; vertical-align:top; border-bottom:1px solid var(--border); }
+  .sum td { padding:8px 0; border-bottom:1px solid var(--border); line-height:1.55; }
+  .sum h4 { margin:16px 0 4px; font-size:14px; color:var(--navy); }
 </style>
 <script src="contest-config.js"></script>
 <script src="cx-wait.js"></script>
@@ -177,37 +268,14 @@
   <header>
     <div class="eyebrow">외부강사 등록신청</div>
     <h1>○○소방학교 외부강사<br>등록을 신청합니다</h1>
-    <p>등록 신청 후 담당자 승인이 완료되면 강사 명단에 정식 등록됩니다.<br><b>승인 결과는 메일로 안내되니, 신청 후 메일을 꼭 확인해 주시기 바랍니다.</b><br>강의가 확정된 건에 대한 자료(동의서·강의계획서 등)는 별도 안내를 통해 제출하시게 됩니다.</p>
+    <p>기본 정보와 강사카드를 작성해 신청하면, 담당자 승인 후 강사 명단에 등록되고 결과를 메일로 안내드립니다.</p>
   </header>
 
-  <div class="process-guide">
-    <div class="process-title">등록 절차 안내</div>
-    <div class="process-steps">
-      <div class="pstep"><div class="pnum">1</div><div class="ptext">강사 등록 신청</div></div>
-      <div class="pstep"><div class="pnum">2</div><div class="ptext">담당자 심사</div></div>
-      <div class="pstep"><div class="pnum">3</div><div class="ptext">승인 / 반려</div></div>
-      <div class="pstep"><div class="pnum">4</div><div class="ptext">메일로 결과 통보</div></div>
-      <div class="pstep">
-        <div class="pnum pnum-muted">5</div>
-        <div class="ptext">강의 배정<span class="pnote">승인된 경우, 필요할 때 진행됩니다</span></div>
-      </div>
-    </div>
-  </div>
+  <div class="regflow" id="regFlow" role="img" aria-label="등록 단계"></div>
 
-  <div class="notice-box">
-    ※ 강사 명단 등록에 협조해 주시면, 앞으로 강사 관리·강의 배정 안내가 전산으로 자동 처리되어 더 빠르고 정확하게 소통드릴 수 있습니다.
-  </div>
-
-  <form id="regForm">
-    <div class="card" id="cxDemoCard" style="border:1px solid #9FCFC3;background:#F4FBF9;">
-      <div style="display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;">
-        <div style="flex:1 1 300px;font-size:13.5px;line-height:1.5;color:#0B4A3F;"><b>심사 체험용 안내</b><br>실제 개인정보를 넣지 마시고, [모의 정보 채우기] 버튼으로 <b>모의 정보</b>를 채워 신청해 보세요. 첨부 파일은 대회용 사본에서 선택 항목입니다.</div>
-        <button type="button" id="cxFill" style="background:#0E6B5C;color:#fff;border:none;border-radius:8px;height:40px;padding:0 16px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;">모의 정보 채우기</button>
-      </div>
-    </div>
-
+  <form id="regForm" novalidate>
     <div class="card">
-      <div class="card-title">기본 정보</div>
+      <div class="card-title"><span>① 기본 정보</span><button type="button" class="btn-sub" id="cxFill" title="실제 개인정보 대신 모의 정보로 채웁니다">모의 정보로 채우기</button></div>
       <div class="row">
         <div class="field">
           <label class="required" for="name">성명</label>
@@ -228,112 +296,82 @@
           <input type="email" id="email" required>
         </div>
       </div>
-      <div class="field">
-        <label for="photo">증명사진 <span style="color:#0E6B5C;font-weight:600;">(대회용: 선택)</span></label>
-        <input type="file" id="photo" accept="image/*">
-      </div>
-      <div class="field">
-        <label for="profileFile">강사카드 (PDF) <span style="color:#0E6B5C;font-weight:600;">(대회용: 선택)</span></label>
-        <input type="file" id="profileFile" accept=".pdf,application/pdf">
-        <a class="form-download" id="cardFormLink" href="#" target="_blank" style="display:none;">↓ 강사카드 양식 다운로드</a>
-        <div class="hint">한글 양식을 작성한 뒤 <b>PDF로 변환(저장)</b>해서 올려 주세요. PDF 파일만 올릴 수 있습니다(10MB 이하).</div>
-      </div>
-      <div class="field">
-        <label for="consentFile">개인정보 수집·이용 동의서 (서명본, PDF) <span style="color:#0E6B5C;font-weight:600;">(대회용: 선택)</span></label>
-        <input type="file" id="consentFile" accept=".pdf,application/pdf">
-        <a class="form-download" id="consentFormLink" href="#" target="_blank" style="display:none;">↓ 개인정보 동의서 양식 다운로드</a>
-        <div class="hint">양식을 내려받아 작성·서명한 뒤 PDF로 변환해 올려 주세요.</div>
-      </div>
       <div class="row">
         <div class="field">
           <label class="required" for="org">소속</label>
-          <input type="text" id="org" placeholder="예 : ○○소방서, ○○대학교" required>
+          <input type="text" id="org" placeholder="예: ○○소방서, ○○대학교" required>
         </div>
         <div class="field">
           <label for="position">직위 / 직책</label>
-          <input type="text" id="position" placeholder="예 : 교수, 소방경">
+          <input type="text" id="position" placeholder="예: 교수, 소방경">
         </div>
       </div>
       <div class="field">
         <label class="required">강사 구분</label>
         <div class="radio-group">
-          <div class="radio-item">
-            <input type="radio" name="type" id="type-solo" value="단독" checked>
-            <label for="type-solo">단독(개인) 강사</label>
-          </div>
-          <div class="radio-item">
-            <input type="radio" name="type" id="type-org" value="기관소속">
-            <label for="type-org">기관 소속 파견 강사</label>
-          </div>
+          <div class="radio-item"><input type="radio" name="type" id="type-solo" value="단독" checked><label for="type-solo">단독(개인) 강사</label></div>
+          <div class="radio-item"><input type="radio" name="type" id="type-org" value="기관소속"><label for="type-org">기관 소속 파견 강사</label></div>
         </div>
       </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">분야</div>
       <div class="row">
         <div class="field">
           <label class="required" for="specialty">분야</label>
           <select id="specialty" required>
             <option value="" disabled selected>선택하세요</option>
-            <option value="직무교육">직무교육</option>
-            <option value="직무역량교육">직무역량교육</option>
-            <option value="소양교육">소양교육</option>
+            <option value="직무교육">직무교육 (소방업무 전문역량)</option>
+            <option value="직무역량교육">직무역량교육 (공통역량)</option>
+            <option value="소양교육">소양교육 (기본 가치·태도)</option>
           </select>
-          <div class="hint">
-            직무교육 : 소방업무 수행에 필요한 전문역량<br>
-            직무역량교육 : 직무를 더 잘 수행하기 위한 공통역량<br>
-            소양교육 : 소방공무원으로서 갖춰야 할 기본 가치와 태도
-          </div>
         </div>
         <div class="field">
-          <label for="subject">강의 가능 교과목</label>
-          <input type="text" id="subject" placeholder="예 : 화재조사실무">
+          <label for="subject">강의 가능 교과목<span class="ai-tag">AI</span></label>
+          <input type="text" id="subject" placeholder="예: 화재조사 실무">
         </div>
       </div>
       <div class="row">
         <div class="field">
           <label for="region">활동지역</label>
-          <input type="text" id="region" placeholder="예 : 동부권">
-        </div>
-      </div>
-      <div class="row">
-        <div class="field">
-          <label for="degree">학위</label>
-          <input type="text" id="degree" placeholder="예 : 최종 학력(소방행정학 석사 등)">
+          <input type="text" id="region" placeholder="예: 광주, 전남 동부">
         </div>
         <div class="field">
-          <label for="cert">자격증</label>
-          <input type="text" id="cert" placeholder="예 : 대표 자격증(화재조사관 등)">
+          <label for="photo">증명사진 <span style="font-weight:500;color:#667085;">(선택)</span></label>
+          <input type="file" id="photo" accept="image/*">
         </div>
       </div>
       <div class="field">
         <label>강의가 어려운 요일·시간 <span style="font-weight:500;color:#667085;">(선택 · 배정할 때 자동으로 제외됩니다)</span></label>
         <div id="cxUnav">
-          <span></span><b style="text-align:center;">월</b><b style="text-align:center;">화</b><b style="text-align:center;">수</b><b style="text-align:center;">목</b><b style="text-align:center;">금</b>
-          <span>오전</span><input type="checkbox" data-d="월" data-h="오전"><input type="checkbox" data-d="화" data-h="오전"><input type="checkbox" data-d="수" data-h="오전"><input type="checkbox" data-d="목" data-h="오전"><input type="checkbox" data-d="금" data-h="오전">
-          <span>오후</span><input type="checkbox" data-d="월" data-h="오후"><input type="checkbox" data-d="화" data-h="오후"><input type="checkbox" data-d="수" data-h="오후"><input type="checkbox" data-d="목" data-h="오후"><input type="checkbox" data-d="금" data-h="오후">
+          <span></span><b>월</b><b>화</b><b>수</b><b>목</b><b>금</b>
+          <span>오전</span><input type="checkbox" data-d="월" data-h="오전" aria-label="월 오전"><input type="checkbox" data-d="화" data-h="오전" aria-label="화 오전"><input type="checkbox" data-d="수" data-h="오전" aria-label="수 오전"><input type="checkbox" data-d="목" data-h="오전" aria-label="목 오전"><input type="checkbox" data-d="금" data-h="오전" aria-label="금 오전">
+          <span>오후</span><input type="checkbox" data-d="월" data-h="오후" aria-label="월 오후"><input type="checkbox" data-d="화" data-h="오후" aria-label="화 오후"><input type="checkbox" data-d="수" data-h="오후" aria-label="수 오후"><input type="checkbox" data-d="목" data-h="오후" aria-label="목 오후"><input type="checkbox" data-d="금" data-h="오후" aria-label="금 오후">
         </div>
         <div class="cx-unrange">
           <span class="cx-unlbl">강의가 어려운 기간</span><input type="date" id="cxUnFrom" aria-label="강의가 어려운 기간 시작일"><span>~</span><input type="date" id="cxUnTo" aria-label="강의가 어려운 기간 끝 날짜">
         </div>
         <div class="hint" id="cxUnHint"></div>
       </div>
-      <div class="field">
-        <label for="bio">약력 / 경력사항</label>
-        <textarea id="bio" placeholder="주요 경력을 간략히 작성해 주세요."></textarea>
-      </div>
     </div>
 
     <div class="card">
-      <div class="card-title">개인정보 수집·이용 동의</div>
+      <div class="card-title"><span>② 강사카드</span></div>
+      <div class="cardbox" id="cardBox"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span>③ 동의서·개인정보 동의</span></div>
+      <div class="field">
+        <label for="consentFile">개인정보 수집·이용 동의서 (서명본, PDF) <span style="font-weight:500;color:#667085;">(심사용 사본: 선택)</span></label>
+        <input type="file" id="consentFile" accept=".pdf,application/pdf">
+        <a class="form-download" id="consentFormLink" href="forms/consent.hwpx" download="개인정보수집활용동의서_양식.hwpx">양식 내려받기</a>
+        <div class="hint">양식을 작성·서명한 뒤 PDF로 저장해 올려 주세요(10MB 이하).</div>
+      </div>
       <div class="consent-box">
-        ○○소방학교는 외부강사 등록 심사와 강사 관리를 위해 아래와 같이 개인정보를 수집·이용합니다.
+        외부강사 등록 심사와 강사 관리를 위해 개인정보를 수집·이용합니다.
         <ul>
-          <li><b>수집 항목</b>: 성명, 생년월일, 연락처, 이메일, 소속·직위, 증명사진, 강사카드, 개인정보 동의서(서명본), 학위·자격증·약력</li>
+          <li><b>수집 항목</b>: 성명, 생년월일, 연락처, 이메일, 소속·직위, 증명사진, 강사카드(학력·자격·경력·강의경력), 개인정보 동의서(서명본)</li>
           <li><b>이용 목적</b>: 외부강사 등록 심사, 강사 명단 관리, 강의 배정 및 안내 연락</li>
-          <li><b>보유·이용 기간</b>: 등록일부터 3년 (기간이 지나면 담당자가 확인하며, 계속 활동하시는 분께는 별도로 재동의를 받습니다. 삭제를 요청하시면 지체 없이 파기합니다)</li>
-          <li>동의를 거부하실 수 있으며, 거부하시면 등록 신청이 제한됩니다.</li>
+          <li><b>보유 기간</b>: 등록일부터 3년(계속 활동 시 재동의, 삭제 요청 시 지체 없이 파기)</li>
+          <li>주민등록번호·계좌번호·주소는 이 화면에서 받지 않습니다.</li>
         </ul>
       </div>
       <label class="consent-check" for="consent"><input type="checkbox" id="consent"> 위 내용을 확인하였으며 개인정보 수집·이용에 동의합니다. (필수)</label>
@@ -341,37 +379,320 @@
 
     <div class="hp-field" aria-hidden="true"><label for="website">웹사이트 (비워 두세요)</label><input type="text" id="website" tabindex="-1" autocomplete="off"></div>
 
-    <div class="hint hint-danger" style="margin-bottom:20px;">
-      ※ 심사 결과 승인되지 않은 경우, 제출하신 서류(사진, 첨부파일 등)는 별도로 반환되지 않습니다.<br>
-      ※ 사진·첨부파일 용량이 크면 업로드가 지연될 수 있습니다. "제출 중..." 표시 중에는 창을 닫지 말고 기다려 주세요.
-    </div>
-
-    <button type="submit" id="submitBtn">등록 신청하기</button>
+    <button type="submit" id="submitBtn">확인하고 신청하기</button>
     <div id="msg"></div>
-
   </form>
 
   <footer class="contact">
     등록이 안 되거나 문의사항이 있으시면<br>
     <b>교육운영팀 000-000-0000</b>로 연락 주시기 바랍니다.
   </footer>
+</div>
 
+<!-- 강사카드 작성 창 -->
+<div class="mdl-back" id="cardMdl" role="dialog" aria-modal="true" aria-labelledby="cardMdlT">
+  <div class="mdl">
+    <div class="mdl-h"><b id="cardMdlT">강사카드 작성</b><button type="button" class="btn-sub" data-close="cardMdl">닫기</button></div>
+    <div class="mdl-b">
+      <div class="up">
+        <div class="up-t"><span class="ai-tag">AI</span>가지고 있는 강사카드·이력서로 자동 채우기</div>
+        <div class="up-d">파일을 올리면 AI가 아래 칸을 채웁니다. 채워진 칸(파란색)을 확인하고, <b>주황색 칸만</b> 입력해 주세요.<br>
+          PDF·hwpx·docx · 주민등록번호·계좌번호·연락처는 화면에서 가린 뒤 보내며, 파일은 저장하지 않습니다.</div>
+        <div class="up-row">
+          <label class="filebtn">파일 올리기<input type="file" id="upFile" accept=".pdf,.hwpx,.docx,.txt,application/pdf"></label>
+          <a href="samples/profile_sample.hwpx" download="강사관리카드_예시(모의).hwpx">예시 강사카드 내려받기 (실제 서식 · 모의 내용, hwpx)</a>
+          <a href="samples/profile_sample.pdf" download="강사이력서_예시(모의).pdf">PDF 예시</a>
+        </div>
+        <div class="up-steps" id="upSteps" style="display:none;"></div>
+        <div class="up-res" id="upRes"></div>
+      </div>
+
+      <div class="sec" data-sec="edu">
+        <button type="button" class="sec-h"><span class="n">1</span><span class="t">학력·자격</span><span class="pill opt" data-pill>선택</span><span class="ch" aria-hidden="true">▾</span></button>
+        <div class="sec-b">
+          <div class="field"><label for="cEdu">최종 학력·전공<span class="ai-tag">AI</span></label><input type="text" id="cEdu" placeholder="예: 석사 소방방재학"></div>
+          <div class="field"><label for="cCert">자격증 (쉼표로 구분)<span class="ai-tag">AI</span></label><input type="text" id="cCert" placeholder="예: 화재조사관, 소방시설관리사"></div>
+        </div>
+      </div>
+      <div class="sec" data-sec="car">
+        <button type="button" class="sec-h"><span class="n">2</span><span class="t">주요 경력</span><span class="pill need" data-pill>필수 1건</span><span class="ch" aria-hidden="true">▾</span></button>
+        <div class="sec-b">
+          <div class="rows car" id="carRows"></div>
+          <button type="button" class="add" data-add="car">+ 경력 추가</button>
+        </div>
+      </div>
+      <div class="sec" data-sec="lec">
+        <button type="button" class="sec-h"><span class="n">3</span><span class="t">강의 경력</span><span class="pill opt" data-pill>선택</span><span class="ch" aria-hidden="true">▾</span></button>
+        <div class="sec-b">
+          <div class="rows lec" id="lecRows"></div>
+          <button type="button" class="add" data-add="lec">+ 강의 경력 추가</button>
+        </div>
+      </div>
+      <div class="sec" data-sec="kw">
+        <button type="button" class="sec-h"><span class="n">4</span><span class="t">전문 분야·강의 소개</span><span class="pill need" data-pill>키워드 필수</span><span class="ch" aria-hidden="true">▾</span></button>
+        <div class="sec-b">
+          <div class="field"><label for="cKw">강의할 수 있는 주제 키워드 (쉼표로 구분, 1개 이상)<span class="ai-tag">AI</span></label><input type="text" id="cKw" placeholder="예: 화재원인 조사, 감식, 증거물 수집"></div>
+          <div class="field"><label>강의 방식</label><div class="opts" id="cMeth"></div></div>
+          <div class="field"><label for="cIntro">강의 소개 (300자 이내)<span class="ai-tag">AI</span></label><textarea id="cIntro" maxlength="300" placeholder="경력과 강의 분야를 2~3문장으로 적어 주세요."></textarea></div>
+        </div>
+      </div>
+      <div class="sec" data-sec="agree">
+        <button type="button" class="sec-h"><span class="n">5</span><span class="t">강의 지원·동의</span><span class="pill need" data-pill>동의 필수</span><span class="ch" aria-hidden="true">▾</span></button>
+        <div class="sec-b">
+          <div class="field"><label>필요한 기자재</label><div class="opts" id="cEquip"></div></div>
+          <label class="agree" id="agMat"><input type="checkbox" id="cAgMat"> <span><b>교육자료 사용 동의</b> — 강의 자료를 교육생에게 인쇄물 등으로 제공하는 것에 동의합니다.</span></label>
+          <label class="agree" id="agPool"><input type="checkbox" id="cAgPool"> <span><b>인력풀 관리 동의</b> — 다음 연도 외부강사 인력풀로 관리되는 것에 동의합니다.</span></label>
+        </div>
+      </div>
+    </div>
+    <div class="mdl-f"><span class="need-txt" id="needTxt"></span><button type="button" class="btn-main" id="cardDone">작성 완료</button></div>
+  </div>
+</div>
+
+<!-- 최종 확인 창 -->
+<div class="mdl-back" id="sumMdl" role="dialog" aria-modal="true" aria-labelledby="sumMdlT">
+  <div class="mdl">
+    <div class="mdl-h"><b id="sumMdlT">신청 내용 확인</b><button type="button" class="btn-sub" data-close="sumMdl">닫기</button></div>
+    <div class="mdl-b" id="sumBody"></div>
+    <div class="mdl-f"><span class="need-txt ok">내용이 맞으면 신청해 주세요. 신청 후에는 담당자 승인을 기다립니다.</span><button type="button" class="btn-sub" data-close="sumMdl">고치기</button><button type="button" class="btn-main" id="sumGo">이대로 신청하기</button></div>
+  </div>
 </div>
 
 <script>
   var WEBAPP_URL = (window.CONTEST_CONFIG && window.CONTEST_CONFIG.WEBAPP_URL) || '';
+  var $ = function(id){ return document.getElementById(id); };
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  var METHODS = ['이론', '실습', '토의', '시뮬레이션', '사례 토의', '역할극'];
+  var EQUIP = ['빔프로젝터', '노트북', '마이크', '화이트보드', '실습 장비'];
+  $('cMeth').innerHTML = METHODS.map(function(m){ return '<label><input type="checkbox" value="' + m + '">' + m + '</label>'; }).join('');
+  $('cEquip').innerHTML = EQUIP.map(function(m){ return '<label><input type="checkbox" value="' + m + '">' + m + '</label>'; }).join('');
 
-  // 서식 다운로드 주소: 한글 양식을 드라이브에 올린 뒤 주소를 넣으면 버튼이 나타납니다.
-  var CARD_FORM_URL = 'forms/instructor-card.hwpx';
-  var CONSENT_FORM_URL = 'forms/consent.hwpx';
-  [['cardFormLink', CARD_FORM_URL], ['consentFormLink', CONSENT_FORM_URL]].forEach(function(p){
-    var el = document.getElementById(p[0]);
-    el.style.display = 'inline-flex';
-    if (p[1]) { el.href = p[1]; el.setAttribute('download', p[0] === 'cardFormLink' ? '강사관리카드_양식.hwpx' : '개인정보수집활용동의서_양식.hwpx'); el.removeAttribute('target'); }
-    else { el.classList.add('disabled'); el.removeAttribute('href'); el.removeAttribute('target'); el.textContent = el.textContent.replace('다운로드', '다운로드 (양식 준비 중)'); }
+  /* ---------- 단계 흐름: ① 기본 정보 → ② 강사카드 → ③ 확인·신청 ---------- */
+  var cardState = { written: false, how: '직접 입력', aiCount: 0 };
+  function basicOk(){ return ['name', 'birth', 'phone', 'email', 'org'].every(function(id){ return $(id).value.trim(); }) && $('specialty').value; }
+  function renderFlow(){
+    var b = basicOk(), c = cardState.written, s = [
+      { t: '① 기본 정보', d: b ? '완료' : '입력 중', c: b ? 'done' : 'now' },
+      { t: '② 강사카드', d: c ? '완료' + (cardState.aiCount ? ' · AI ' + cardState.aiCount + '칸' : '') : (b ? '작성할 차례' : '남음'), c: c ? 'done' : (b ? 'now' : 'todo') },
+      { t: '③ 확인·신청', d: b && c ? '신청할 차례' : '남음', c: b && c ? 'now' : 'todo' }
+    ];
+    $('regFlow').setAttribute('aria-label', '등록 단계: ' + s.map(function(x){ return x.t + ' ' + x.d; }).join(', '));
+    $('regFlow').innerHTML = s.map(function(x, i){ return (i ? '<span class="ar" aria-hidden="true">›</span>' : '') + '<div class="st df-' + x.c + '"><b>' + x.t + '</b><span>' + esc(x.d) + '</span></div>'; }).join('');
+  }
+  document.addEventListener('input', function(ev){ if (ev.target.closest && ev.target.closest('#regForm')) renderFlow(); });
+  document.addEventListener('change', function(ev){ if (ev.target.closest && ev.target.closest('#regForm')) renderFlow(); });
+
+  /* ---------- 강사카드 상태 상자 ---------- */
+  function cardData(){
+    var list = function(v){ return String(v || '').split(/[,\n]/).map(function(x){ return x.trim(); }).filter(String); };
+    var rows = function(box, keys){
+      return Array.prototype.map.call(document.querySelectorAll('#' + box + ' .r'), function(r){
+        var o = {}; r.querySelectorAll('input').forEach(function(inp, i){ o[keys[i]] = inp.value.trim(); }); return o;
+      }).filter(function(o){ return keys.some(function(k){ return o[k]; }); });
+    };
+    var checked = function(box){ return Array.prototype.map.call(document.querySelectorAll('#' + box + ' input:checked'), function(i){ return i.value; }); };
+    return {
+      학력: $('cEdu').value.trim(), 자격증: list($('cCert').value),
+      주요경력: rows('carRows', ['기간', '기관', '업무']), 강의경력: rows('lecRows', ['연도', '기관', '교과목', '시간']),
+      전문키워드: list($('cKw').value), 강의방식: checked('cMeth'), 강의소개: $('cIntro').value.trim(), 필요기자재: checked('cEquip'),
+      교육자료동의: $('cAgMat').checked, 인력풀동의: $('cAgPool').checked, 작성방식: cardState.how
+    };
+  }
+  function renderCardBox(){
+    var box = $('cardBox');
+    if (!cardState.written) {
+      box.className = 'cardbox';
+      box.innerHTML = '<div class="txt"><b>아직 작성하지 않았습니다.</b><br>학력·자격·경력·강의경력을 적습니다. 가지고 있는 강사카드나 이력서 파일을 올리면 AI가 칸을 채워 줍니다.</div>' +
+        '<button type="button" class="btn-main" id="cardOpen">강사카드 작성하기</button>';
+    } else {
+      var c = cardData();
+      var ch = [];
+      ch.push('<span class="chip">' + (c.학력 ? '학력 ✓' : '학력 없음') + '</span>');
+      ch.push('<span class="chip">주요 경력 ' + c.주요경력.length + '건</span>');
+      ch.push('<span class="chip">강의 경력 ' + c.강의경력.length + '건</span>');
+      ch.push('<span class="chip">키워드 ' + c.전문키워드.length + '개</span>');
+      if (cardState.aiCount) ch.push('<span class="chip ai">AI가 채운 칸 ' + cardState.aiCount + '개 (확인함)</span>');
+      box.className = 'cardbox done';
+      box.innerHTML = '<div class="txt"><b>작성했습니다.</b><div class="chips">' + ch.join('') + '</div></div><button type="button" class="btn-sub" id="cardOpen">고치기</button>';
+    }
+    $('cardOpen').onclick = function(){ openMdl('cardMdl'); };
+  }
+
+  /* ---------- 창 열고 닫기 ---------- */
+  function openMdl(id){ $(id).classList.add('on'); document.body.style.overflow = 'hidden'; if (id === 'cardMdl') { ensureRows(); checkCard(true); } }
+  function closeMdl(id){ $(id).classList.remove('on'); document.body.style.overflow = ''; }
+  document.addEventListener('click', function(ev){
+    var t = ev.target.closest ? ev.target.closest('[data-close]') : null;
+    if (t) closeMdl(t.getAttribute('data-close'));
+  });
+  document.addEventListener('keydown', function(ev){ if (ev.key === 'Escape') { closeMdl('cardMdl'); closeMdl('sumMdl'); } });
+
+  /* ---------- 경력 줄 ---------- */
+  function addRow(kind, v, ai){
+    v = v || {};
+    var keys = kind === 'car' ? [['기간', '2015.03~2020.02'], ['기관', '근무 기관'], ['업무', '담당 업무']] : [['연도', '2024'], ['기관', '강의한 기관'], ['교과목', '교과목'], ['시간', '4시간']];
+    var r = document.createElement('div'); r.className = 'r' + (ai ? ' is-ai' : '');
+    r.innerHTML = keys.map(function(k){ return '<input type="text" aria-label="' + k[0] + '" placeholder="' + k[1] + '" value="' + esc(v[k[0]] || '') + '">'; }).join('') + '<button type="button" class="x" aria-label="이 줄 지우기">×</button>';
+    $(kind === 'car' ? 'carRows' : 'lecRows').appendChild(r);
+  }
+  function ensureRows(){ if (!document.querySelector('#carRows .r')) addRow('car'); if (!document.querySelector('#lecRows .r')) addRow('lec'); }
+  document.addEventListener('click', function(ev){
+    var a = ev.target.closest ? ev.target.closest('[data-add]') : null;
+    if (a) { addRow(a.getAttribute('data-add')); checkCard(); return; }
+    var x = ev.target.closest ? ev.target.closest('.rows .x') : null;
+    if (x) { x.parentNode.remove(); checkCard(); return; }
+    var h = ev.target.closest ? ev.target.closest('.sec-h') : null;
+    if (h) h.parentNode.classList.toggle('open');
+  });
+  // 고친 칸은 AI 표시를 지움(강사가 확인한 값)
+  $('cardMdl').addEventListener('input', function(ev){
+    var t = ev.target;
+    if (t.classList.contains('is-ai')) { t.classList.remove('is-ai'); }
+    var r = t.closest('.r'); if (r) r.classList.remove('is-ai');
+    checkCard();
+  });
+  $('cardMdl').addEventListener('change', function(){ checkCard(); });
+
+  /* ---------- 필수 확인(빈 칸만 주황색, 끝나면 [작성 완료] 활성) ---------- */
+  function checkCard(openNeed){
+    var c = cardData(), need = [];
+    var carOk = c.주요경력.some(function(x){ return x.기관; });
+    var kwOk = c.전문키워드.length > 0;
+    var agOk = c.교육자료동의 && c.인력풀동의;
+    if (!carOk) need.push('주요 경력 1건(기관)');
+    if (!kwOk) need.push('키워드 1개');
+    if (!agOk) need.push('동의 ' + ((c.교육자료동의 ? 0 : 1) + (c.인력풀동의 ? 0 : 1)) + '개');
+    var firstCar = document.querySelector('#carRows .r input:nth-child(2)');
+    if (firstCar) firstCar.classList.toggle('is-need', !carOk);
+    $('cKw').classList.toggle('is-need', !kwOk);
+    $('agMat').classList.toggle('is-need', !c.교육자료동의); $('agPool').classList.toggle('is-need', !c.인력풀동의);
+    var pills = {
+      edu: c.학력 || c.자격증.length ? ['ok', '입력함'] : ['opt', '선택'],
+      car: carOk ? ['ok', c.주요경력.length + '건'] : ['need', '필수 1건'],
+      lec: c.강의경력.length ? ['ok', c.강의경력.length + '건'] : ['opt', '선택'],
+      kw: kwOk ? ['ok', '키워드 ' + c.전문키워드.length + '개'] : ['need', '키워드 필수'],
+      agree: agOk ? ['ok', '동의함'] : ['need', '동의 필수']
+    };
+    Object.keys(pills).forEach(function(k){
+      var sec = document.querySelector('.sec[data-sec="' + k + '"]'), p = sec.querySelector('[data-pill]');
+      var aiN = sec.querySelectorAll('.is-ai').length;
+      p.className = 'pill ' + pills[k][0]; p.textContent = pills[k][1] + (aiN ? ' · AI ' + aiN : '');
+      if (openNeed && pills[k][0] === 'need') sec.classList.add('open');
+    });
+    document.querySelectorAll('label[for]').forEach(function(l){ var f = l.getAttribute('for'); if (f && $(f)) l.classList.toggle('has-ai', $(f).classList.contains('is-ai')); });
+    $('needTxt').className = 'need-txt' + (need.length ? '' : ' ok');
+    $('needTxt').textContent = need.length ? '남은 필수: ' + need.join(', ') : '필수 항목을 모두 채웠습니다.';
+    $('cardDone').disabled = need.length > 0;
+    return need.length === 0;
+  }
+  $('cardDone').addEventListener('click', function(){
+    if (!checkCard()) return;
+    cardState.written = true;
+    cardState.aiCount = document.querySelectorAll('#cardMdl .is-ai').length + (cardState.aiFilled || 0);
+    closeMdl('cardMdl'); renderCardBox(); renderFlow();
   });
 
-  /* ===== [대회용 추가] 등록: 모의 정보 채우기 · 강의 불가 일정 ===== */
+  /* ---------- 파일 → 글자 읽기(화면 안) → 개인정보 가림 → AI ---------- */
+  var LIB = { pdf: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js', pdfw: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js', zip: 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js' };
+  function loadScript(src){ return new Promise(function(ok, no){ var s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = function(){ no(new Error('도구를 불러오지 못했습니다')); }; document.head.appendChild(s); }); }
+  function xmlText(xml, pTag, tTag){
+    return xml.split(new RegExp('</' + pTag + '>')).map(function(p){
+      var out = [], re = new RegExp('<' + tTag + '(?:\\s[^>]*)?>([\\s\\S]*?)</' + tTag + '>', 'g'), m;
+      while ((m = re.exec(p))) out.push(m[1].replace(/<[^>]+>/g, ''));
+      return out.join('');
+    }).filter(function(x){ return x.trim(); }).join('\n').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+  }
+  function readFileText(file){
+    var name = file.name.toLowerCase();
+    if (/\.txt$/.test(name)) return file.text();
+    if (/\.pdf$/.test(name) || file.type === 'application/pdf') {
+      return (window.pdfjsLib ? Promise.resolve() : loadScript(LIB.pdf)).then(function(){
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = LIB.pdfw;
+        return file.arrayBuffer();
+      }).then(function(buf){ return window.pdfjsLib.getDocument({ data: buf }).promise; }).then(function(doc){
+        var ps = []; for (var i = 1; i <= Math.min(doc.numPages, 6); i++) ps.push(doc.getPage(i).then(function(pg){ return pg.getTextContent(); }).then(function(tc){
+          var lines = [], last = null;
+          tc.items.forEach(function(it){ var y = Math.round(it.transform[5]); if (last !== null && Math.abs(y - last) > 3) lines.push('\n'); else if (last !== null) lines.push(' '); lines.push(it.str); last = y; });
+          return lines.join('');
+        }));
+        return Promise.all(ps).then(function(a){ return a.join('\n'); });
+      });
+    }
+    if (/\.(hwpx|docx)$/.test(name)) {
+      return (window.JSZip ? Promise.resolve() : loadScript(LIB.zip)).then(function(){ return window.JSZip.loadAsync(file); }).then(function(zip){
+        var isHwp = /\.hwpx$/.test(name);
+        var names = Object.keys(zip.files).filter(function(n){ return isHwp ? /^Contents\/section\d+\.xml$/.test(n) : n === 'word/document.xml'; }).sort();
+        return Promise.all(names.map(function(n){ return zip.file(n).async('string'); })).then(function(xs){
+          return xs.map(function(x){ return isHwp ? xmlText(x, 'hp:p', 'hp:t') : xmlText(x, 'w:p', 'w:t'); }).join('\n');
+        });
+      });
+    }
+    return Promise.reject(new Error('PDF·hwpx·docx 파일만 읽을 수 있습니다. 다른 형식은 PDF로 저장해 올려 주세요.'));
+  }
+  function maskText(t){
+    var n = 0, f = function(){ n++; return '[가림]'; };
+    t = String(t || '')
+      .replace(/\b\d{6}\s*-\s*[1-4]\d{6}\b/g, f)
+      .replace(/\b01[016789][-\s.]?\d{3,4}[-\s.]?\d{4}\b/g, f)
+      .replace(/\b0\d{1,2}[-\s.]\d{3,4}[-\s.]\d{4}\b/g, f)
+      .replace(/\b\d{3,6}-\d{2,6}-\d{3,8}(-\d{1,3})?\b/g, f)
+      .replace(/[\w.+-]+@[\w-]+(\.[\w-]+)+/g, f);
+    return { text: t, n: n };
+  }
+  function upSteps(k, extra){
+    var s = ['① 파일 글자 읽기', '② 개인정보 가리기', '③ AI가 칸 나누기'];
+    $('upSteps').style.display = 'flex';
+    $('upSteps').innerHTML = s.map(function(x, i){ return '<div class="s df-' + (i < k ? 'done' : i === k ? 'now' : 'todo') + '">' + x + (i === k && extra ? ' ' + esc(extra) : '') + '</div>'; }).join('');
+  }
+  function setAi(id, v){
+    if (!v) return 0;
+    var el = $(id); if (el.value.trim()) return 0;   // 강사가 이미 쓴 칸은 덮어쓰지 않음
+    el.value = v; el.classList.add('is-ai'); return 1;
+  }
+  function fillFromAi(c){
+    var n = 0;
+    n += setAi('cEdu', c.학력);
+    n += setAi('cCert', (c.자격증 || []).join(', '));
+    n += setAi('cKw', (c.전문키워드 || []).join(', '));
+    n += setAi('cIntro', c.강의소개);
+    n += setAi('subject', c.교과목명);
+    var emptyRows = function(box){ Array.prototype.forEach.call(document.querySelectorAll('#' + box + ' .r'), function(r){ if (!Array.prototype.some.call(r.querySelectorAll('input'), function(i){ return i.value.trim(); })) r.remove(); }); };
+    if ((c.주요경력 || []).length) { emptyRows('carRows'); c.주요경력.forEach(function(x){ addRow('car', x, true); n++; }); }
+    if ((c.강의경력 || []).length) { emptyRows('lecRows'); c.강의경력.forEach(function(x){ addRow('lec', x, true); n++; }); }
+    (c.강의방식 || []).forEach(function(m){ var i = document.querySelector('#cMeth input[value="' + m + '"]'); if (i && !i.checked) { i.checked = true; } });
+    ensureRows();
+    return n;
+  }
+  $('upFile').addEventListener('change', function(){
+    var f = this.files[0]; this.value = '';
+    if (!f) return;
+    $('upRes').className = 'up-res'; $('upRes').textContent = '';
+    if (f.size > 10 * 1024 * 1024) { $('upRes').className = 'up-res err'; $('upRes').textContent = '파일이 10MB보다 큽니다.'; return; }
+    var t0 = Date.now(), masked = 0;
+    upSteps(0, f.name);
+    readFileText(f).then(function(text){
+      if (String(text || '').replace(/\s/g, '').length < 20) throw new Error('파일에서 글자를 찾지 못했습니다(스캔 이미지일 수 있습니다). 글자가 있는 PDF로 올리거나 직접 입력해 주세요.');
+      upSteps(1);
+      var m = maskText(text); masked = m.n;
+      upSteps(2, '(모델 응답 대기)');
+      return fetch(WEBAPP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'aiCardFill', 글: m.text }) }).then(function(r){ return r.json(); });
+    }).then(function(j){
+      if (!j || j.status !== 'ok') throw new Error((j && j.message) || '서버 오류');
+      if (!j.ai) { upSteps(3); $('upRes').className = 'up-res err'; $('upRes').textContent = j.이유 || '자동으로 채우지 못했습니다. 직접 입력해 주세요.'; return; }
+      upSteps(3);
+      var n = fillFromAi(j.card);
+      cardState.how = 'AI 자동 채우기';
+      document.querySelectorAll('#cardMdl .sec').forEach(function(s){ s.classList.add('open'); });
+      $('upRes').innerHTML = 'AI가 <b>' + n + '칸</b>을 채웠습니다 (' + esc(j.모델 || '') + ', ' + ((j.소요ms || (Date.now() - t0)) / 1000).toFixed(1) + '초' + (masked ? ' · 개인정보 ' + masked + '곳 가림' : '') + '). 파란 칸을 확인하고 주황 칸만 입력해 주세요.';
+      checkCard(true);
+      renderFlow();
+    }).catch(function(e){
+      $('upSteps').style.display = 'none';
+      $('upRes').className = 'up-res err'; $('upRes').textContent = (e && e.message) || '파일을 읽지 못했습니다. 직접 입력해 주세요.';
+    });
+  });
+
+  /* ---------- 강의 불가 일정 ---------- */
   function cxUnavailValue(){
     var out = [];
     ['월', '화', '수', '목', '금'].forEach(function(d){
@@ -379,228 +700,131 @@
       var pm = document.querySelector('#cxUnav input[data-d="' + d + '"][data-h="오후"]').checked;
       if (am && pm) out.push(d + '(종일)'); else if (am) out.push(d + '(오전)'); else if (pm) out.push(d + '(오후)');
     });
-    var f = document.getElementById('cxUnFrom').value, t = document.getElementById('cxUnTo').value;
+    var f = $('cxUnFrom').value, t = $('cxUnTo').value;
     if (f && t && t >= f) out.push(f === t ? f : f + '~' + t);
     return out.join('; ');
   }
   function cxUnHint(){
-    var f = document.getElementById('cxUnFrom'), t = document.getElementById('cxUnTo'), h = document.getElementById('cxUnHint');
-    if (f.value) t.min = f.value;                       // 끝 날짜가 시작보다 앞서지 않게 미리 막음
+    var f = $('cxUnFrom'), t = $('cxUnTo'), h = $('cxUnHint');
+    if (f.value) t.min = f.value;
     if (f.value && t.value && t.value < f.value) t.value = f.value;
     var v = cxUnavailValue();
     h.textContent = v ? '저장될 내용: ' + v : '';
   }
-  document.getElementById('cxUnav').addEventListener('change', cxUnHint);
-  document.getElementById('cxUnFrom').addEventListener('change', cxUnHint);
-  document.getElementById('cxUnTo').addEventListener('change', cxUnHint);
-  document.getElementById('cxFill').addEventListener('click', function(){
+  ['cxUnav', 'cxUnFrom', 'cxUnTo'].forEach(function(id){ $(id).addEventListener('change', cxUnHint); });
+
+  /* ---------- 모의 정보로 채우기(기본 정보만, 강사카드는 파일로 체험) ---------- */
+  $('cxFill').addEventListener('click', function(){
     var n = String(Math.floor(1000 + Math.random() * 9000));
-    var set = function(id, v){ var el = document.getElementById(id); if (el) { el.value = v; el.dispatchEvent(new Event('input')); } };
-    set('name', '체험강사' + n.slice(-2));
+    var sur = '김이박최정강조윤장임'.charAt(Math.floor(Math.random() * 10)), giv = ['서연', '도윤', '하준', '지안', '시우', '예린', '준호', '유나'][Math.floor(Math.random() * 8)];
+    var set = function(id, v){ var el = $(id); if (el) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); } };
+    set('name', sur + giv);
     set('birth', '19800101');
     set('phone', '010-0000-' + n);
-    set('email', 'judge' + n + '@example.com');
-    set('org', '모의 안전교육기관');
+    set('email', 'mock' + n + '@example.com');
+    set('org', '○○안전교육원');
     set('position', '전문강사');
-    set('subject', '화재조사 실무');
     set('region', '광주');
-    set('degree', '소방방재학 석사(모의)');
-    set('cert', '화재조사관(모의)');
-    set('bio', '모의 데이터입니다. 화재조사 실무 강의 5년.');
-    var sp = document.getElementById('specialty'); if (sp) sp.value = '직무교육';
-    var ty = document.querySelector('input[name=type]'); if (ty) ty.checked = true;
+    $('specialty').value = '직무교육';
     var cb = document.querySelector('#cxUnav input[data-d="금"][data-h="오후"]'); if (cb) cb.checked = true;
-    cxUnHint();
-    var c = document.getElementById('consent'); if (c) c.checked = true;
-    document.getElementById('submitBtn').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    cxUnHint(); renderFlow();
+    $('cardBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
 
-  var MAX_PDF_BYTES = 10 * 1024 * 1024;
-
-  var form = document.getElementById('regForm');
-  var msg = document.getElementById('msg');
-  var btn = document.getElementById('submitBtn');
-
-  function fileToBase64(file){
-    return new Promise(function(resolve, reject){
-      if (!file) { resolve(null); return; }
-      var reader = new FileReader();
-      reader.onload = function(){ resolve(reader.result); };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  }
-
+  /* ---------- 생년월일·연락처 입력 모양 ---------- */
   function calcAge(birthStr){
-    var parts = birthStr.split('-');
-    if (parts.length !== 3) return null;
-    var b = new Date(parts[0], parts[1]-1, parts[2]);
-    if (isNaN(b.getTime())) return null;
-    var today = new Date();
-    var age = today.getFullYear() - b.getFullYear();
-    var m = today.getMonth() - b.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < b.getDate())) age--;
+    var p = birthStr.split('-'); if (p.length !== 3) return null;
+    var b = new Date(p[0], p[1] - 1, p[2]); if (isNaN(b.getTime())) return null;
+    var t = new Date(), age = t.getFullYear() - b.getFullYear(), m = t.getMonth() - b.getMonth();
+    if (m < 0 || (m === 0 && t.getDate() < b.getDate())) age--;
     return age;
   }
-
-  var birthInput = document.getElementById('birth');
-  var ageBadge = document.getElementById('ageBadge');
-  birthInput.addEventListener('input', function(){
-    var digits = birthInput.value.replace(/[^0-9]/g, '').slice(0, 8);
-    var formatted = digits;
-    if (digits.length > 4) formatted = digits.slice(0,4) + '-' + digits.slice(4);
-    if (digits.length > 6) formatted = digits.slice(0,4) + '-' + digits.slice(4,6) + '-' + digits.slice(6);
-    birthInput.value = formatted;
-
-    if (digits.length === 8) {
-      var age = calcAge(formatted);
-      ageBadge.textContent = age !== null ? '(만 ' + age + '세)' : '';
-    } else {
-      ageBadge.textContent = '';
-    }
+  $('birth').addEventListener('input', function(){
+    var d = this.value.replace(/[^0-9]/g, '').slice(0, 8), f = d;
+    if (d.length > 4) f = d.slice(0, 4) + '-' + d.slice(4);
+    if (d.length > 6) f = d.slice(0, 4) + '-' + d.slice(4, 6) + '-' + d.slice(6);
+    this.value = f;
+    var a = d.length === 8 ? calcAge(f) : null;
+    $('ageBadge').textContent = a !== null ? '(만 ' + a + '세)' : '';
+  });
+  $('phone').addEventListener('input', function(){
+    var d = this.value.replace(/[^0-9]/g, '').slice(0, 11), f = d;
+    if (d.length > 3) f = d.slice(0, 3) + '-' + d.slice(3);
+    if (d.length > 7) f = d.slice(0, 3) + '-' + d.slice(3, 7) + '-' + d.slice(7);
+    this.value = f;
   });
 
-  var phoneInput = document.getElementById('phone');
-  phoneInput.addEventListener('input', function(){
-    var digits = phoneInput.value.replace(/[^0-9]/g, '').slice(0, 11);
-    var formatted = digits;
-    if (digits.length > 3) formatted = digits.slice(0,3) + '-' + digits.slice(3);
-    if (digits.length > 7) formatted = digits.slice(0,3) + '-' + digits.slice(3,7) + '-' + digits.slice(7);
-    phoneInput.value = formatted;
-  });
-
-  form.addEventListener('submit', function(e){
-    if (!form.checkValidity()) { e.preventDefault(); form.reportValidity(); return; }
-    e.preventDefault();
-    msg.style.display = 'none';
-    msg.className = '';
-
-    var typeEl = document.querySelector('input[name=type]:checked');
-    var photoFile = document.getElementById('photo').files[0];
-    var profileFile = document.getElementById('profileFile').files[0];
-    var consentFile = document.getElementById('consentFile').files[0];
-
-    var payload = {
+  /* ---------- 신청: 확인 창 → 제출 ---------- */
+  var MAX_PDF_BYTES = 10 * 1024 * 1024;
+  function showMsg(t, ok){ var m = $('msg'); m.innerHTML = t; m.className = ok ? 'ok' : 'err'; m.style.display = 'block'; m.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+  function buildPayload(){
+    var typeEl = document.querySelector('input[name=type]:checked'), c = cardData();
+    return {
       action: 'register',
-      성명: document.getElementById('name').value.trim(),
-      생년월일: document.getElementById('birth').value,
-      연락처: document.getElementById('phone').value.trim(),
-      이메일: document.getElementById('email').value.trim(),
-      소속: document.getElementById('org').value.trim(),
-      직위: document.getElementById('position').value.trim(),
-      강사구분: typeEl ? typeEl.value : '',
-      전문분야: document.getElementById('specialty').value.trim(),
-      교과목명: document.getElementById('subject').value.trim(),
-      불가일정: cxUnavailValue(),
-      활동지역: document.getElementById('region').value.trim(),
-      자격증학위: [
-        document.getElementById('degree').value.trim() ? '학위: ' + document.getElementById('degree').value.trim() : '',
-        document.getElementById('cert').value.trim() ? '자격증: ' + document.getElementById('cert').value.trim() : ''
-      ].filter(Boolean).join(' / '),
-      약력: document.getElementById('bio').value.trim(),
-      동의: document.getElementById('consent').checked === true,
-      website: document.getElementById('website').value
+      성명: $('name').value.trim(), 생년월일: $('birth').value, 연락처: $('phone').value.trim(), 이메일: $('email').value.trim(),
+      소속: $('org').value.trim(), 직위: $('position').value.trim(), 강사구분: typeEl ? typeEl.value : '',
+      전문분야: $('specialty').value.trim(), 교과목명: $('subject').value.trim(), 불가일정: cxUnavailValue(), 활동지역: $('region').value.trim(),
+      자격증학위: [c.학력, c.자격증.join(', ')].filter(String).join(' / '),
+      약력: c.강의소개 || (c.주요경력[0] ? [c.주요경력[0].기간, c.주요경력[0].기관, c.주요경력[0].업무].filter(String).join(' ') : ''),
+      강사카드: c,
+      동의: $('consent').checked === true, website: $('website').value
     };
-
-    if (!payload.성명 || !payload.생년월일 || !payload.연락처 || !payload.이메일 || !payload.소속 || !payload.전문분야) {
-      msg.textContent = '필수 항목(*)을 모두 입력해 주세요.';
-      msg.className = 'err';
-      msg.style.display = 'block';
-      return;
-    }
-    if (!payload.동의) {
-      msg.textContent = '개인정보 수집·이용에 동의해 주셔야 신청할 수 있습니다.';
-      msg.className = 'err';
-      msg.style.display = 'block';
-      return;
-    }
-    if (false && !photoFile) {   // 대회용: 사진 선택
-      msg.textContent = '증명사진을 첨부해 주세요.';
-      msg.className = 'err';
-      msg.style.display = 'block';
-      return;
-    }
-
-    var pdfBad = null;
-    [[profileFile, '강사카드'], [consentFile, '개인정보 동의서']].forEach(function(p){
-      if (pdfBad) return;
-      if (!p[0]) return;   // 대회용: 첨부 선택(올린 경우만 형식 검사)
-      else if (!/\.pdf$/i.test(p[0].name) && p[0].type !== 'application/pdf') pdfBad = p[1] + '는 PDF 파일만 올릴 수 있습니다. 한글 양식을 PDF로 변환해 주세요.';
-      else if (p[0].size > MAX_PDF_BYTES) pdfBad = p[1] + ' 파일이 너무 큽니다. 10MB 이하로 올려 주세요.';
-    });
-    if (pdfBad) {
-      msg.textContent = pdfBad; msg.className = 'err'; msg.style.display = 'block';
-      return;
-    }
-
-    btn.disabled = true;
-    btn.textContent = '제출 중...';
-
-    fileToBase64(photoFile)
-      .then(function(base64){
-        if (base64) {
-          payload.사진base64 = base64;
-          payload.사진타입 = photoFile.type;
-        }
-        return fileToBase64(profileFile);
-      })
-      .then(function(profileBase64){
-        if (profileBase64) {
-          payload.프로필base64 = profileBase64;
-          payload.프로필타입 = profileFile.type || 'application/pdf';
-        }
-        return fileToBase64(consentFile);
-      })
-      .then(function(consentBase64){
-        if (consentBase64) {
-          payload.동의서base64 = consentBase64;
-          payload.동의서타입 = consentFile.type || 'application/pdf';
-        }
-        return postWithRetry(JSON.stringify(payload), 0);
-      })
-      .then(function(data){
-        if (data.status === 'ok') {
-          msg.innerHTML = '등록 신청이 접수되었습니다.<br><b>승인 여부는 메일로 안내되니, 반드시 메일을 확인해 주시기 바랍니다.</b><br><span style="font-weight:500;">(시연 모드: 접수 확인 메일은 실제로 발송되지 않습니다. 담당자 화면의 "처리할 일 → 강사 등록 승인 대기"에서 이 신청을 확인할 수 있습니다.)</span>';
-          msg.className = 'ok';
-          msg.style.display = 'block';
-          form.reset();
-          ageBadge.textContent = '';
-        } else if (data.message) {
-          msg.textContent = data.message;
-          msg.className = 'err';
-          msg.style.display = 'block';
-        } else {
-          throw new Error('server error');
-        }
-      })
-      .catch(function(){
-        msg.textContent = '제출 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
-        msg.className = 'err';
-        msg.style.display = 'block';
-      })
-      .finally(function(){
-        btn.disabled = false;
-        btn.textContent = '등록 신청하기';
-      });
-  });
-
-  // 접수가 몰려 서버가 'busy'로 답하면 3~6초 뒤 자동으로 다시 보냄(최대 6회). 신청자가 다시 누를 필요 없음
-  function postWithRetry(body, n){
-    return fetch(WEBAPP_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: body
-    }).then(function(res){ return res.json(); }).then(function(data){
-      if (data && data.status === 'busy' && n < 6) {
-        document.getElementById('submitBtn') && (document.getElementById('submitBtn').textContent = '접수 대기 중... 자동으로 다시 시도합니다 (' + (n + 1) + '/6)');
-        return new Promise(function(r){ setTimeout(r, 3000 + Math.random() * 3000); }).then(function(){ return postWithRetry(body, n + 1); });
-      }
-      if (data && data.status === 'busy') return { status: 'error', message: '접수가 많이 몰려 처리하지 못했습니다. 잠시 후 다시 신청해 주세요. 입력한 내용은 화면에 남아 있습니다.' };
-      return data;
-    });
   }
+  $('regForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    $('msg').style.display = 'none';
+    if (!basicOk()) { showMsg('① 기본 정보의 필수 항목(*)을 모두 입력해 주세요.'); ['name', 'birth', 'phone', 'email', 'org', 'specialty'].forEach(function(id){ $(id).classList.toggle('is-need', !$(id).value.trim()); }); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($('email').value.trim())) { showMsg('이메일 형식을 확인해 주세요.'); $('email').classList.add('is-need'); return; }
+    if (!cardState.written) { showMsg('② 강사카드를 작성해 주세요.'); openMdl('cardMdl'); return; }
+    if (!$('consent').checked) { showMsg('개인정보 수집·이용에 동의해 주셔야 신청할 수 있습니다.'); return; }
+    var cf = $('consentFile').files[0];
+    if (cf && ((!/\.pdf$/i.test(cf.name) && cf.type !== 'application/pdf') || cf.size > MAX_PDF_BYTES)) { showMsg('개인정보 동의서는 10MB 이하 PDF 파일만 올릴 수 있습니다.'); return; }
+    var p = buildPayload(), c = p.강사카드;
+    var row = function(k, v){ return '<tr><th>' + k + '</th><td>' + (v || '<span style="color:#98A2B3">없음</span>') + '</td></tr>'; };
+    var lines = function(arr, keys){ return arr.map(function(x){ return esc(keys.map(function(k){ return x[k]; }).filter(String).join(' · ')); }).join('<br>'); };
+    $('sumBody').innerHTML = '<h4>① 기본 정보</h4><table class="sum">' +
+      row('성명', esc(p.성명)) + row('연락처', esc(p.연락처) + ' · ' + esc(p.이메일)) + row('소속', esc([p.소속, p.직위].filter(String).join(' · '))) +
+      row('분야', esc(p.전문분야) + (p.교과목명 ? ' · ' + esc(p.교과목명) : '')) + row('강의 어려운 때', esc(p.불가일정)) + '</table>' +
+      '<h4>② 강사카드' + (cardState.aiCount ? ' <span class="chip ai">AI가 채운 칸 ' + cardState.aiCount + '개 포함</span>' : '') + '</h4><table class="sum">' +
+      row('학력·자격', esc([c.학력, c.자격증.join(', ')].filter(String).join(' / '))) + row('주요 경력', lines(c.주요경력, ['기간', '기관', '업무'])) +
+      row('강의 경력', lines(c.강의경력, ['연도', '기관', '교과목', '시간'])) + row('키워드', esc(c.전문키워드.join(', '))) + row('강의 소개', esc(c.강의소개)) + '</table>' +
+      '<h4>③ 동의서·동의</h4><table class="sum">' + row('동의서', cf ? esc(cf.name) : '') + row('개인정보 동의', '동의함') + '</table>';
+    openMdl('sumMdl');
+  });
+  function fileToBase64(file){ return new Promise(function(ok, no){ if (!file) { ok(null); return; } var r = new FileReader(); r.onload = function(){ ok(r.result); }; r.onerror = no; r.readAsDataURL(file); }); }
+  $('sumGo').addEventListener('click', function(){
+    var btn = this, p = buildPayload(), ph = $('photo').files[0], cf = $('consentFile').files[0];
+    btn.disabled = true; btn.textContent = '신청 중...';
+    fileToBase64(ph).then(function(b){ if (b) { p.사진base64 = b; p.사진타입 = ph.type; } return fileToBase64(cf); })
+      .then(function(b){ if (b) { p.동의서base64 = b; p.동의서타입 = cf.type || 'application/pdf'; } return postWithRetry(JSON.stringify(p), 0); })
+      .then(function(d){
+        closeMdl('sumMdl');
+        if (d.status === 'ok') {
+          showMsg('등록 신청이 접수되었습니다. 담당자 승인 후 메일로 안내드립니다.<br><span style="font-weight:500;">(심사용 사본: 메일은 실제로 보내지 않습니다. 강사관리 화면의 승인 대기에서 이 신청을 확인할 수 있습니다.)</span><br><a href="instructor-dashboard.html" style="display:inline-block;margin-top:10px;font-weight:800;color:var(--navy);">강사관리에서 확인하기 ›</a>', true);
+          $('regForm').reset(); $('ageBadge').textContent = '';
+          ['carRows', 'lecRows'].forEach(function(id){ $(id).innerHTML = ''; });
+          ['cEdu', 'cCert', 'cKw', 'cIntro'].forEach(function(id){ $(id).value = ''; $(id).classList.remove('is-ai'); });
+          document.querySelectorAll('#cardMdl input[type=checkbox]').forEach(function(i){ i.checked = false; });
+          cardState = { written: false, how: '직접 입력', aiCount: 0 }; $('upRes').textContent = ''; $('upSteps').style.display = 'none';
+          renderCardBox(); renderFlow();
+        } else showMsg(esc(d.message || '신청을 처리하지 못했습니다.'));
+      })
+      .catch(function(){ closeMdl('sumMdl'); showMsg('제출 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요. 입력한 내용은 화면에 남아 있습니다.'); })
+      .finally(function(){ btn.disabled = false; btn.textContent = '이대로 신청하기'; });
+  });
+  // 접수가 몰려 서버가 'busy'로 답하면 3~6초 뒤 자동으로 다시 보냄(최대 6회)
+  function postWithRetry(body, n){
+    return fetch(WEBAPP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: body })
+      .then(function(res){ return res.json(); }).then(function(data){
+        if (data && data.status === 'busy' && n < 6) return new Promise(function(r){ setTimeout(r, 3000 + Math.random() * 3000); }).then(function(){ return postWithRetry(body, n + 1); });
+        if (data && data.status === 'busy') return { status: 'error', message: '접수가 많이 몰려 처리하지 못했습니다. 잠시 후 다시 신청해 주세요.' };
+        return data;
+      });
+  }
+
+  renderCardBox(); renderFlow(); ensureRows(); checkCard();
 </script>
 
-  <div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 18px;font-family:'Pretendard',sans-serif;">화면 버전 2026-10-14 강사등록 2</div>
+  <div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 18px;font-family:'Pretendard',sans-serif;">화면 버전 2026-10-17 강사등록 d1</div>
 </body>
 </html>

@@ -338,6 +338,16 @@
   .crumb .sep{margin:0 2px;color:var(--text-faint);font-size:18px;font-weight:700;}
   .crumb .cur{color:#fff;background:var(--navy);font-weight:800;padding:5px 12px;border-radius:8px;}
   @media (max-width:640px){ .crumb{font-size:14px;} .crumb a{padding:4px 7px;} .crumb .cur{padding:4px 9px;} }
+  /* d1 승인 대기 카드·디지털 강사카드 */
+  #pendBox{background:#fff;border:2px solid #E8762B;border-radius:12px;padding:14px 16px;margin:0 0 14px;}
+  .pd-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px;} .pd-h b{font-size:16px;color:#9A3D0A;} .pd-h span{font-size:13px;color:#475467;}
+  .pd-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;border-top:1px solid #F2F4F7;padding:10px 0;}
+  .pd-main{flex:1 1 320px;min-width:0;} .pd-name{font-size:15px;font-weight:800;} .pd-name span{font-size:13px;font-weight:600;color:#667085;}
+  .pd-sub{font-size:13px;color:#475467;margin:2px 0 6px;} .pd-card{display:flex;flex-wrap:wrap;gap:6px;font-size:12.5px;color:#667085;}
+  .pd-chip{font-size:12px;font-weight:700;border-radius:999px;padding:2px 9px;background:#F2F4F7;color:#344054;} .pd-chip.ai{background:#F3F8FE;color:#2F6FB2;}
+  .pd-act{display:flex;gap:8px;} .pd-btn{height:38px;padding:0 14px;border:1px solid #D0D5DD;border-radius:8px;background:#fff;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;}
+  .pd-btn.main{background:#1B3A5F;border-color:#1B3A5F;color:#fff;}
+  .cd-r{display:flex;gap:10px;padding:5px 0;border-bottom:1px solid #F2F4F7;font-size:13px;line-height:1.55;} .cd-k{flex:0 0 76px;color:#667085;font-weight:700;} .cd-v{flex:1;min-width:0;}
 </style>
 <script src="contest-config.js"></script>
 <script src="cx-wait.js"></script>
@@ -376,11 +386,13 @@
       <button id="reloadListBtn" class="badge" style="border:1px solid var(--border-input);cursor:pointer;font-family:inherit;">새로고침</button>
       <button id="inviteOpenBtn" class="badge" style="border:1px solid var(--navy);cursor:pointer;font-family:inherit;background:var(--navy);color:#fff;">강사 초대</button>
       <button id="copyPublicLinkBtn" class="badge" style="border:1px solid var(--border-input);cursor:pointer;font-family:inherit;">강사등록 링크</button>
+      <a href="instructor-registration.html" target="_blank" rel="noopener" class="badge" style="border:1px solid var(--border-input);cursor:pointer;font-family:inherit;text-decoration:none;color:inherit;" title="강사가 보는 등록 신청 화면을 새 창으로 엽니다">등록 신청 화면 ↗</a>
       <button id="logoutBtn" class="badge" type="button" style="border:1px solid var(--border-input);cursor:pointer;font-family:inherit;">로그아웃</button>
     </div>
   </header>
 
-  <div id="mockInstBanner" style="background:#FFF7E6;border:1px solid #F3D88C;color:#7A4A00;font-size:13.5px;border-radius:8px;padding:10px 14px;margin:-4px 0 12px 0;"><b>모의 입력 강사 30명입니다.</b> 대회 시연용으로 만든 가상 강사이며 실존 인물·연락처가 아닙니다. 검색·상세 보기·초대 등 기능은 실제와 같이 동작합니다.</div>
+  <div id="mockInstBanner" style="background:#FFF7E6;border:1px solid #F3D88C;color:#7A4A00;font-size:13.5px;border-radius:8px;padding:10px 14px;margin:-4px 0 12px 0;">강사 정보는 심사용 모의 데이터입니다(실존 인물·연락처 아님).</div>
+  <div id="pendBox" style="display:none;"></div>
   <div id="staleBar" style="display:none;background:#EEF3F8;color:var(--navy);font-size:13px;font-weight:700;border-radius:8px;padding:10px 14px;margin:-4px 0 12px 0;">이전에 불러온 목록을 먼저 보여 드리고 있습니다. 연락처·상세 정보는 최신 정보를 받으면 자동으로 표시됩니다.</div>
   <div id="viewerModeBanner" style="display:none;background:#FAEEDA;color:#633806;font-size:13px;font-weight:700;border-radius:8px;padding:10px 14px;margin:-4px 0 16px 0;">조회 전용 계정입니다. 강사 정보 열람과 자료 다운로드만 가능하며, 승인·삭제 등 변경 작업은 관리자 계정으로 로그인해야 합니다.</div>
 
@@ -609,6 +621,7 @@
   }
 
   function getAdminPw(){
+    if (window.CONTEST_CONFIG && window.CONTEST_CONFIG.SIMPLE) return window.CONTEST_CONFIG.DEMO_ADMIN;   // d1 심사용: 번호 대신 확인창
     var stored = sessionStorage.getItem('jsfa_admin_pw');
     if (stored) return stored;
     var entered = prompt('관리자 권한 비밀번호를 입력해 주세요 (이번 접속 동안 다시 묻지 않습니다):', '');
@@ -1006,7 +1019,7 @@
           '<div class="fi fi-reconsent"><div class="fk">재동의 확인</div><div class="fv">' + (d.재동의확인일 ? (esc(d.재동의확인일) + (d.재동의메모 ? '<br><span style="font-size:12px;font-weight:400;">' + esc(d.재동의메모) + '</span>' : '')) : '-') + '</div></div>'; })()) +
         '<div class="fi full"><div class="fk">자격증·학위</div><div class="fv">' + esc(slashJoinLines(d.자격증학위) || '-') + '</div></div>' +
         '<div class="fi full"><div class="fk">약력</div><div class="fv">' + esc(slashJoinLines(d.약력) || '-') + '</div></div>' +
-        '<div class="fi full"><div class="fk">강사카드</div><div class="fv">' + profileLinkHtml + '</div></div>' +
+        '<div class="fi full"><div class="fk">강사카드</div><div class="fv" id="cardDetail">불러오는 중…</div>' + (d.프로필파일링크 ? '<div class="fv" style="margin-top:6px;font-size:12px;">이전 PDF: ' + profileLinkHtml + '</div>' : '') + '</div>' +
         '<div class="fi full"><div class="fk">개인정보 동의서</div><div class="fv">' + consentLinkHtml + '</div></div>' +
       '</div>' +
       docReplaceBoxHtml(d, isViewer) +
@@ -1032,6 +1045,7 @@
       '</div>';
 
     document.getElementById('overlay').style.display = 'flex';
+    fetchCard(d.강사ID).then(function(c){ var el = document.getElementById('cardDetail'); if (el) el.innerHTML = cardDetailHtml(c); }).catch(function(){ var el = document.getElementById('cardDetail'); if (el) el.textContent = '강사카드를 불러오지 못했습니다.'; });
 
     document.getElementById('detailCloseBottomBtn').addEventListener('click', function(){
       document.getElementById('overlay').style.display = 'none';
@@ -1291,7 +1305,7 @@
     .then(function(res){ return res.json(); })
     .then(function(json){
       if (json.status === 'ok') {
-        var doneMsg = decision === '승인' ? '승인 처리되었습니다.' : (decision === '보류' ? '보류 처리되었습니다.' : '반려 처리되었습니다.');
+        var doneMsg = decision === '승인' ? '승인 처리되었습니다. 이 강사는 이제 강의배정 후보에 포함됩니다.' : (decision === '보류' ? '보류 처리되었습니다.' : '반려 처리되었습니다.');
         if (json.메일 === '발송완료') { doneMsg += '\n안내 메일을 보냈습니다. (시연 모드: 실제 발송 없음)'; setTimeout(function(){ cxToast('안내 메일을 보낸 것으로 처리했습니다(시연 모드: 실제 발송 없음).'); }, 300); }
         else if (json.메일 === '대기') doneMsg += '\n오늘 메일 한도 때문에 안내 메일은 발송 대기 중입니다. 한도가 남으면 순서대로 자동 발송됩니다.';
         alert(doneMsg);
@@ -1684,7 +1698,55 @@
     else window.alert('해당 강사를 강사관리 목록에서 찾지 못했습니다. (강사ID: ' + id + ')');
   }
 
+  /* d1: 승인 대기 카드(목록 위) — 강사카드 요약을 보고 바로 [승인하기] */
+  var cardCache = {};
+  function fetchCard(id){
+    if (cardCache[id]) return Promise.resolve(cardCache[id]);
+    return fetch(WEBAPP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'getInstructorCard', password: sessionStorage.getItem('jsfa_dash_pw'), 강사ID: id }) })
+      .then(function(r){ return r.json(); }).then(function(j){ cardCache[id] = (j && j.card) || { 없음: true }; return cardCache[id]; });
+  }
+  function cardSummaryHtml(c){
+    if (!c || c.없음) return '<span style="color:#98A2B3;">강사카드 없음</span>';
+    var car = (c.주요경력목록 || []).length, lec = (c.강의경력목록 || []).length;
+    var ai = /AI/.test(c.작성방식 || '');
+    return '<span class="pd-chip">' + esc(c.학력 || '학력 없음') + '</span><span class="pd-chip">주요 경력 ' + car + '건</span><span class="pd-chip">강의 경력 ' + lec + '건</span>' +
+      (c.전문키워드 ? '<span class="pd-chip">' + esc(c.전문키워드) + '</span>' : '') + (ai ? '<span class="pd-chip ai">AI 자동 채우기 후 강사 확인</span>' : '');
+  }
+  function renderPending(){
+    var box = document.getElementById('pendBox'); if (!box) return;
+    var list = isViewerRole() ? [] : allData.filter(function(d){ return d.상태 === '승인대기' && !d._stale; });
+    if (!list.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
+    box.style.display = '';
+    box.innerHTML = '<div class="pd-h"><b>승인 대기 ' + list.length + '명</b><span>강사가 등록을 신청했습니다. 강사카드를 확인하고 승인하면 강의배정 후보에 바로 포함됩니다.</span></div>' +
+      list.map(function(d){
+        return '<div class="pd-row" data-pid="' + escapeAttr(d.강사ID) + '"><div class="pd-main"><div class="pd-name">' + esc(d.성명 || '') + ' <span>' + esc([d.소속, d.직위].filter(Boolean).join(' · ')) + '</span></div>' +
+          '<div class="pd-sub">' + esc([d.전문분야, d.교과목명].filter(Boolean).join(' · ')) + ' · 신청일 ' + esc(d.등록일 || '-') + '</div>' +
+          '<div class="pd-card" data-pcard="' + escapeAttr(d.강사ID) + '">강사카드 불러오는 중…</div></div>' +
+          '<div class="pd-act"><button type="button" class="pd-btn" data-pview="' + escapeAttr(d.강사ID) + '">강사카드 보기</button><button type="button" class="pd-btn main" data-pok="' + escapeAttr(d.강사ID) + '">승인하기</button></div></div>';
+      }).join('');
+    list.forEach(function(d){ fetchCard(d.강사ID).then(function(c){ var el = document.querySelector('[data-pcard="' + d.강사ID + '"]'); if (el) el.innerHTML = cardSummaryHtml(c); }).catch(function(){}); });
+  }
+  document.addEventListener('click', function(ev){
+    var t = ev.target.closest ? ev.target.closest('[data-pview],[data-pok]') : null; if (!t) return;
+    var id = t.getAttribute('data-pview') || t.getAttribute('data-pok');
+    var d = allData.filter(function(x){ return String(x.강사ID) === id; })[0]; if (!d) return;
+    if (t.hasAttribute('data-pview')) { openDetail(d); return; }
+    var adminPw = getAdminPw(); if (adminPw === null) return;
+    if (!confirm('"' + (d.성명 || '') + '" 강사를 승인하시겠습니까?\n승인하면 강사님께 안내 메일이 발송되고 강의배정 후보에 포함됩니다.')) return;
+    submitApproval(d.강사ID, '승인', null, adminPw);
+  });
+  function cardDetailHtml(c){
+    if (!c || c.없음) return '<span style="color:#98A2B3;">작성한 강사카드가 없습니다.</span>';
+    var lines = function(arr, keys){ return (arr || []).map(function(x){ return esc(keys.map(function(k){ return x[k]; }).filter(Boolean).join(' · ')); }).join('<br>') || '-'; };
+    var row = function(k, v){ return '<div class="cd-r"><div class="cd-k">' + k + '</div><div class="cd-v">' + (v || '-') + '</div></div>'; };
+    return (/AI/.test(c.작성방식 || '') ? '<div class="pd-chip ai" style="display:inline-block;margin-bottom:8px;">AI 자동 채우기 후 강사 확인 · ' + esc(c.작성일시 || '') + '</div>' : '') +
+      row('학력', esc(c.학력)) + row('자격증', esc(c.자격증)) + row('주요 경력', lines(c.주요경력목록, ['기간', '기관', '업무'])) +
+      row('강의 경력', lines(c.강의경력목록, ['연도', '기관', '교과목', '시간'])) + row('키워드', esc(c.전문키워드)) + row('강의 방식', esc(c.강의방식)) +
+      row('강의 소개', esc(c.강의소개)) + row('필요 기자재', esc(c.필요기자재)) + row('동의', '교육자료 ' + esc(c['교육자료 사용 동의'] || '-') + ' · 인력풀 ' + esc(c['인력풀 관리 동의'] || '-'));
+  }
   function updateSummaryStats(){
+    renderPending();
     document.getElementById('statTotal').textContent = allData.length + '명';
     document.getElementById('statActive').textContent = allData.filter(function(d){return d.상태==='활성';}).length + '명';
     document.getElementById('statPending').textContent = allData.filter(function(d){return d.상태==='승인대기';}).length + '명';
