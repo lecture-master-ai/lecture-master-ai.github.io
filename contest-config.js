@@ -5,7 +5,7 @@
      로그인은 비밀번호 없이 [로그인] 버튼 하나로, 강사 승인은 확인창으로 줄입니다. false로 바꾸면 원래 화면으로 돌아갑니다(코드는 지우지 않음). */
 window.CONTEST_CONFIG = {
   WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbzYdVSZsLnSw3JN01aIDuXa1Ubxh6ERWYC-0TEQxu6tRYrcI9-WNYEoKv3Cfk9qyUvJ/exec',
-  VERSION: '대회용 d2',
+  VERSION: '대회용 d2b',
   ORG_NAME: '○○소방학교',
   SIMPLE: true,
   DEMO_PW: '0000',      // 심사용 담당자 권한(모의 데이터 전용). 운영판은 개인 비밀번호 사용
@@ -27,8 +27,8 @@ window.CONTEST_CONFIG = {
     var b = document.createElement('div');
     b.id = 'contestBanner';
     b.setAttribute('role', 'note');
-    b.textContent = '대회용 · 모의데이터 — 실제 인물·연락처가 아닙니다. 메일·문자는 실제로 발송되지 않습니다(시연 모드).';
-    b.style.cssText = 'background:#7A2E0E;color:#fff;font-size:12.5px;font-weight:700;text-align:center;padding:6px 12px;line-height:1.4;letter-spacing:-0.2px;';
+    b.textContent = '심사용 사본 · 모의 데이터 · 메일·문자 실제 발송 없음';
+    b.style.cssText = 'background:#EEF1F5;color:#5F6877;font-size:11.5px;font-weight:600;text-align:center;padding:3px 12px;line-height:1.4;border-bottom:1px solid #E1E6ED;';
     document.body.insertBefore(b, document.body.firstChild);
     var v = document.createElement('div');
     v.id = 'contestVersion';
@@ -60,6 +60,119 @@ window.CONTEST_CONFIG = {
       form.addEventListener('submit', fill, true);
     }
   }
-  function ready() { banner(); simple(); }
+  /* ===== d2b: AI 도움 표지 · AI 작동 중 표시(모든 화면 공통) =====
+     - AI가 쓰이는 버튼에 같은 파란 'AI 도움' 표지와 설명 말풍선을 붙임
+     - 서버의 AI 액션을 부르는 동안 화면 맨 위에 진행 줄과 경과 초, 누른 버튼은 'AI 작동 중'으로 바뀜. 끝나면 모델 이름·걸린 시간을 3초 보여 줌 */
+  var AI_ACT = {
+    aiBatchAssign: '강사카드·평가·의견을 읽고 교과목 관련성을 판단하고 있습니다',
+    aiCardFill: '강사카드 글을 읽고 칸을 나누고 있습니다',
+    aiRecommend: '비슷한 교과목을 찾고 근거를 쓰고 있습니다',
+    surveyPreview: '서술형 의견을 분류·요약하고 있습니다'
+  };
+  var AI_TIP = 'AI 도움: 강사카드·평가·의견 같은 글을 AI가 읽고 근거를 제시합니다. 적용·발송은 담당자가 결정합니다.';
+  var AI_BTN = ['#abBar [data-ab="draft"]', '#abBar [data-ab="review"]', '#cxFind', '#cardMdl label.filebtn', '[data-cxsurvey]'];
+  function aiCss() {
+    if (document.getElementById('aiCss')) return;
+    var st = document.createElement('style'); st.id = 'aiCss';
+    st.textContent = '.ai-badge{display:inline-flex;align-items:center;font-size:10.5px;font-weight:800;line-height:1;background:#2F6FB2;color:#fff;border-radius:4px;padding:3px 5px;margin-right:6px;letter-spacing:-0.2px;white-space:nowrap;vertical-align:1px}' +
+      '.btn.primary .ai-badge,.ai-onnavy .ai-badge{background:#fff;color:#1B3A5F}' +
+      '.ai-busy{position:relative;pointer-events:none;opacity:1!important;box-shadow:0 0 0 2px #2F6FB2 inset!important}' +
+      '.ai-busy .ai-orig{display:none}.ai-busy-t{display:inline-flex;align-items:center;gap:6px}' +
+      '.ai-spin{width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:aiSpin .8s linear infinite;display:inline-block}' +
+      '@keyframes aiSpin{to{transform:rotate(360deg)}}' +
+      '#aiTop{position:fixed;left:0;right:0;top:0;z-index:100000;display:none;font-family:inherit}' +
+      '#aiTop .bar{height:3px;background:linear-gradient(90deg,rgba(47,111,178,.15),#2F6FB2,rgba(47,111,178,.15));background-size:40% 100%;background-repeat:no-repeat;animation:aiBar 1.2s ease-in-out infinite;background-color:#D7E5F5}' +
+      '#aiTop.done .bar{animation:none;background:#2F6FB2}#aiTop.warn .bar{animation:none;background:#E8762B}' +
+      '@keyframes aiBar{0%{background-position:-40% 0}100%{background-position:140% 0}}' +
+      '#aiTop .msg{margin:6px auto 0;width:max-content;max-width:calc(100vw - 24px);display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #9DBCE0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;color:#1B3A5F;box-shadow:0 2px 8px rgba(16,24,40,.12)}' +
+      '#aiTop.warn .msg{border-color:#F3C9A6;color:#9A3D0A}#aiTop .msg small{font-weight:600;color:#5F6877}' +
+      '@media (prefers-reduced-motion:reduce){#aiTop .bar,.ai-spin{animation:none}}' +
+      '.ai-hint{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:13px;color:#344054;margin:2px 0 10px}.ai-hint b{color:#1B3A5F}';
+    document.head.appendChild(st);
+  }
+  function aiDecorate() {
+    AI_BTN.forEach(function (sel) {
+      Array.prototype.forEach.call(document.querySelectorAll(sel), function (el) {
+        if (el.getAttribute('data-aideco')) return;
+        el.setAttribute('data-aideco', '1');
+        var old = el.querySelector('.ab-tag'); if (old) old.parentNode.removeChild(old);
+        var b = document.createElement('span'); b.className = 'ai-badge'; b.textContent = 'AI 도움';
+        el.insertBefore(b, el.firstChild);
+        el.classList.add('ai-btn');
+        if (!el.getAttribute('title') || el.id === 'cxFind') el.setAttribute('title', AI_TIP);
+        if (el.matches('label.filebtn, .cxbtn')) el.classList.add('ai-onnavy');
+      });
+    });
+  }
+  var aiLast = null, aiLastAt = 0, aiRun = {}, aiN = 0, aiT0 = 0, aiTick = null, aiHide = null, aiBtns = [];
+  document.addEventListener('click', function (ev) { var t = ev.target && ev.target.closest ? ev.target.closest('.ai-btn') : null; if (t) { aiLast = t; aiLastAt = Date.now(); } }, true);
+  document.addEventListener('change', function (ev) { var t = ev.target && ev.target.closest ? ev.target.closest('.ai-btn') : null; if (t) { aiLast = t; aiLastAt = Date.now(); } }, true);
+  function aiTop() {
+    var el = document.getElementById('aiTop');
+    if (!el) { el = document.createElement('div'); el.id = 'aiTop'; el.setAttribute('role', 'status'); el.setAttribute('aria-live', 'polite'); el.innerHTML = '<div class="bar"></div><div class="msg"></div>'; document.body.appendChild(el); }
+    return el;
+  }
+  function aiSec() { return Math.max(0, Math.round((Date.now() - aiT0) / 100) / 10); }
+  function aiStart(act) {
+    aiRun[act] = (aiRun[act] || 0) + 1; aiN++;
+    if (aiN > 1) return;
+    clearTimeout(aiHide); aiT0 = Date.now();
+    var el = aiTop(); el.className = ''; el.style.display = 'block';
+    var put = function () { el.querySelector('.msg').innerHTML = '<span class="ai-badge">AI</span>AI가 판단하는 중 <small>· ' + AI_ACT[act] + ' · ' + Math.floor(aiSec()) + '초</small>'; aiBtns.forEach(function (b) { var s = b.querySelector('.ai-sec'); if (s) s.textContent = Math.floor(aiSec()) + '초'; }); };
+    put(); clearInterval(aiTick); aiTick = setInterval(put, 500);
+    if (aiLast && Date.now() - aiLastAt < 3000 && document.body.contains(aiLast)) {
+      var b = aiLast; aiLast = null;
+      if (!b.classList.contains('ai-busy')) {
+        Array.prototype.forEach.call(b.childNodes, function (n) { if (n.nodeType === 3 && n.textContent.trim()) { var sp = document.createElement('span'); sp.className = 'ai-orig'; sp.textContent = n.textContent; b.replaceChild(sp, n); } else if (n.nodeType === 1 && !n.classList.contains('ai-badge') && n.tagName !== 'INPUT') n.classList.add('ai-orig'); });
+        var t = document.createElement('span'); t.className = 'ai-busy-t'; t.innerHTML = '<i class="ai-spin" aria-hidden="true"></i>AI 작동 중… <b class="ai-sec">0초</b>';
+        b.appendChild(t); b.classList.add('ai-busy'); aiBtns.push(b);
+      }
+    }
+  }
+  function aiEnd(act, j) {
+    aiRun[act] = Math.max(0, (aiRun[act] || 1) - 1); aiN = Math.max(0, aiN - 1);
+    if (aiN > 0) return;
+    clearInterval(aiTick);
+    aiBtns.forEach(function (b) { b.classList.remove('ai-busy'); var t = b.querySelector('.ai-busy-t'); if (t) t.parentNode.removeChild(t); Array.prototype.forEach.call(b.querySelectorAll('.ai-orig'), function (n) { n.classList.remove('ai-orig'); }); });
+    aiBtns = [];
+    var el = aiTop(), sec = aiSec().toFixed(1), model = '', ok = true;
+    if (j && j.status === 'ok') {
+      if (act === 'surveyPreview') { var a = (j.data && j.data.ai) || {}; model = a.요약 || a.연결 || ''; ok = !!model; }
+      else { ok = j.ai !== false; model = j.모델 || ''; }
+    } else ok = false;
+    el.className = ok ? 'done' : 'warn';
+    el.querySelector('.msg').innerHTML = ok ? '<span class="ai-badge">AI</span>AI 완료 <small>· ' + (model ? model + ' · ' : '') + sec + '초</small>'
+      : '<span class="ai-badge" style="background:#E8762B">AI</span>AI 응답 없음 <small>· 규칙 결과로 표시했습니다 · ' + sec + '초</small>';
+    clearTimeout(aiHide); aiHide = setTimeout(function () { el.style.display = 'none'; }, ok ? 3000 : 5000);
+  }
+  if (window.fetch && !window.__aiWrap) {
+    window.__aiWrap = true;
+    var of = window.fetch.bind(window);
+    window.fetch = function (url, opt) {
+      var act = '';
+      try { if (opt && typeof opt.body === 'string' && opt.body.charAt(0) === '{') { var bd = JSON.parse(opt.body); if (AI_ACT[bd.action]) act = bd.action; } } catch (e) {}
+      if (!act) return of(url, opt);
+      aiStart(act);
+      var done = false, fin = function (j) { if (done) return; done = true; aiEnd(act, j); };
+      return of(url, opt).then(function (r) {
+        try { r.clone().json().then(fin, function () { fin(null); }); } catch (e) { fin(null); }
+        return r;
+      }, function (err) { if (!(err && err.name === 'AbortError')) fin(null); else fin({ status: 'ok', ai: true, 모델: '' }); throw err; });
+    };
+  }
+  /* d2b: 긴 상세 카드는 위·아래 모두 [닫기] — 아래에만 [닫기]가 있는 카드의 머리 줄에 같은 동작의 버튼을 붙임 */
+  function topClose() {
+    ['#iCard', '#bCard', '#cCard'].forEach(function (sel) {
+      var card = document.querySelector(sel); if (!card) return;
+      var top = card.querySelector(':scope > .top'); if (!top || top.querySelector('.topx')) return;
+      var bottom = Array.prototype.filter.call(card.querySelectorAll('button'), function (b) { return b.textContent.trim() === '닫기' && !b.classList.contains('topx'); }).pop();
+      if (!bottom) return;
+      var x = document.createElement('button'); x.type = 'button'; x.className = 'btn sm topx'; x.textContent = '닫기';
+      x.style.cssText = 'margin-left:auto;flex:0 0 auto;align-self:flex-start;';
+      x.addEventListener('click', function () { bottom.click(); });
+      top.appendChild(x);
+    });
+  }
+  function ready() { banner(); simple(); aiCss(); aiDecorate(); topClose(); try { new MutationObserver(function () { clearTimeout(window.__aiDec); window.__aiDec = setTimeout(function () { aiDecorate(); topClose(); }, 60); }).observe(document.body, { childList: true, subtree: true }); } catch (e) {} }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ready); else ready();
 })();
