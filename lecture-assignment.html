@@ -623,6 +623,61 @@
   .ds-ex{color:#9A3D0A !important;}
   .ds.dirty{border-color:#F3C9A6;background:#FFFBF7;} .ds.dirty .ds-btn{background:var(--navy);color:#fff;}
   .ds-btn:hover{background:#E8EEF6;}
+
+  /* d2k 폴리싱: 보드(칸반) — A 반응형 · B 단계 표시줄 의미 · C 상자 2겹·그림자 통일 · D 상태·접근성 */
+  #demoBox, #demoBox *, header .sub, #stToast{word-break:keep-all;overflow-wrap:anywhere;}
+  .bd{background:transparent;border:none;border-radius:0;padding:0;}
+  .bd-track{gap:16px;margin:4px 0 16px;}
+  .bd-track::before{background:#B8C4D4;}
+  .bd-n, .bd-st.has .bd-n{background:#fff;border:2px solid var(--navy);color:var(--navy);}
+  .bd-cnt{position:absolute;top:-6px;right:-10px;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:#E8762B;color:#fff;font-size:11.5px;font-weight:800;line-height:20px;text-align:center;box-shadow:0 0 0 2px #E3E8EF;}
+  .bd-st .d{color:#475467;}
+  .bd-lanes{gap:16px;}
+  .bd-lane{background:rgba(255,255,255,.5);border-radius:12px;padding:8px;gap:8px;min-height:140px;}
+  .bd-lh{padding:4px 4px 0;}
+  .bd-empty{border-color:#A9B6C7;color:#475467;background:transparent;}
+  .bdc{border:none;border-radius:12px;padding:12px 16px 16px;gap:8px;box-shadow:0 1px 2px rgba(16,24,40,.06),0 2px 6px rgba(16,24,40,.06);cursor:pointer;transition:box-shadow .15s ease-out;}
+  .bdc.moved{box-shadow:0 0 0 2px #E8762B,0 2px 6px rgba(16,24,40,.06);}
+  .ds{border:none;box-shadow:0 2px 8px rgba(0,0,0,.05);padding:12px 16px;margin:0 0 16px;}
+  .ds.dirty{border:none;background:#FFF8F1;box-shadow:0 0 0 1px #F3C9A6,0 2px 8px rgba(0,0,0,.05);}
+  .bd-done{border:none;box-shadow:0 2px 8px rgba(0,0,0,.05);padding:12px 16px;}
+  .bd-foot{margin-top:16px;}
+  .demo-note{color:#5F6877;}
+  .bd-mini{display:none;}
+  #demoBox .btn:focus-visible, .bdc:focus-visible, .bd-mini button:focus-visible{outline:2px solid var(--navy);outline-offset:2px;}
+  .bd-empty.bd-add{background:#fff;}
+  .bdc .btn:hover, .ds-btn:hover, .bd-empty.bd-add:hover{background:#fff;} .bd-addsm:hover{background:transparent;} .ds.dirty .ds-btn:hover{background:var(--navy);}
+  @media (hover:hover){
+    .bdc:hover{box-shadow:0 2px 4px rgba(16,24,40,.08),0 8px 16px rgba(16,24,40,.08);}
+    .bdc .btn:hover, .ds-btn:hover, .bd-empty.bd-add:hover, .bd-addsm:hover{background:#E8EEF6;}
+    .ds.dirty .ds-btn:hover{background:#245C96;}
+  }
+  .bdc .btn:active, .ds-btn:active, .bd-addsm:active{transform:scale(.98);}
+  @media (prefers-reduced-motion:reduce){ .bdc{transition:none;} .bdc .btn:active, .ds-btn:active, .bd-addsm:active{transform:none;} }
+  /* PC(4칸이 단계 표시줄 아래에 맞춰 놓일 때): 칸 머리의 단계 이름은 표시줄과 겹치므로 숨김 */
+  @media (min-width:1024px){ .bd-lh{display:none;} .bd-lane{padding-top:8px;} }
+  /* 태블릿 세로: 2×2 */
+  @media (min-width:761px) and (max-width:1023px){
+    .bd-lanes{grid-template-columns:repeat(2,1fr);}
+    .bd-lane{min-height:0;}
+    .bd-st .tls{display:none;}
+  }
+  /* 휴대폰: 작은 단계 줄 + 빈 칸 접기 + 누르기 쉬운 크기 */
+  @media (max-width:760px){
+    .bd-mini{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 0 12px;}
+    .bd-mini button{display:flex;align-items:center;justify-content:flex-start;gap:6px;height:44px;padding:0 10px;border:none;border-radius:10px;background:#fff;color:var(--navy);font:inherit;font-size:13px;font-weight:800;box-shadow:0 1px 2px rgba(16,24,40,.06);cursor:pointer;}
+    .bd-mini button i{font-style:normal;width:20px;height:20px;border-radius:50%;border:1.5px solid var(--navy);display:inline-flex;align-items:center;justify-content:center;font-size:11px;}
+    .bd-mini button em{font-style:normal;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#E8762B;color:#fff;font-size:11px;line-height:18px;}
+    .bd-mini button.zero em{background:#C9D2DD;}
+    .bd-lane{background:transparent;padding:0;min-height:0;}
+    .bd-mini button em{margin-left:auto;}
+    .bd-lane.empty:not(.first) .bd-empty{display:none;}
+    .bd-lane.empty:not(.first) .bd-lh{background:rgba(255,255,255,.6);border-radius:10px;padding:12px 14px;}
+    .bd-lh{padding:0 2px;}
+    .ds{padding:12px;} .ds-btn{height:44px;width:100%;}
+    .bdc .btn, .bd-addsm{height:44px;}
+    .bdc{padding:12px 14px 14px;}
+  }
   .pf-v{display:none;flex-direction:column;gap:0;}
   .pf-vr{display:grid;grid-template-columns:30px 1fr auto;gap:2px 10px;align-items:center;padding:9px 0;border-top:1px solid #EEF1F5;}
   .pf-vr:first-child{border-top:none;}
@@ -1151,7 +1206,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d2j</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d2k</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -1820,10 +1875,12 @@
     var canEdit = !isViewer();
     var EMPTY = ['', '교과목이 없는 과정이 여기에 놓입니다.', '강사 빈 칸이 있는 과정이 여기에 놓입니다.', '배정을 마치고 안내를 기다리는 과정이 여기에 놓입니다.', '방금 강사 안내를 마친 과정이 잠시 머문 뒤 배정 완료 목록으로 옮겨집니다.'];
     var h = demoStHtml() + '<section class="bd" aria-label="강의배정 절차와 과정 위치"><div class="bd-track">' + STEPS.map(function(s, i){
-      return '<div class="bd-st' + (lanes[i + 1].length ? ' has' : '') + '"><div class="bd-n">' + (i + 1) + '</div><div class="t">' + s.t + '</div><div class="d">' + s.d + '</div><div class="tls">' + s.tl.filter(function(x){ return x[0]; }).map(stTool).join('') + '</div></div>'; }).join('') + '</div><div class="bd-lanes">';
+      var c = lanes[i + 1].length;
+      return '<div class="bd-st"><div class="bd-n">' + (i + 1) + (c ? '<span class="bd-cnt" aria-label="' + c + '과정">' + c + '</span>' : '') + '</div><div class="t">' + s.t + '</div><div class="d">' + s.d + '</div><div class="tls">' + s.tl.filter(function(x){ return x[0]; }).map(stTool).join('') + '</div></div>'; }).join('') + '</div>' +
+      '<nav class="bd-mini" aria-label="단계 바로가기">' + STEPS.map(function(s, i){ var c = lanes[i + 1].length; return '<button type="button" data-bdgo="' + (i + 1) + '"' + (c ? '' : ' class="zero"') + '><i>' + (i + 1) + '</i>' + s.t + '<em>' + c + '</em></button>'; }).join('') + '</nav><div class="bd-lanes">';
     STEPS.forEach(function(s, i){
       var L = lanes[i + 1];
-      h += '<div class="bd-lane"><div class="bd-lh"><span>' + (i + 1) + '. ' + s.t + '</span>' + (L.length ? '<em>' + L.length + '과정</em>' : '<span>0</span>') + '</div>';
+      h += '<div class="bd-lane' + (L.length ? '' : ' empty') + (i ? '' : ' first') + '" id="bdl' + (i + 1) + '"><div class="bd-lh"><span>' + (i + 1) + '. ' + s.t + '</span>' + (L.length ? '<em>' + L.length + '과정</em>' : '<span>0</span>') + '</div>';
       if (!L.length) h += i === 0 && canEdit ? '<button type="button" class="bd-empty bd-add" data-bdadd="1"><b>+ 과정 올리기</b><span>앞으로 열릴 과정을 골라 올립니다</span></button>' : '<div class="bd-empty">' + EMPTY[i + 1] + '</div>';
       L.forEach(function(r){
         var key = r.p['과정+기수'], st = r.st, dd = dDay(r.p), pct = st.n ? Math.round((st.n - st.empty) / st.n * 100) : 0;
@@ -1831,7 +1888,7 @@
         if (hot && !mv.shown && !mv.added && !mv.toasted) moves.push(courseLabel(key) + '이(가) ' + st.lane + '단계 \'' + STEPS[st.lane - 1].t + '\'(으)로 이동했습니다.');
         if (hot && !mv.shown && mv.spare) moves.push(courseLabel(key) + '이(가) 다음 시연용으로 올라왔습니다.');
         if (hot && !mv.shown) { mv.shown = true; mv.visit = boardVisit; }
-        h += '<article class="bdc' + (hot ? ' moved' : '') + '">' + (hot ? '<span class="bdc-mv">' + (mv.spare ? '다음 시연' : mv.added ? '방금 올림' : '방금 이동') + '</span>' : '') + '<div><div class="bdc-t">' + esc(key) + '</div><div class="bdc-p">' + esc(ipgyo(r.p)) + (dd ? ' · ' + dd : '') + '</div></div>' +
+        h += '<article class="bdc' + (hot ? ' moved' : '') + '" data-card-open="' + esc(key) + '">' + (hot ? '<span class="bdc-mv">' + (mv.spare ? '다음 시연' : mv.added ? '방금 올림' : '방금 이동') + '</span>' : '') + '<div><div class="bdc-t">' + esc(key) + '</div><div class="bdc-p">' + esc(ipgyo(r.p)) + (dd ? ' · ' + dd : '') + '</div></div>' +
           (st.n ? '<div class="bdc-pg"><span>강사 ' + (st.n - st.empty) + ' / ' + st.n + '칸</span><i><b style="width:' + pct + '%"></b></i></div>' : '') +
           '<div class="bdc-x">' + (st.nx.ai ? '<span class="ai-badge">AI 도움</span>' : '') + esc(st.nx.x) + '</div>' +
           '<button type="button" class="btn" data-demo-open="' + esc(key) + '">편성 화면 열기</button></article>';
@@ -1877,9 +1934,15 @@
     $('hSub').textContent = '교과목에 맞는 강사를 찾아 배정합니다. 최종 결정은 담당자가 합니다.';
   }
   document.addEventListener('toggle', function(ev){ if (ev.target && ev.target.classList && ev.target.classList.contains('bd-done')) ab.doneOpen = ev.target.open; }, true);
+  // d2k: 카드 아무 곳이나 눌러도 편성 화면 열기(안의 버튼·링크는 각자 동작)
+  document.addEventListener('click', function(ev){
+    if (!ev.target.closest || ev.target.closest('button, a, input, label')) return;
+    var c = ev.target.closest('[data-card-open]'); if (c) openCourse(c.getAttribute('data-card-open'));
+  });
   document.addEventListener('click', function(ev){
     var t = ev.target.closest ? ev.target.closest('button') : null; if (!t) return;
     var k = t.getAttribute('data-demo-open'); if (k) { openCourse(k); return; }
+    var go = t.getAttribute('data-bdgo'); if (go) { var ln = $('bdl' + go); if (ln) ln.scrollIntoView({ behavior: window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); return; }
     if (t.getAttribute('data-bdadd')) { var ob = {}; plans.forEach(function(p){ var kk = p['과정+기수']; if (DEMO_KEYS[kk] || (boardAdd || []).indexOf(kk) > -1) ob[kk] = true; }); boardPick(ob); return; }
     if (t.id === 'demoAll') { document.body.classList.toggle('showall'); renderDemo(); }
     if (t.id === 'demoReset') {

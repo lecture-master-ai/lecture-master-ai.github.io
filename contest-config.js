@@ -5,7 +5,7 @@
      로그인은 비밀번호 없이 [로그인] 버튼 하나로, 강사 승인은 확인창으로 줄입니다. false로 바꾸면 원래 화면으로 돌아갑니다(코드는 지우지 않음). */
 window.CONTEST_CONFIG = {
   WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbzYdVSZsLnSw3JN01aIDuXa1Ubxh6ERWYC-0TEQxu6tRYrcI9-WNYEoKv3Cfk9qyUvJ/exec',
-  VERSION: '대회용 d2j',
+  VERSION: '대회용 d2k',
   ORG_NAME: '○○소방학교',
   SIMPLE: true,
   DEMO_PW: '0000',      // 심사용 담당자 권한(모의 데이터 전용). 운영판은 개인 비밀번호 사용
@@ -30,7 +30,8 @@ window.CONTEST_CONFIG = {
     var b = document.createElement('div');
     b.id = 'contestBanner';
     b.setAttribute('role', 'note');
-    b.innerHTML = '심사용 사본 · 모의 데이터 · 메일·문자 실제 발송 없음 · <a href="lecture-assignment.html#v=table" style="color:#1B3A5F;font-weight:700;">시험을 마치면 [시연 처음 상태로]를 눌러 주세요</a>';
+    b.innerHTML = '<span class="cb-a">심사용 사본 · 모의 데이터 · 메일·문자 실제 발송 없음 · </span><a href="lecture-assignment.html#v=table" style="color:#1B3A5F;font-weight:700;">시험을 마치면 [시연 처음 상태로]를 눌러 주세요</a>';
+    var bs = document.createElement('style'); bs.textContent = '@media (max-width:600px){#contestBanner .cb-a{display:none}#contestBanner{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}'; document.head.appendChild(bs);
     b.style.cssText = 'background:#EEF1F5;color:#5F6877;font-size:11.5px;font-weight:600;text-align:center;padding:3px 12px;line-height:1.4;border-bottom:1px solid #E1E6ED;';
     document.body.insertBefore(b, document.body.firstChild);
     var v = document.createElement('div');
