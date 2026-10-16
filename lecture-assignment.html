@@ -618,6 +618,10 @@
   .ds-dirty{font-weight:800;color:#9A3D0A;background:#FFF4EC;border-radius:999px;padding:2px 10px;}
   .ds-clean{font-weight:800;color:#1B3A5F;background:#E8EEF6;border-radius:999px;padding:2px 10px;}
   .ds-btn{height:36px;border-color:var(--navy);color:var(--navy);font-size:13.5px;}
+  .ds-m{display:flex;flex-direction:column;gap:4px;min-width:0;}
+  .ds-ask{font-size:13px;color:#344054;} .ds-ask b{color:var(--navy);}
+  .ds-ex{color:#9A3D0A !important;}
+  .ds.dirty{border-color:#F3C9A6;background:#FFFBF7;} .ds.dirty .ds-btn{background:var(--navy);color:#fff;}
   .ds-btn:hover{background:#E8EEF6;}
   .pf-v{display:none;flex-direction:column;gap:0;}
   .pf-vr{display:grid;grid-template-columns:30px 1fr auto;gap:2px 10px;align-items:center;padding:9px 0;border-top:1px solid #EEF1F5;}
@@ -1147,7 +1151,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d2i</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d2j</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -1739,10 +1743,13 @@
   }
   function demoStHtml(){
     var j = demoSt, now = j ? j.지금 + (Date.now() - j.at) : Date.now();
-    var msg = !j ? '<span>시연 상태를 확인하는 중입니다…</span>' : j.none ? '<span>바꾼 내용은 이 버튼으로 처음 상태로 되돌릴 수 있습니다</span>' :
+    var msg = !j ? '<span>시연 상태를 확인하는 중입니다…</span>' : j.none ? '' :
       (j.변경 ? '<span class="ds-dirty">앞선 시험에서 바뀐 내용 ' + j.변경 + '건</span>' + (j.마지막변경 ? '<span>마지막 변경 ' + agoText(j.마지막변경, now) + '</span>' : '') : '<span class="ds-clean">처음 상태입니다</span>') +
       (j.초기화 ? '<span>마지막 초기화 ' + whenText(j.초기화) + (j.자동 ? '(새벽 자동)' : '') + '</span>' : '');
-    return '<div class="ds"><div class="ds-t"><b>시연 데이터</b>' + msg + '</div>' + (isViewer() ? '' : '<button type="button" class="btn ds-btn" id="demoReset">시연 처음 상태로</button>') + '</div>';
+    var dirty = j && j.변경;
+    return '<div class="ds' + (dirty ? ' dirty' : '') + '"><div class="ds-m"><div class="ds-t"><b>시연 데이터</b>' + msg + '</div>' +
+      '<div class="ds-ask">' + (demoExhausted.length ? '<b class="ds-ex">준비된 시연 과정(' + esc(demoExhausted.join(', ')) + ')을 모두 사용했습니다. [시연 처음 상태로]를 눌러 주세요.</b> ' : dirty ? '앞선 평가관이 바꾼 내용이 남아 있어도, 장면마다 손대지 않은 과정이 새로 올라와 있습니다. ' : '') + '시험을 마치시면 <b>다음 평가관을 위해</b> [시연 처음 상태로]를 눌러 주세요.</div></div>' +
+      (isViewer() ? '' : '<button type="button" class="btn ds-btn" id="demoReset">시연 처음 상태로</button>') + '</div>';
   }
   function nxHtml(st, cls){
     return '<div class="' + cls + (st.nx.fin ? ' fin' : '') + '"><small>' + st.nx.h + '</small>' + (st.nx.ai ? '<span class="ai-badge">AI 도움</span>' : '') + esc(st.nx.x) + '</div>';
@@ -1771,9 +1778,29 @@
     if (!rows.length) h += '<div class="demo-d">편성이 필요한 과정이 없습니다.</div>';
     return h + '</div>' + demoFoot();
   }
+  /* d2d: 장면별 예비 과정 — 손대지 않은 과정은 장면마다 첫 1개만 보여 주고, 처리된 과정은 단계 칸에 남겨 흐름을 보여 줌 */
+  var boardVis = null, demoExhausted = [], boardVisit = 0;
+  var SCENE = { ai: 'AI 강사 일괄 배정', copy: '지난 기수 불러오기', cell: '빈 칸 채우기' };
+  function demoPick(demos){
+    var types = {}, show = {}, ex = [];
+    demos.forEach(function(p){ var k = p['과정+기수'], t = DEMO_KEYS[k]; (types[t] = types[t] || []).push(k); });
+    var fresh = function(t, st){ return t === 'ai' ? st.n > 0 && st.empty === st.n : t === 'copy' ? st.n === 0 : st.n > 0 && st.empty > 0; };
+    Object.keys(types).forEach(function(t){
+      var got = false;
+      types[t].forEach(function(k){ var st = courseStage(k); if (!fresh(t, st)) show[k] = true; else if (!got) { show[k] = true; got = true; } });
+      if (!got) ex.push(SCENE[t] || t);
+    });
+    demoExhausted = ex;
+    return demos.filter(function(p){ return show[p['과정+기수']]; });
+  }
   function renderDemoB(demos, arrived){
     if (boardAdd === null) boardFetch();
     if (arrived || !demoSt) demoStFetch();
+    if (arrived) boardVisit++;
+    demos = demoPick(demos);
+    var vis = {}; demos.forEach(function(p){ vis[p['과정+기수']] = true; });
+    if (boardVis) Object.keys(vis).forEach(function(k){ if (!boardVis[k] && !stageMoved[k]) stageMoved[k] = { at: Date.now(), from: 0, to: 0, shown: false, added: true, spare: true }; });
+    boardVis = vis;
     var seen = {}, list = [];
     demos.concat((boardAdd || []).map(planByKey).filter(function(p){ return p && !isCancelled(p); })).forEach(function(p){ var k = p['과정+기수']; if (!seen[k]) { seen[k] = true; list.push(p); } });
     var lanes = [[], [], [], [], []], doneList = [], moves = [];
@@ -1800,10 +1827,11 @@
       if (!L.length) h += i === 0 && canEdit ? '<button type="button" class="bd-empty bd-add" data-bdadd="1"><b>+ 과정 올리기</b><span>앞으로 열릴 과정을 골라 올립니다</span></button>' : '<div class="bd-empty">' + EMPTY[i + 1] + '</div>';
       L.forEach(function(r){
         var key = r.p['과정+기수'], st = r.st, dd = dDay(r.p), pct = st.n ? Math.round((st.n - st.empty) / st.n * 100) : 0;
-        var mv = stageMoved[key], hot = mv && Date.now() - mv.at < 5 * 60000 && (!mv.shown || !arrived);
-        if (hot && arrived && !mv.shown && !mv.added && !mv.toasted) moves.push(courseLabel(key) + '이(가) ' + st.lane + '단계 \'' + STEPS[st.lane - 1].t + '\'(으)로 이동했습니다.');
-        if (hot && arrived) mv.shown = true;
-        h += '<article class="bdc' + (hot ? ' moved' : '') + '">' + (hot ? '<span class="bdc-mv">' + (mv.added ? '방금 올림' : '방금 이동') + '</span>' : '') + '<div><div class="bdc-t">' + esc(key) + '</div><div class="bdc-p">' + esc(ipgyo(r.p)) + (dd ? ' · ' + dd : '') + '</div></div>' +
+        var mv = stageMoved[key], hot = mv && Date.now() - mv.at < 5 * 60000 && (!mv.shown || mv.visit === boardVisit);   // 처음 보이는 방문 동안만 강조
+        if (hot && !mv.shown && !mv.added && !mv.toasted) moves.push(courseLabel(key) + '이(가) ' + st.lane + '단계 \'' + STEPS[st.lane - 1].t + '\'(으)로 이동했습니다.');
+        if (hot && !mv.shown && mv.spare) moves.push(courseLabel(key) + '이(가) 다음 시연용으로 올라왔습니다.');
+        if (hot && !mv.shown) { mv.shown = true; mv.visit = boardVisit; }
+        h += '<article class="bdc' + (hot ? ' moved' : '') + '">' + (hot ? '<span class="bdc-mv">' + (mv.spare ? '다음 시연' : mv.added ? '방금 올림' : '방금 이동') + '</span>' : '') + '<div><div class="bdc-t">' + esc(key) + '</div><div class="bdc-p">' + esc(ipgyo(r.p)) + (dd ? ' · ' + dd : '') + '</div></div>' +
           (st.n ? '<div class="bdc-pg"><span>강사 ' + (st.n - st.empty) + ' / ' + st.n + '칸</span><i><b style="width:' + pct + '%"></b></i></div>' : '') +
           '<div class="bdc-x">' + (st.nx.ai ? '<span class="ai-badge">AI 도움</span>' : '') + esc(st.nx.x) + '</div>' +
           '<button type="button" class="btn" data-demo-open="' + esc(key) + '">편성 화면 열기</button></article>';
@@ -1861,7 +1889,7 @@
       t.disabled = true; t.textContent = '되돌리는 중입니다(30초 안팎)…';
       api({ action: 'demoReset', password: getPw() }).then(function(j){
         if (!j || j.status !== 'ok') { t.disabled = false; t.textContent = '시연 처음 상태로'; alert((j && j.message) || '되돌리지 못했습니다'); return; }
-        ab.held = {}; ab.heldOk = {}; ab.justDone = {}; ab.copied = {}; ab.manual = null; ab.msg = ''; cxRes = {}; boardAdd = null; stageSeen = {}; stageMoved = {}; demoSt = null;
+        ab.held = {}; ab.heldOk = {}; ab.justDone = {}; ab.copied = {}; ab.manual = null; ab.msg = ''; cxRes = {}; boardAdd = null; stageSeen = {}; stageMoved = {}; demoSt = null; boardVis = null;
         instructors = null; instrById = {};
         bootClear();
         return loadAll(getPw()).then(function(){ showMsg('ok', '처음 상태로 되돌렸습니다.'); });

@@ -5,13 +5,16 @@
      로그인은 비밀번호 없이 [로그인] 버튼 하나로, 강사 승인은 확인창으로 줄입니다. false로 바꾸면 원래 화면으로 돌아갑니다(코드는 지우지 않음). */
 window.CONTEST_CONFIG = {
   WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbzYdVSZsLnSw3JN01aIDuXa1Ubxh6ERWYC-0TEQxu6tRYrcI9-WNYEoKv3Cfk9qyUvJ/exec',
-  VERSION: '대회용 d2i',
+  VERSION: '대회용 d2j',
   ORG_NAME: '○○소방학교',
   SIMPLE: true,
   DEMO_PW: '0000',      // 심사용 담당자 권한(모의 데이터 전용). 운영판은 개인 비밀번호 사용
   DEMO_ADMIN: '1111',   // 심사용 승인 권한(화면에서는 묻지 않고 확인창만 표시)
   // 강의배정 첫 화면에 먼저 보여 줄 과정(ai: 강사 미배정 → AI 일괄 배정, copy: 편성 전 → 지난 기수 불러오기, cell: 빈 칸 1개)
-  DEMO_COURSES: { '소방관계법규 실무과정 8기': 'ai', '구급역량 향상과정 10기': 'copy', '화재조사 전문과정 12기': 'cell' },
+  // 첫 화면 시연 과정(장면별 첫 과정 + 예비). 앞 과정이 처리되면 같은 장면의 다음 예비 과정이 첫 화면에 자동으로 올라옴
+  DEMO_COURSES: { '소방관계법규 실무과정 8기': 'ai', '소방관계법규 실무과정 9기': 'ai', '구급역량 향상과정 11기': 'ai',
+    '구급역량 향상과정 10기': 'copy', '구조역량 강화과정 14기': 'copy', '화재조사 전문과정 13기': 'copy',
+    '화재조사 전문과정 12기': 'cell', '민관 합동 위험물 안전과정 6기': 'cell', '신임 관리자 리더십과정 17기': 'cell' },
   // 평가관리 첫 화면에 보여 줄 과정(반영 대기 2 + 반영 완료 1)
   DEMO_EVAL: ['신임 관리자 리더십과정 16기', '구조역량 강화과정 13기', '소방관계법규 실무과정 7기']
 };
@@ -27,7 +30,7 @@ window.CONTEST_CONFIG = {
     var b = document.createElement('div');
     b.id = 'contestBanner';
     b.setAttribute('role', 'note');
-    b.textContent = '심사용 사본 · 모의 데이터 · 메일·문자 실제 발송 없음';
+    b.innerHTML = '심사용 사본 · 모의 데이터 · 메일·문자 실제 발송 없음 · <a href="lecture-assignment.html#v=table" style="color:#1B3A5F;font-weight:700;">시험을 마치면 [시연 처음 상태로]를 눌러 주세요</a>';
     b.style.cssText = 'background:#EEF1F5;color:#5F6877;font-size:11.5px;font-weight:600;text-align:center;padding:3px 12px;line-height:1.4;border-bottom:1px solid #E1E6ED;';
     document.body.insertBefore(b, document.body.firstChild);
     var v = document.createElement('div');
