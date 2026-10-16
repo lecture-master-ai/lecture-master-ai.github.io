@@ -365,6 +365,18 @@
   .dflow-s.df-todo{background:#F2F4F7;color:#98A2B3;}
   .dflow-a{align-self:center;color:#98A2B3;font-weight:800;}
 
+  /* d2c: 심사용 단순 화면 — 작은 부연 설명·강의계획서·운영팀 자동추가 숨김, AI 버튼은 파란색으로 구분 */
+  body.simple #editView .hint, body.simple #planView .hint, body.simple .ab-s, body.simple .ab-note, body.simple .ab-tip,
+  body.simple .ev2-sub, body.simple .demo-h span, body.simple .cxfind-row .hint{display:none !important;}
+  body.simple #sNoPlanWrap, body.simple #sOps, body.simple #sOps2, body.simple #sOpsAuto, body.simple .docleg, body.simple .db{display:none !important;}
+  .btn.ab-ai{background:#fff;color:#2F6FB2;border:1.5px solid #2F6FB2;}
+  .btn.ab-ai:hover{background:#F3F8FE;}
+  .btn.primary.ab-ai{background:#2F6FB2;border-color:#2F6FB2;color:#fff;box-shadow:0 2px 6px rgba(47,111,178,.35);}
+  .btn.primary.ab-ai:hover{background:#245C96;border-color:#245C96;}
+  .btn.primary.ab-ai:active{background:#1D4D80;}
+  .btn.primary.ab-ai .ai-badge{background:#fff;color:#2F6FB2;}
+  .btn.ab-ai .ai-badge{background:#2F6FB2;color:#fff;}
+
   /* d2: 평가관리 카드 */
   .ev2-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:10px;}
   .ev2-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;height:100%;box-sizing:border-box;}
@@ -2110,7 +2122,7 @@
       (function(){
         var seen = {}, n = 0;
         sessionsOf(currentKey).forEach(function(r){ var s = String(r['교과목'] || ''); if (isNoPlan(r) && !seen[s]) { seen[s] = 1; n++; } });
-        return n ? '<span class="tag t-none" title="강의계획서 제출 대상에서 제외한 교과목 수(책자 제작·마감 집계에서 빠짐)">계획서 제외 ' + n + '과목</span>' : '';
+        return n && !SIMPLE ? '<span class="tag t-none" title="강의계획서 제출 대상에서 제외한 교과목 수(책자 제작·마감 집계에서 빠짐)">계획서 제외 ' + n + '과목</span>' : '';
       })() +
       (function(){ if (isCancelled(p)) return ''; var ss = subjState(p), m = (ss.kind === 'info' || ss.kind === 'ok') ? gapMissCount(p) : 0; return (ss.kind === 'info' && ss.fr ? '<span class="tag t-info">' + esc(ss.fr) + '</span>' : '') + (m ? '<span class="tag t-warn">빈 교시 ' + m + '칸</span>' : ''); })();
     var co = cflByKey[currentKey];
@@ -4247,7 +4259,7 @@
     });
     return units;
   }
-  function noPlanTag(r){ return isNoPlan(r) && !isOps(r) ? ' <span class="tag t-none" style="font-size:11px;vertical-align:middle;">강의계획서 불필요</span>' : ''; }
+  function noPlanTag(r){ return !SIMPLE && isNoPlan(r) && !isOps(r) ? ' <span class="tag t-none" style="font-size:11px;vertical-align:middle;">강의계획서 불필요</span>' : ''; }
   function renderSessionList(){
     try { abRender(); } catch (e) { if (window.console) console.error(e); }
     var p = planByKey(currentKey);
@@ -4361,11 +4373,11 @@
         '<span class="ab-note">빈 칸 전체의 초안을 한 번에 만들고, 칸마다 선정 이유를 보여 드립니다.</span></div>';
     } else {
       var copied = ab.copied[currentKey] && held;
-      act = '<div class="ab-acts"><button type="button" class="btn' + (copied ? ' primary' : '') + ' ab-ai" data-ab="review"><span class="ab-tag">AI</span>' + (copied ? '지난 기수 강사 AI로 다시 검토' : 'AI로 강사 다시 검토') + '</button>' +
+      act = '<div class="ab-acts"><button type="button" class="btn primary ab-ai" data-ab="review"><span class="ab-tag">AI</span>' + (copied ? '지난 기수 강사 AI로 다시 검토' : 'AI로 강사 다시 검토') + '</button>' +
         '<span class="ab-note">' + (copied ? '지난 기수 강사를 그대로 불러왔습니다. 그동안 쌓인 설문 평가를 반영해 유지·교체를 칸마다 제안합니다.' : '지금 배정된 강사를 같은 기준(일정·평가·관련성)으로 다시 점검합니다.') + '</span></div>';
     }
     if (held) act += '<div class="ab-held"><div><b>강사 안내 보류 중 · ' + held + '명(' + (ab.held[currentKey].칸 || 0) + '칸)</b><span>적용한 배정은 아직 강사에게 알리지 않았습니다. 확인을 마치면 강사별로 1통씩 보냅니다.</span></div>' +
-      '<button type="button" class="btn primary" data-ab="send">안내 일괄 발송 (' + held + '명)</button></div>';
+      '<button type="button" class="btn primary" data-ab="send">강의배정 자동 일괄 발송 (' + held + '명)</button></div>';
     if (ab.msg) act += '<div class="ab-msg">' + ab.msg + '</div>';
     box.innerHTML = h + act;
     box.style.display = '';
@@ -4509,7 +4521,7 @@
     h += '<div class="ab-tw"><table class="ab-tbl"><thead><tr>' + head + '</tr></thead><tbody>' + rows + '</tbody></table></div>';
     var nChk = Object.keys(ab.chk).filter(function(k){ return ab.chk[k] && ab.sel[k]; }).length;
     var applyTxt = ab.kind === 'draft' ? '선택한 ' + nChk + '칸 적용' : (ab.src === 'copy' ? '선택한 ' + nChk + '칸 교체' : '선택한 ' + nChk + '칸 AI 초안으로 바꾸기');
-    h += '<div class="ab-foot"><div class="ab-fn">적용해도 강사에게 바로 안내되지 않습니다. 화면에서 확인한 뒤 <b>[안내 일괄 발송]</b>으로 강사별 1통씩 보냅니다.</div>' +
+    h += '<div class="ab-foot"><div class="ab-fn">적용해도 강사에게 바로 안내되지 않습니다. 화면에서 확인한 뒤 <b>[강의배정 자동 일괄 발송]</b>으로 강사별 1통씩 보냅니다.</div>' +
       '<div class="ab-fb"><button type="button" class="btn" data-ab="close">' + (ab.kind === 'draft' ? '닫기' : '지금 편성 유지') + '</button><button type="button" class="btn primary" data-ab="apply"' + (nChk ? '' : ' disabled') + '>' + applyTxt + '</button></div><div id="abMsg"></div></div>';
     ab.modal.body.innerHTML = h;
   }
@@ -4557,12 +4569,12 @@
     if (!confirm('강사 ' + hd.강사 + '명에게 배정 안내를 보냅니다(강사별 1통, ' + hd.칸 + '칸).\n보낼까요?')) return;
     btn.disabled = true; btn.textContent = '보내는 중…';
     api({ action: 'sendHeldNotices', password: getPw(), 개설키: key }).then(function(j){
-      if (!j || j.status !== 'ok') { btn.disabled = false; btn.textContent = '안내 일괄 발송'; alert((j && j.message) || '보내지 못했습니다'); return; }
+      if (!j || j.status !== 'ok') { btn.disabled = false; btn.textContent = '강의배정 자동 일괄 발송'; alert((j && j.message) || '보내지 못했습니다'); return; }
       var n = (j.안내 || []).length;
       ab.held[key] = { 칸: 0, 강사: 0 }; ab.copied[key] = false;
       ab.msg = ic('check', 'l') + '강사 ' + n + '명에게 배정 안내를 보냈습니다' + (j.시연모드 ? '(심사용 사본은 실제로 보내지 않고 발송 기록에만 남깁니다)' : '') + '. <button type="button" class="ab-lnk" data-cxout="1">보낸 내용 보기</button>';
       abRender();
-    }).catch(function(){ btn.disabled = false; btn.textContent = '안내 일괄 발송'; alert('서버에 연결하지 못했습니다.'); });
+    }).catch(function(){ btn.disabled = false; btn.textContent = '강의배정 자동 일괄 발송'; alert('서버에 연결하지 못했습니다.'); });
   }
   document.addEventListener('click', function(ev){
     var t = ev.target.closest ? ev.target.closest('#abBar [data-ab]') : null; if (!t) return;
@@ -5800,7 +5812,7 @@
       '<b>복사 ' + good.length + '줄</b>' + (bad ? ' · <span style="color:var(--err-fg);font-weight:700;">제외 ' + bad + '줄(아래 표 확인)</span>' : '') + '</div>' +
       '<div class="pwrap"><table><thead><tr><th>원본 일자</th><th>새 일자</th><th>교시</th><th>교과목</th><th>반</th><th>강사</th><th>강의실</th><th>결과</th></tr></thead><tbody>' + trs + '</tbody></table></div>' +
       cfHtml +
-      '<div class="box w">원본 내용을 그대로 가져옵니다. 저장 후 교과목 편성 화면의 "수정"에서 <b>날짜·교시·교과목·반·강의실·강사·비고를 모두 바꿀 수 있고</b>, 필요 없는 줄은 삭제할 수 있습니다. <b>복사 저장 시 강사에게 안내(메일·문자)는 바로 가지 않고 보류됩니다.</b> 저장 후 지난 기수 평가를 반영해 강사를 다시 검토하고, [안내 일괄 발송]으로 강사별 1통씩 보냅니다.' + (cp.instr ? ' 강사가 달라지는 기수라면 "강사도 복사"를 해제해 비워 둘 수 있습니다.' : ' 강사는 비어 있는 상태("미지정")로 저장됩니다.') + '</div>' +
+      '<div class="box w">원본 내용을 그대로 가져옵니다. 저장 후 교과목 편성 화면의 "수정"에서 <b>날짜·교시·교과목·반·강의실·강사·비고를 모두 바꿀 수 있고</b>, 필요 없는 줄은 삭제할 수 있습니다. <b>복사 저장 시 강사에게 안내(메일·문자)는 바로 가지 않고 보류됩니다.</b> 저장 후 지난 기수 평가를 반영해 강사를 다시 검토하고, [강의배정 자동 일괄 발송]으로 강사별 1통씩 보냅니다.' + (cp.instr ? ' 강사가 달라지는 기수라면 "강사도 복사"를 해제해 비워 둘 수 있습니다.' : ' 강사는 비어 있는 상태("미지정")로 저장됩니다.') + '</div>' +
       '<div class="msg" id="pMsg"></div>' +
       '<div class="btns"><button type="button" class="btn" id="pClose">닫기</button><button type="button" class="btn primary" id="pSave"' + (good.length ? '' : ' disabled') + '>' + good.length + '줄 복사해 저장</button></div>';
     $('pClose').addEventListener('click', closeCopy);
@@ -5832,7 +5844,7 @@
       var nIns = (j.data || []).filter(function(r){ return r['강사ID'] || r['강사명']; }).length;
       showMsg('ok', courseLabel(srcKey) + '에서 교과목 ' + (j.개수 || good.length) + '줄을 복사했습니다. ' +
         (useInstr ? '강사 ' + nIns + '줄은 원본 그대로 복사했으니, 달라지는 교과목은 "수정"에서 바꿔 주세요. ' : '강사는 비워 두었습니다("강사 지정"으로 입력). ') +
-        (useInstr ? '강사 안내는 보류했습니다. 아래 [강사 배정]에서 AI로 다시 검토한 뒤 [안내 일괄 발송]으로 보냅니다. ' : '') +
+        (useInstr ? '강사 안내는 보류했습니다. 아래 [강사 배정]에서 AI로 다시 검토한 뒤 [강의배정 자동 일괄 발송]으로 보냅니다. ' : '') +
         ((j.warnings || []).length ? ' 확인 필요: ' + j.warnings.join(' / ') + '.' : ''));
       window.scrollTo(0, 0);
     }).catch(function(){
