@@ -500,6 +500,81 @@
     .ab-pipe i{display:none;} .ab-pipe span{flex-basis:45%;}
   }
   .demo-note{margin-top:10px;text-align:center;font-size:12px;color:#98A2B3;}
+
+  /* ---- 첫 화면 시안(?ui=a / ?ui=b) ---- */
+  .pf{background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px 20px 16px;margin:0 0 18px;}
+  .pf-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px 16px;flex-wrap:wrap;margin-bottom:12px;}
+  .pf-h b{font-size:16px;color:var(--navy);} .pf-h > span{font-size:12.5px;color:var(--text-muted);}
+  .pf-band{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;}
+  .pf-s{position:relative;min-height:92px;padding:12px 26px 12px 30px;background:#E8EEF6;color:var(--navy);display:flex;flex-direction:column;justify-content:space-between;
+    clip-path:polygon(0 0,calc(100% - 18px) 0,100% 50%,calc(100% - 18px) 100%,0 100%,18px 50%);}
+  .pf-s:first-child{padding-left:18px;clip-path:polygon(0 0,calc(100% - 18px) 0,100% 50%,calc(100% - 18px) 100%,0 100%);border-radius:10px 0 0 10px;}
+  .pf-s.has{background:var(--navy);color:#fff;}
+  .pf-s .t{color:inherit;display:block;font-size:17px;font-weight:800;letter-spacing:-0.3px;} .pf-s .t i{font-style:normal;opacity:.65;margin-right:6px;font-weight:700;}
+  .pf-s .d{font-size:12.5px;opacity:.8;margin-top:2px;line-height:1.35;}
+  .pf-s .c{font-size:13px;font-weight:700;margin-top:8px;}
+  .pf-s .c em{font-style:normal;display:inline-block;background:#E8762B;color:#fff;border-radius:999px;padding:1px 9px;margin-right:4px;}
+  .pf-s:not(.has) .c{color:#7A8699;}
+  .pf-tools{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:10px;}
+  .pf-tools > div{display:flex;flex-direction:column;gap:5px;padding:0 6px 0 18px;}
+  .pf-tools > div:first-child{padding-left:4px;}
+  .tl{font-size:12.5px;color:#344054;line-height:1.3;display:flex;align-items:center;}
+  .tl .ai-badge{margin-right:6px;}
+  .tl .hum,.tl .auto{display:inline-flex;font-size:10.5px;font-weight:800;line-height:1;border-radius:4px;padding:3px 5px;margin-right:6px;white-space:nowrap;}
+  .tl .hum{background:#fff;color:var(--navy);border:1px solid #B8C4D4;padding:2px 4px;}
+  .tl .auto{background:#EEF1F5;color:#475467;}
+  .wk-h{display:flex;align-items:baseline;gap:8px;margin:0 2px 10px;} .wk-h b{font-size:16px;color:var(--navy);} .wk-h span{font-size:13px;color:var(--text-muted);}
+  .wk-grid{text-align:left;display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px;}
+  .wk{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;}
+  .wk-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+  .wk-t{font-size:17px;font-weight:800;color:#101828;letter-spacing:-0.3px;line-height:1.3;} .wk-p{font-size:13px;color:#475467;margin-top:2px;}
+  .wk-dd{flex-shrink:0;font-size:12px;font-weight:800;color:var(--navy);background:#E8EEF6;border-radius:6px;padding:3px 7px;}
+  .wk-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;}
+  .wk-bar span{height:6px;border-radius:3px;background:#E4E7EC;} .wk-bar span.done{background:var(--navy);} .wk-bar span.now{background:#E8762B;}
+  .wk-lb{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;font-size:11.5px;color:#98A2B3;margin-top:-5px;}
+  .wk-lb span.done{color:var(--navy);font-weight:700;} .wk-lb span.now{color:#9A3D0A;font-weight:800;}
+  .wk-next{background:#FFF4EC;border-radius:8px;padding:9px 11px;font-size:14px;color:#101828;line-height:1.45;flex:1;}
+  .wk-next small{display:block;font-size:11.5px;font-weight:800;color:#9A3D0A;margin-bottom:2px;}
+  .wk-next.fin{background:#F2F4F7;} .wk-next.fin small{color:#475467;}
+  .wk .btn{width:100%;height:40px;font-size:14.5px;border-color:var(--navy);color:var(--navy);}
+  .wk .btn:hover{background:#E8EEF6;}
+  /* 시안 B: 단계별 보드 */
+  .bd{background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px 18px 18px;}
+  .bd-track{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;position:relative;margin-bottom:14px;}
+  .bd-track::before{content:"";position:absolute;left:12.5%;right:12.5%;top:17px;height:2px;background:#C9D3E0;}
+  .bd-st{position:relative;text-align:center;}
+  .bd-n{width:36px;height:36px;margin:0 auto 6px;border-radius:50%;background:#fff;border:2px solid #C9D3E0;color:#7A8699;font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;position:relative;}
+  .bd-st.has .bd-n{background:var(--navy);border-color:var(--navy);color:#fff;}
+  .bd-st .t{display:block;font-size:16px;font-weight:800;color:var(--navy);} .bd-st .d{font-size:12px;color:var(--text-muted);margin-top:1px;}
+  .bd-st .tls{display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:7px;}
+  .bd-lanes{text-align:left;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;align-items:start;}
+  .bd-lane{background:#F3F6FA;border-radius:12px;padding:10px;min-height:150px;display:flex;flex-direction:column;gap:10px;}
+  .bd-lh{font-size:12.5px;font-weight:800;color:#475467;padding:0 2px;display:flex;justify-content:space-between;}
+  .bd-lh em{font-style:normal;color:#9A3D0A;}
+  .bd-empty{flex:1;border:1.5px dashed #C9D3E0;border-radius:10px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:12.5px;color:#7A8699;padding:14px 10px;line-height:1.45;}
+  .bdc{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 13px;display:flex;flex-direction:column;gap:7px;}
+  .bdc-t{font-size:15px;font-weight:800;color:#101828;letter-spacing:-0.3px;line-height:1.3;} .bdc-p{font-size:12px;color:#475467;}
+  .bdc-pg{display:flex;align-items:center;gap:8px;font-size:12px;color:#344054;font-weight:700;}
+  .bdc-pg i{flex:1;height:5px;border-radius:3px;background:#E4E7EC;overflow:hidden;position:relative;} .bdc-pg i b{position:absolute;left:0;top:0;bottom:0;background:var(--navy);border-radius:3px;}
+  .bdc-x{font-size:13px;line-height:1.4;color:#101828;}
+  .bdc .btn{width:100%;height:34px;font-size:13.5px;border-color:var(--navy);color:var(--navy);}
+  .bdc .btn:hover{background:#E8EEF6;}
+  .bd-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;}
+  @media (max-width:760px){
+    .pf{padding:14px;} .pf-band,.pf-tools{display:none;}
+    .pf-v{display:flex !important;}
+    .bd-track{display:none;} .bd-lanes{grid-template-columns:1fr;} .bd-lane{min-height:0;}
+    .bd-lh{font-size:14px;color:var(--navy);} .bd-empty{padding:10px;}
+    .bd{padding:12px;}
+  }
+  .pf-v{display:none;flex-direction:column;gap:0;}
+  .pf-vr{display:grid;grid-template-columns:30px 1fr auto;gap:2px 10px;align-items:center;padding:9px 0;border-top:1px solid #EEF1F5;}
+  .pf-vr:first-child{border-top:none;}
+  .pf-vr .n{grid-row:span 2;width:28px;height:28px;border-radius:50%;background:#E8EEF6;color:var(--navy);font-weight:800;display:flex;align-items:center;justify-content:center;font-size:13px;}
+  .pf-vr.has .n{background:var(--navy);color:#fff;}
+  .pf-vr .t{display:block;font-size:15px;font-weight:800;color:var(--navy);} .pf-vr .c{grid-row:span 2;font-size:12.5px;font-weight:700;color:#7A8699;}
+  .pf-vr.has .c{color:#9A3D0A;}
+  .pf-vr .tls{display:flex;flex-wrap:wrap;gap:4px 10px;}
   .gnav-brand .on{color:#FFB38A;margin-left:.3em;}
   .gnav-in{display:flex;align-items:stretch;gap:2px;padding:0 20px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
   .gnav-in::-webkit-scrollbar{display:none;}
@@ -1019,7 +1094,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d2c</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d2d</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -1496,6 +1571,92 @@
     return '<div class="dflow" role="img" aria-label="편성 단계: ' + st.map(function(x){ return x.t + ' ' + x.s; }).join(', ') + '">' +
       st.map(function(x, i){ return (i ? '<span class="dflow-a" aria-hidden="true">›</span>' : '') + '<div class="dflow-s df-' + x.c + '"><b>' + (i + 1) + '. ' + x.t + '</b><span>' + esc(x.s) + '</span></div>'; }).join('') + '</div>';
   }
+
+  /* ---- 첫 화면 시안: ?ui=a(공정 띠) / ?ui=b(단계별 보드) ---- */
+  var UIV = (/[?&]ui=([ab]|old)/.exec(location.search) || [])[1] || 'b'; if (UIV === 'old') UIV = '';   // 첫 화면: 단계별 보드(B) 기본
+  var STEPS = [
+    { t: '교과목 편성', d: '지난 기수 편성 불러오기', tl: [['ai', '지난 기수 강사 재검토'], ['', '지난 기수 편성 불러오기']] },
+    { t: '강사 배정', d: '빈 칸에 강사 배정', tl: [['ai', 'AI 강사 일괄 배정'], ['ai', '적합한 강사 찾기']] },
+    { t: '완료', d: '담당자 확인 후 배정 확정', tl: [['hum', '배정 확인·적용']] },
+    { t: '일괄 발송', d: '강사별 1통씩 안내', tl: [['auto', '강의배정 자동 일괄 발송']] }
+  ];
+  function stTool(x){ return '<span class="tl">' + (x[0] === 'ai' ? '<span class="ai-badge">AI 도움</span>' : x[0] ? '<span class="' + x[0] + '">' + (x[0] === 'hum' ? '담당자' : '자동') + '</span>' : '') + esc(x[1]) + '</span>'; }
+  function dDay(p){
+    var a = normYmd(p['입교 시작일']); if (!a) return '';
+    var t = new Date(Date.now() + 9 * 3600000); t = Date.UTC(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate());
+    var q = a.split('-'), n = Math.round((Date.UTC(+q[0], +q[1] - 1, +q[2]) - t) / 86400000);
+    return n > 0 ? '개강 D-' + n : n === 0 ? '오늘 개강' : '진행 중';
+  }
+  // 과정 위치: 1 교과목 편성 · 2 강사 배정 · 3 완료(안내 보류 중) · 4 일괄 발송(끝)
+  function courseStage(key){
+    var ss = sessionsOf(key), n = ss.length, empty = ss.filter(function(r){ return !String(r['강사ID'] || '') && !String(r['강사명'] || ''); }).length;
+    var hd = ab.held[key]; if (hd === undefined && n && !empty) { ab.held[key] = { 칸: 0, 강사: 0 }; abHeldFetchDemo(key); }
+    var held = (ab.held[key] && ab.held[key].강사) || 0;
+    var lane = !n ? 1 : empty ? 2 : held ? 3 : 4, nx;
+    if (lane === 1) nx = { ai: true, h: '지금 할 일', x: '지난 기수 편성을 불러오고, 강사는 지난 기수 평가로 다시 검토합니다.' };
+    else if (lane === 2 && empty === n) nx = { ai: true, h: '지금 할 일', x: '빈 칸 ' + empty + '개 · AI 강사 일괄 배정으로 초안을 만듭니다.' };
+    else if (lane === 2) nx = { ai: true, h: '지금 할 일', x: '빈 칸 ' + empty + '개 · 적합한 강사 찾기로 후보를 확인합니다.' };
+    else if (lane === 3) nx = { ai: false, h: '지금 할 일', x: '배정 완료 · 강사 ' + held + '명에게 강의배정 자동 일괄 발송' };
+    else nx = { ai: false, fin: true, h: '끝', x: '배정과 강사 안내를 마쳤습니다.' };
+    return { lane: lane, n: n, empty: empty, held: held, nx: nx };
+  }
+  function abHeldFetchDemo(key){
+    api({ action: 'heldNotices', password: getPw(), 개설키: key }).then(function(j){
+      if (j && j.status === 'ok' && (j.강사 || 0)) { ab.held[key] = { 칸: j.칸 || 0, 강사: j.강사 || 0 }; if (!currentKey) renderDemo(); }
+    }).catch(function(){});
+  }
+  function demoFoot(){
+    return '<div class="demo-all"><button type="button" class="btn" id="demoAll">' + (document.body.classList.contains('showall') ? '전체 과정 접기' : '전체 과정 보기 (' + plans.length + '개)') + '</button></div>' +
+      '<div class="demo-note">심사용 사본 · 모의 데이터입니다. 바꾼 내용은 처음 상태로 되돌릴 수 있습니다. <button type="button" class="ab-lnk" id="demoReset">처음 상태로 되돌리기</button></div>';
+  }
+  function nxHtml(st, cls){
+    return '<div class="' + cls + (st.nx.fin ? ' fin' : '') + '"><small>' + st.nx.h + '</small>' + (st.nx.ai ? '<span class="ai-badge">AI 도움</span>' : '') + esc(st.nx.x) + '</div>';
+  }
+  function renderDemoA(demos){
+    var rows = demos.map(function(p){ return { p: p, st: courseStage(p['과정+기수']) }; });
+    var cnt = [0, 0, 0, 0, 0]; rows.forEach(function(r){ cnt[r.st.lane]++; });
+    var h = '<section class="pf" aria-label="강의배정 절차"><div class="pf-h"><b>강의배정 절차</b><span><span class="ai-badge">AI 도움</span>AI가 근거를 붙여 제안하고, 적용은 담당자가 결정합니다.</span></div><div class="pf-band">';
+    STEPS.forEach(function(s, i){
+      var c = cnt[i + 1], todo = i < 3 ? c : c;
+      h += '<div class="pf-s' + (c && i < 3 ? ' has' : '') + '"><div><div class="t"><i>' + (i + 1) + '</i>' + s.t + '</div><div class="d">' + s.d + '</div></div>' +
+        '<div class="c">' + (c ? (i < 3 ? '<em>' + c + '</em>과정 진행 중' : c + '과정 끝') : '해당 과정 없음') + '</div></div>';
+    });
+    h += '</div><div class="pf-tools">' + STEPS.map(function(s){ return '<div>' + s.tl.map(stTool).join('') + '</div>'; }).join('') + '</div>';
+    h += '<div class="pf-v">' + STEPS.map(function(s, i){ var c = cnt[i + 1];
+      return '<div class="pf-vr' + (c && i < 3 ? ' has' : '') + '"><span class="n">' + (i + 1) + '</span><span class="t">' + s.t + '</span><span class="c">' + (c ? c + '과정' : '-') + '</span><span class="tls">' + s.tl.filter(function(x){ return x[0]; }).map(stTool).join('') + '</span></div>'; }).join('') + '</div></section>';
+    h += '<div class="wk-h"><b>작성 중인 과정</b><span>' + rows.length + '개</span></div><div class="wk-grid">';
+    rows.forEach(function(r){
+      var key = r.p['과정+기수'], L = r.st.lane, dd = dDay(r.p);
+      var cls = function(i){ return L === 4 || i < L ? 'done' : i === L ? 'now' : ''; };
+      h += '<article class="wk"><div class="wk-top"><div><div class="wk-t">' + esc(key) + '</div><div class="wk-p">' + esc(ipgyo(r.p)) + '</div></div>' + (dd ? '<span class="wk-dd">' + dd + '</span>' : '') + '</div>' +
+        '<div class="wk-bar" aria-hidden="true">' + [1, 2, 3, 4].map(function(i){ return '<span class="' + cls(i) + '"></span>'; }).join('') + '</div>' +
+        '<div class="wk-lb" role="img" aria-label="현재 단계: ' + STEPS[Math.min(L, 4) - 1].t + '">' + STEPS.map(function(s, i){ return '<span class="' + cls(i + 1) + '">' + s.t + '</span>'; }).join('') + '</div>' +
+        nxHtml(r.st, 'wk-next') + '<button type="button" class="btn" data-demo-open="' + esc(key) + '">편성 화면 열기</button></article>';
+    });
+    if (!rows.length) h += '<div class="demo-d">편성이 필요한 과정이 없습니다.</div>';
+    return h + '</div>' + demoFoot();
+  }
+  function renderDemoB(demos){
+    var lanes = [[], [], [], [], []];
+    demos.forEach(function(p){ var st = courseStage(p['과정+기수']); lanes[st.lane].push({ p: p, st: st }); });
+    var EMPTY = ['', '교과목이 없는 과정이 여기에 놓입니다.', '강사 빈 칸이 있는 과정이 여기에 놓입니다.', '배정을 마치고 안내를 기다리는 과정이 여기에 놓입니다.', '강사 안내까지 마친 과정이 여기에 놓입니다.'];
+    var h = '<section class="bd" aria-label="강의배정 절차와 과정 위치"><div class="bd-track">' + STEPS.map(function(s, i){
+      return '<div class="bd-st' + (lanes[i + 1].length ? ' has' : '') + '"><div class="bd-n">' + (i + 1) + '</div><div class="t">' + s.t + '</div><div class="d">' + s.d + '</div><div class="tls">' + s.tl.filter(function(x){ return x[0]; }).map(stTool).join('') + '</div></div>'; }).join('') + '</div><div class="bd-lanes">';
+    STEPS.forEach(function(s, i){
+      var L = lanes[i + 1];
+      h += '<div class="bd-lane"><div class="bd-lh"><span>' + (i + 1) + '. ' + s.t + '</span>' + (L.length ? '<em>' + L.length + '과정</em>' : '<span>0</span>') + '</div>';
+      if (!L.length) h += '<div class="bd-empty">' + EMPTY[i + 1] + '</div>';
+      L.forEach(function(r){
+        var key = r.p['과정+기수'], st = r.st, dd = dDay(r.p), pct = st.n ? Math.round((st.n - st.empty) / st.n * 100) : 0;
+        h += '<article class="bdc"><div><div class="bdc-t">' + esc(key) + '</div><div class="bdc-p">' + esc(ipgyo(r.p)) + (dd ? ' · ' + dd : '') + '</div></div>' +
+          (st.n ? '<div class="bdc-pg"><span>강사 ' + (st.n - st.empty) + ' / ' + st.n + '칸</span><i><b style="width:' + pct + '%"></b></i></div>' : '') +
+          '<div class="bdc-x">' + (st.nx.ai ? '<span class="ai-badge">AI 도움</span>' : '') + esc(st.nx.x) + '</div>' +
+          '<button type="button" class="btn" data-demo-open="' + esc(key) + '">편성 화면 열기</button></article>';
+      });
+      h += '</div>';
+    });
+    return h + '</div><div class="bd-foot"><span class="legend"><span class="ai-badge">AI 도움</span>AI가 근거를 붙여 제안하고, 적용은 담당자가 결정합니다.</span></div></section>' + demoFoot();
+  }
   function renderDemo(){
     var box = $('demoBox'); if (!box) return;
     var on = SIMPLE && !currentKey && planMode === 'table';
@@ -1505,6 +1666,7 @@
     var order = ['ai', 'copy', 'cell'];
     var demos = plans.filter(function(p){ return DEMO_KEYS[p['과정+기수']] && !isCancelled(p); });
     demos.sort(function(a, b){ return order.indexOf(DEMO_KEYS[a['과정+기수']]) - order.indexOf(DEMO_KEYS[b['과정+기수']]); });
+    if (UIV) { box.innerHTML = UIV === 'a' ? renderDemoA(demos) : renderDemoB(demos); $('hTitle').textContent = '강의배정'; $('hSub').textContent = '교과목에 맞는 강사를 찾아 배정합니다. 최종 결정은 담당자가 합니다.'; return; }
     var h = '<div class="demo-h"><b>편성이 필요한 과정</b><span>다가오는 과정 중 강사 배정이 남은 과정입니다.</span></div>' +
       '<div class="ai-hint"><span class="ai-badge">AI 도움</span><b>AI 도움을 받을 수 있는 곳</b><span>강사 일괄 배정 · 지난 기수 강사 재검토 · 적합한 강사 찾기 · 강사카드 채우기 · 설문 의견 정리</span><span style="color:#667085">— AI는 근거를 제시하고, 적용은 담당자가 결정합니다.</span></div><div class="demo-grid">';
     demos.forEach(function(p){
@@ -4342,8 +4504,8 @@
     var st = [
       { t: '교과목 편성', s: '완료 ' + nAll + '칸', c: 'done' },
       { t: '강사 배정', s: nEmpty ? (nAll - nEmpty) + ' / ' + nAll + '칸' : '완료', c: nEmpty ? 'now' : 'done' },
-      { t: '강사 안내', s: held ? '보류 ' + held + '명' : (nEmpty ? '남음' : '완료'), c: held ? 'now' : (nEmpty ? 'todo' : 'done') },
-      { t: '편성 완료', s: !nEmpty && !held ? '완료' : '남음', c: !nEmpty && !held ? 'done' : 'todo' }
+      { t: '완료', s: nEmpty ? '남음' : '배정 확정', c: nEmpty ? 'todo' : 'done' },
+      { t: '일괄 발송', s: held ? '대기 ' + held + '명' : (nEmpty ? '남음' : '완료'), c: held ? 'now' : (nEmpty ? 'todo' : 'done') }
     ];
     return '<div class="dflow ab-flow" role="img" aria-label="진행 단계: ' + st.map(function(x){ return x.t + ' ' + x.s; }).join(', ') + '">' +
       st.map(function(x, i){ return (i ? '<span class="dflow-a" aria-hidden="true">›</span>' : '') + '<div class="dflow-s df-' + x.c + '"><b>' + (i + 1) + '. ' + x.t + '</b><span>' + esc(x.s) + '</span></div>'; }).join('') + '</div>';
