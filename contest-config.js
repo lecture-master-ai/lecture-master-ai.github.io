@@ -5,7 +5,7 @@
      로그인은 비밀번호 없이 [로그인] 버튼 하나로, 강사 승인은 확인창으로 줄입니다. false로 바꾸면 원래 화면으로 돌아갑니다(코드는 지우지 않음). */
 window.CONTEST_CONFIG = {
   WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbzYdVSZsLnSw3JN01aIDuXa1Ubxh6ERWYC-0TEQxu6tRYrcI9-WNYEoKv3Cfk9qyUvJ/exec',
-  VERSION: '대회용 d2e',
+  VERSION: '대회용 d2g',
   ORG_NAME: '○○소방학교',
   SIMPLE: true,
   DEMO_PW: '0000',      // 심사용 담당자 권한(모의 데이터 전용). 운영판은 개인 비밀번호 사용
@@ -157,7 +157,9 @@ window.CONTEST_CONFIG = {
     surveyCommit: ['설문 결과를 반영하는 중', '설문 결과 반영'],
     surveyUndo: ['반영을 취소하는 중', '반영 취소'],
     saveSession: ['저장하는 중', '저장'],
-    deleteSession: ['삭제하는 중', '삭제']
+    deleteSession: ['삭제하는 중', '삭제'],
+    abRulesSave: ['배정 규칙 기본값을 저장하는 중', '규칙 저장'],
+    boardSet: ['보드에 과정을 올리는 중', '과정 올리기']
   };
   var wkN = 0, wkT0 = 0, wkTick = null, wkAct = '';
   function wkStart(act) {
