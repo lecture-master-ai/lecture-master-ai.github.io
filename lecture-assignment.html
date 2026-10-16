@@ -603,6 +603,13 @@
   .ab-rn{width:58px;height:28px;border:1px solid var(--border-input);border-radius:6px;padding:0 6px;font:inherit;font-size:13px;text-align:center;margin:0 3px;}
   .ab-rb{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;justify-content:flex-end;margin-top:10px;font-size:12.5px;color:#5F6877;}
   .ab-rb > span{margin-right:auto;}
+
+  /* d2g: 강사관리로 돌아가기 */
+  #dashBack{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:0 0 12px;}
+  .db-back{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 16px;border:1.5px solid var(--navy);border-radius:8px;background:#fff;color:var(--navy);font-weight:800;font-size:14.5px;text-decoration:none;}
+  .db-back:hover{background:#E8EEF6;} .db-back:focus-visible{outline:2px solid var(--navy);outline-offset:2px;}
+  .db-back svg{width:16px;height:16px;}
+  .db-note{font-size:12.5px;color:var(--text-muted);}
   .pf-v{display:none;flex-direction:column;gap:0;}
   .pf-vr{display:grid;grid-template-columns:30px 1fr auto;gap:2px 10px;align-items:center;padding:9px 0;border-top:1px solid #EEF1F5;}
   .pf-vr:first-child{border-top:none;}
@@ -1109,6 +1116,7 @@
   <div id="editView">
     <div id="viewerNote" class="viewer-note" style="display:none;">조회 전용 계정입니다. 교과목 편성 내용은 볼 수만 있고 추가·수정·삭제는 할 수 없습니다.</div>
     <div id="sBlock" class="note-err" style="display:none;margin-bottom:12px;"></div>
+    <div id="dashBack" style="display:none;"></div>
     <div class="panel" id="sHead"></div>
     <div class="panel" id="abBar" style="display:none;"></div>
     <div class="panel" id="sFormPanel"></div>
@@ -1130,7 +1138,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d2g</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d2h</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -2233,15 +2241,27 @@
       gridKeepWeek = mondayOf(dm[1]); gridWantDate = dm[1];
       lastDate = dm[1];   // 교과목 추가 칸의 일자 기본값을 누른 날짜로
     }
-    if (currentKey === key && $('editView').style.display === 'block') { refreshEditList(); return; }
+    var fdb = /[#&]from=dash(?:&|$)/.test(location.hash || '') && /[#&]ri=([^&]+)/.exec(location.hash || '');
+    if (fdb) { var rn = /[#&]rn=([^&]*)/.exec(location.hash || ''); try { dashBack = { id: decodeURIComponent(fdb[1]), name: rn ? decodeURIComponent(rn[1]) : '', key: key }; } catch (e) { dashBack = null; } }
+    if (currentKey === key && $('editView').style.display === 'block') { refreshEditList(); renderDashBack(); return; }
     showEdit(key);
+    renderDashBack();
+  }
+  /* d2g: 강사관리 강사 상세의 '강의배정에서 보기'로 들어온 경우 → 시간표를 확인하고 그 강사 상세로 돌아가는 버튼 */
+  var dashBack = null;
+  function renderDashBack(){
+    var el = $('dashBack'); if (!el) return;
+    if (!dashBack || dashBack.key !== currentKey) { el.style.display = 'none'; el.innerHTML = ''; return; }
+    el.innerHTML = '<a class="db-back" href="instructor-dashboard.html#i=' + encodeURIComponent(dashBack.id) + '">' + ic('arrowL', 'l') + (dashBack.name ? esc(dashBack.name) + ' 강사 상세로 돌아가기' : '강사 상세로 돌아가기') + '</a>' +
+      '<span class="db-note">강사관리의 강의 이력에서 이 과정 시간표로 왔습니다.</span>';
+    el.style.display = '';
   }
   function showPlan(){
     currentKey = '';
     closeBrowse(); closeInstructor(); closeChange(); closeCopy(); closeFormModal();
     $('editView').style.display = 'none';
     $('planView').style.display = '';
-    cameFrom = ''; cameBack = '';
+    cameFrom = ''; cameBack = ''; dashBack = null; renderDashBack();
     applyPlanHead();
     applyFilters();
   }
@@ -5465,6 +5485,7 @@
   function closeInstructor(){ $('iOverlay').style.display = 'none'; }
   /* 이 강사의 주강사 편성(교과목별) 강의계획서 제출 현황 */
   function planSecHtml(id, mine, viewer){
+    if (SIMPLE) return '';   // 심사용: 강의계획서 숨김(강사관리 강의 이력과 같게)
     var list = mine.map(function(r){ return { r: r, st: planState(r) }; }).filter(function(o){ return o.st; })
       .sort(function(a, b){ return String(a.st.date).localeCompare(String(b.st.date)); });
     if (!list.length) return '';
