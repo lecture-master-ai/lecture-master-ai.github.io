@@ -448,6 +448,7 @@
   .ab-opt{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;margin:8px 0;font-size:13px;}
   .ab-opt label{display:flex;align-items:center;gap:6px;font-weight:700;cursor:pointer;} .ab-opt small{font-weight:500;color:#667085;}
   .ab-rules summary{cursor:pointer;font-weight:800;color:var(--navy);}
+  .ab-why-x{display:flex;justify-content:flex-end;margin-top:8px;}
   .ab-rules ol{margin:6px 0 0;padding-left:20px;line-height:1.6;}
   .ab-tw{border:1px solid #D5DCE6;border-radius:10px;overflow:auto;}
   .ab-tbl{width:100%;border-collapse:collapse;font-size:13px;}
@@ -1094,7 +1095,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d2e</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d2f</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -4627,7 +4628,7 @@
         '<div class="ab-ar">' + esc(a.reason || '') + '</div></div><button type="button" class="btn sm" data-abswap="' + esc(c.편성ID + '|' + a.id) + '">이 강사로 바꾸기</button></div>';
     }).join('') + '</div></div>';
     if ((c.제외 || []).length) h += '<div class="ab-wr"><span class="ab-wl">조건 제외</span><div>' + c.제외.map(function(e){ return '<div class="ab-ex"><b>' + esc(e.name) + '</b> — ' + esc(e.why) + '</div>'; }).join('') + '</div></div>';
-    return h + '</div>';
+    return h + '<div class="ab-why-x"><button type="button" class="btn sm" data-abwhy="' + esc(c.편성ID) + '">선정 이유 닫기' + ic('chevU', 'r') + '</button></div></div>';
   }
   function abPickCell(c){
     var cur = abCandOf(c, ab.sel[c.편성ID]);

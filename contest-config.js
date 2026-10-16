@@ -5,7 +5,7 @@
      로그인은 비밀번호 없이 [로그인] 버튼 하나로, 강사 승인은 확인창으로 줄입니다. false로 바꾸면 원래 화면으로 돌아갑니다(코드는 지우지 않음). */
 window.CONTEST_CONFIG = {
   WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbzYdVSZsLnSw3JN01aIDuXa1Ubxh6ERWYC-0TEQxu6tRYrcI9-WNYEoKv3Cfk9qyUvJ/exec',
-  VERSION: '대회용 d2d',
+  VERSION: '대회용 d2e',
   ORG_NAME: '○○소방학교',
   SIMPLE: true,
   DEMO_PW: '0000',      // 심사용 담당자 권한(모의 데이터 전용). 운영판은 개인 비밀번호 사용
@@ -81,7 +81,8 @@ window.CONTEST_CONFIG = {
       '.ai-spin{width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:aiSpin .8s linear infinite;display:inline-block}' +
       '@keyframes aiSpin{to{transform:rotate(360deg)}}' +
       '#aiTop{position:fixed;left:0;right:0;top:0;z-index:100000;display:none;font-family:inherit}' +
-      '#aiTop .bar{height:3px;background:linear-gradient(90deg,rgba(47,111,178,.15),#2F6FB2,rgba(47,111,178,.15));background-size:40% 100%;background-repeat:no-repeat;animation:aiBar 1.2s ease-in-out infinite;background-color:#D7E5F5}' +
+      '#aiTop .bar{display:block;margin:0;padding:0;border:0;border-radius:0;min-height:0;box-shadow:none;height:3px;background:linear-gradient(90deg,rgba(47,111,178,.15),#2F6FB2,rgba(47,111,178,.15));background-size:40% 100%;background-repeat:no-repeat;animation:aiBar 1.2s ease-in-out infinite;background-color:#D7E5F5}' +
+      '#aiTop.aiwk .bar{background-color:#DCE3EC;background-image:linear-gradient(90deg,rgba(27,58,95,.15),#1B3A5F,rgba(27,58,95,.15))}#aiTop.aiwk .msg{border-color:#B8C4D4}#aiTop.done.aiwk .bar{background:#1B3A5F}' +
       '#aiTop.done .bar{animation:none;background:#2F6FB2}#aiTop.warn .bar{animation:none;background:#E8762B}' +
       '@keyframes aiBar{0%{background-position:-40% 0}100%{background-position:140% 0}}' +
       '#aiTop .msg{margin:6px auto 0;width:max-content;max-width:calc(100vw - 24px);display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #9DBCE0;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;color:#1B3A5F;box-shadow:0 2px 8px rgba(16,24,40,.12)}' +
@@ -145,12 +146,47 @@ window.CONTEST_CONFIG = {
       : '<span class="ai-badge" style="background:#E8762B">AI</span>AI 응답 없음 <small>· 규칙 결과로 표시했습니다 · ' + sec + '초</small>';
     clearTimeout(aiHide); aiHide = setTimeout(function () { el.style.display = 'none'; }, ok ? 3000 : 5000);
   }
+  /* d2e: AI가 아닌 오래 걸리는 작업도 화면 맨 위에 '작업 중' 표시(발송·저장·되돌리기 등) */
+  var WORK_ACT = {
+    sendHeldNotices: ['강사별 안내 메일을 보내는 중', '안내 메일 발송'],
+    applyAiDraft: ['배정을 저장하는 중', '배정 저장'],
+    copySessions: ['지난 기수 편성을 불러오는 중', '불러오기'],
+    demoReset: ['처음 상태로 되돌리는 중', '되돌리기'],
+    makeSurveyForm: ['설문 링크를 만드는 중', '설문 링크 만들기'],
+    sendFeedback: ['환류 메일을 보내는 중', '환류 메일 발송'],
+    surveyCommit: ['설문 결과를 반영하는 중', '설문 결과 반영'],
+    surveyUndo: ['반영을 취소하는 중', '반영 취소'],
+    saveSession: ['저장하는 중', '저장'],
+    deleteSession: ['삭제하는 중', '삭제']
+  };
+  var wkN = 0, wkT0 = 0, wkTick = null, wkAct = '';
+  function wkStart(act) {
+    wkN++; if (wkN > 1 || aiN > 0) return;
+    clearTimeout(aiHide); wkT0 = Date.now(); wkAct = act;
+    var el = aiTop(); el.className = 'aiwk'; el.style.display = 'block';
+    var put = function () { if (aiN > 0) return; el.querySelector('.msg').innerHTML = '<i class="ai-spin" aria-hidden="true"></i>' + WORK_ACT[wkAct][0] + ' <small>· ' + Math.floor((Date.now() - wkT0) / 1000) + '초</small>'; };
+    put(); clearInterval(wkTick); wkTick = setInterval(put, 500);
+  }
+  function wkEnd(act, j) {
+    wkN = Math.max(0, wkN - 1); if (wkN > 0 || aiN > 0) return;
+    clearInterval(wkTick);
+    var el = aiTop(), ok = !!(j && j.status === 'ok'), sec = ((Date.now() - wkT0) / 1000).toFixed(1);
+    el.className = ok ? 'done aiwk' : 'warn';
+    el.querySelector('.msg').innerHTML = ok ? WORK_ACT[act][1] + ' 완료 <small>· ' + sec + '초</small>' : '끝나지 않았습니다 <small>· 화면의 안내를 확인해 주세요</small>';
+    clearTimeout(aiHide); aiHide = setTimeout(function () { el.style.display = 'none'; }, ok ? 2500 : 5000);
+  }
   if (window.fetch && !window.__aiWrap) {
     window.__aiWrap = true;
     var of = window.fetch.bind(window);
     window.fetch = function (url, opt) {
       var act = '';
-      try { if (opt && typeof opt.body === 'string' && opt.body.charAt(0) === '{') { var bd = JSON.parse(opt.body); if (AI_ACT[bd.action]) act = bd.action; } } catch (e) {}
+      var wk = '';
+      try { if (opt && typeof opt.body === 'string' && opt.body.charAt(0) === '{') { var bd = JSON.parse(opt.body); if (AI_ACT[bd.action]) act = bd.action; else if (WORK_ACT[bd.action]) wk = bd.action; } } catch (e) {}
+      if (wk) {
+        wkStart(wk);
+        var wdone = false, wfin = function (j) { if (wdone) return; wdone = true; wkEnd(wk, j); };
+        return of(url, opt).then(function (r) { try { r.clone().json().then(wfin, function () { wfin(null); }); } catch (e) { wfin(null); } return r; }, function (err) { wfin(null); throw err; });
+      }
       if (!act) return of(url, opt);
       aiStart(act);
       var done = false, fin = function (j) { if (done) return; done = true; aiEnd(act, j); };
