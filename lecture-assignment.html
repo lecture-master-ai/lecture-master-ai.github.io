@@ -610,6 +610,15 @@
   .db-back:hover{background:#E8EEF6;} .db-back:focus-visible{outline:2px solid var(--navy);outline-offset:2px;}
   .db-back svg{width:16px;height:16px;}
   .db-note{font-size:12.5px;color:var(--text-muted);}
+
+  /* d2d: 시연 상태 줄 */
+  .ds{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 14px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:10px 14px;margin:0 0 12px;text-align:left;}
+  .ds-t{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;font-size:13px;color:#475467;}
+  .ds-t b{color:var(--navy);font-size:14px;}
+  .ds-dirty{font-weight:800;color:#9A3D0A;background:#FFF4EC;border-radius:999px;padding:2px 10px;}
+  .ds-clean{font-weight:800;color:#1B3A5F;background:#E8EEF6;border-radius:999px;padding:2px 10px;}
+  .ds-btn{height:36px;border-color:var(--navy);color:var(--navy);font-size:13.5px;}
+  .ds-btn:hover{background:#E8EEF6;}
   .pf-v{display:none;flex-direction:column;gap:0;}
   .pf-vr{display:grid;grid-template-columns:30px 1fr auto;gap:2px 10px;align-items:center;padding:9px 0;border-top:1px solid #EEF1F5;}
   .pf-vr:first-child{border-top:none;}
@@ -1138,7 +1147,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d2h</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d2i</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -1708,7 +1717,32 @@
   }
   function demoFoot(){
     return '<div class="demo-all"><button type="button" class="btn" id="demoAll">' + (document.body.classList.contains('showall') ? '전체 과정 접기' : '전체 과정 보기 (' + plans.length + '개)') + '</button></div>' +
-      '<div class="demo-note">심사용 사본 · 모의 데이터입니다. 바꾼 내용은 처음 상태로 되돌릴 수 있습니다. <button type="button" class="ab-lnk" id="demoReset">처음 상태로 되돌리기</button></div>';
+      '<div class="demo-note">심사용 사본 · 모의 데이터입니다. 메일·문자는 실제로 보내지 않습니다.</div>';
+  }
+  /* d2d: 시연 상태 줄 — 평가관이 들어왔을 때 앞선 시험으로 바뀐 내용이 있는지 보고 처음 상태로 되돌림 */
+  var demoSt = null, demoStLoading = false;
+  function demoStFetch(){
+    if (demoStLoading) return; demoStLoading = true;
+    api({ action: 'demoStatus', password: getPw() }).then(function(j){ demoStLoading = false; demoSt = j && j.status === 'ok' ? j : { none: true }; demoSt.at = Date.now(); if (!currentKey) renderDemo(); })
+      .catch(function(){ demoStLoading = false; demoSt = { none: true, at: Date.now() }; if (!currentKey) renderDemo(); });
+  }
+  function agoText(ms, now){
+    var m = Math.max(0, Math.round((now - ms) / 60000));
+    if (m < 1) return '방금'; if (m < 60) return m + '분 전';
+    var h = Math.round(m / 60); if (h < 24) return h + '시간 전';
+    return Math.round(h / 24) + '일 전';
+  }
+  function whenText(ms){
+    var d = new Date(ms + 9 * 3600000), t = new Date(Date.now() + 9 * 3600000), p2 = function(n){ return ('0' + n).slice(-2); };
+    var same = d.getUTCFullYear() === t.getUTCFullYear() && d.getUTCMonth() === t.getUTCMonth() && d.getUTCDate() === t.getUTCDate();
+    return (same ? '오늘 ' : (d.getUTCMonth() + 1) + '/' + d.getUTCDate() + ' ') + p2(d.getUTCHours()) + ':' + p2(d.getUTCMinutes());
+  }
+  function demoStHtml(){
+    var j = demoSt, now = j ? j.지금 + (Date.now() - j.at) : Date.now();
+    var msg = !j ? '<span>시연 상태를 확인하는 중입니다…</span>' : j.none ? '<span>바꾼 내용은 이 버튼으로 처음 상태로 되돌릴 수 있습니다</span>' :
+      (j.변경 ? '<span class="ds-dirty">앞선 시험에서 바뀐 내용 ' + j.변경 + '건</span>' + (j.마지막변경 ? '<span>마지막 변경 ' + agoText(j.마지막변경, now) + '</span>' : '') : '<span class="ds-clean">처음 상태입니다</span>') +
+      (j.초기화 ? '<span>마지막 초기화 ' + whenText(j.초기화) + (j.자동 ? '(새벽 자동)' : '') + '</span>' : '');
+    return '<div class="ds"><div class="ds-t"><b>시연 데이터</b>' + msg + '</div>' + (isViewer() ? '' : '<button type="button" class="btn ds-btn" id="demoReset">시연 처음 상태로</button>') + '</div>';
   }
   function nxHtml(st, cls){
     return '<div class="' + cls + (st.nx.fin ? ' fin' : '') + '"><small>' + st.nx.h + '</small>' + (st.nx.ai ? '<span class="ai-badge">AI 도움</span>' : '') + esc(st.nx.x) + '</div>';
@@ -1739,6 +1773,7 @@
   }
   function renderDemoB(demos, arrived){
     if (boardAdd === null) boardFetch();
+    if (arrived || !demoSt) demoStFetch();
     var seen = {}, list = [];
     demos.concat((boardAdd || []).map(planByKey).filter(function(p){ return p && !isCancelled(p); })).forEach(function(p){ var k = p['과정+기수']; if (!seen[k]) { seen[k] = true; list.push(p); } });
     var lanes = [[], [], [], [], []], doneList = [], moves = [];
@@ -1757,7 +1792,7 @@
     });
     var canEdit = !isViewer();
     var EMPTY = ['', '교과목이 없는 과정이 여기에 놓입니다.', '강사 빈 칸이 있는 과정이 여기에 놓입니다.', '배정을 마치고 안내를 기다리는 과정이 여기에 놓입니다.', '방금 강사 안내를 마친 과정이 잠시 머문 뒤 배정 완료 목록으로 옮겨집니다.'];
-    var h = '<section class="bd" aria-label="강의배정 절차와 과정 위치"><div class="bd-track">' + STEPS.map(function(s, i){
+    var h = demoStHtml() + '<section class="bd" aria-label="강의배정 절차와 과정 위치"><div class="bd-track">' + STEPS.map(function(s, i){
       return '<div class="bd-st' + (lanes[i + 1].length ? ' has' : '') + '"><div class="bd-n">' + (i + 1) + '</div><div class="t">' + s.t + '</div><div class="d">' + s.d + '</div><div class="tls">' + s.tl.filter(function(x){ return x[0]; }).map(stTool).join('') + '</div></div>'; }).join('') + '</div><div class="bd-lanes">';
     STEPS.forEach(function(s, i){
       var L = lanes[i + 1];
@@ -1820,15 +1855,17 @@
     if (t.getAttribute('data-bdadd')) { var ob = {}; plans.forEach(function(p){ var kk = p['과정+기수']; if (DEMO_KEYS[kk] || (boardAdd || []).indexOf(kk) > -1) ob[kk] = true; }); boardPick(ob); return; }
     if (t.id === 'demoAll') { document.body.classList.toggle('showall'); renderDemo(); }
     if (t.id === 'demoReset') {
-      if (!confirm('모의 데이터를 처음 상태로 되돌립니다.\n그동안 배정·강사 등록·설문 반영한 내용과 발송 기록이 모두 지워집니다.\n진행할까요?')) return;
+      var recent = demoSt && demoSt.마지막변경 && (demoSt.지금 + (Date.now() - demoSt.at) - demoSt.마지막변경) < 30 * 60000;
+      if (!confirm('모의 데이터를 처음 상태로 되돌립니다.\n그동안 배정·강사 등록·설문 반영한 내용과 발송 기록이 모두 지워집니다.' +
+        (recent ? '\n\n마지막 변경이 ' + agoText(demoSt.마지막변경, demoSt.지금 + (Date.now() - demoSt.at)) + '입니다. 다른 평가관이 시험 중일 수 있습니다.' : '') + '\n\n진행할까요?')) return;
       t.disabled = true; t.textContent = '되돌리는 중입니다(30초 안팎)…';
       api({ action: 'demoReset', password: getPw() }).then(function(j){
-        if (!j || j.status !== 'ok') { t.disabled = false; t.textContent = '처음 상태로 되돌리기'; alert((j && j.message) || '되돌리지 못했습니다'); return; }
-        ab.held = {}; ab.heldOk = {}; ab.justDone = {}; ab.copied = {}; ab.manual = null; ab.msg = ''; cxRes = {}; boardAdd = null; stageSeen = {}; stageMoved = {};
+        if (!j || j.status !== 'ok') { t.disabled = false; t.textContent = '시연 처음 상태로'; alert((j && j.message) || '되돌리지 못했습니다'); return; }
+        ab.held = {}; ab.heldOk = {}; ab.justDone = {}; ab.copied = {}; ab.manual = null; ab.msg = ''; cxRes = {}; boardAdd = null; stageSeen = {}; stageMoved = {}; demoSt = null;
         instructors = null; instrById = {};
         bootClear();
         return loadAll(getPw()).then(function(){ showMsg('ok', '처음 상태로 되돌렸습니다.'); });
-      }).catch(function(){ t.disabled = false; t.textContent = '처음 상태로 되돌리기'; alert('서버에 연결하지 못했습니다.'); });
+      }).catch(function(){ t.disabled = false; t.textContent = '시연 처음 상태로'; alert('서버에 연결하지 못했습니다.'); });
     }
   });
   function render(){
