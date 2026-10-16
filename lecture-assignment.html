@@ -1007,7 +1007,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d2b</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d2c</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -1091,7 +1091,8 @@
     var READ = { listAssignmentData:1, listSessions:1, login:1, list:1, getHistory:1, bootstrap:1, listReservations:1 };
     if (READ[body && body.action]) return hedgedPost(body, opts && opts.onRetry);
     var ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-    var timer = ctl ? setTimeout(function(){ ctl.abort(); }, 40000) : null;
+    var AI_WAIT = { aiBatchAssign: 1, aiRecommend: 1, surveyPreview: 1 };   // d2c: AI를 부르는 요청은 90초까지 기다림
+    var timer = ctl ? setTimeout(function(){ ctl.abort(); }, AI_WAIT[body && body.action] ? 90000 : 40000) : null;
     return fetch(WEBAPP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body), signal: ctl ? ctl.signal : undefined })
       .then(readJson)
       .then(function(j){ if (timer) clearTimeout(timer); return j; }, function(err){ if (timer) clearTimeout(timer); throw err; });
@@ -4413,7 +4414,13 @@
         ab.chk[c.편성ID] = ab.kind === 'draft' ? true : !!(c.현재 ? c.현재.id !== c.pick.id : true);
       });
       abModalRender();
-    }).catch(function(){ ab.busy = false; if (ab.modal) ab.modal.body.innerHTML = '<div class="note-err">서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.</div>'; });
+    }).catch(function(err){
+      ab.busy = false; if (!ab.modal) return;
+      var sec = Math.round((Date.now() - t0) / 1000);
+      var why = err && err.name === 'AbortError' ? '응답이 ' + sec + '초 안에 오지 않았습니다. 서버가 초안을 다 만들었다면 다시 누를 때 바로 표시됩니다.'
+        : (err && err.html ? esc(err.message) : '서버에 연결하지 못했습니다(' + sec + '초). 인터넷 연결을 확인한 뒤 다시 시도해 주세요.');
+      ab.modal.body.innerHTML = '<div class="note-err">' + why + '</div><div style="margin-top:10px;display:flex;gap:8px;"><button type="button" class="btn primary" data-abretry="1">다시 시도</button><button type="button" class="btn" data-ab="close">닫기</button></div>';
+    });
   }
   function abCandOf(c, id){
     if (c.pick && c.pick.id === id) return c.pick;
@@ -4461,7 +4468,8 @@
     var j = ab.res; if (!j || !ab.modal) return;
     var cells = j.cells || [], h = '';
     if (!cells.length) { ab.modal.body.innerHTML = '<div class="cx-guide">' + esc(j.이유 || '배정할 칸이 없습니다') + '</div>'; return; }
-    var aiLine = j.ai ? 'AI 판단: ' + esc(j.모델) + (j.모델번호 ? '(' + j.모델번호 + '번 모델)' : '') : '<span class="ab-warn">AI 응답이 없어 규칙(담당 교과목·이력·평가)만으로 만들었습니다.</span>';
+    var aiLine = j.ai ? 'AI 판단: ' + esc(j.모델) + (j.모델번호 ? '(' + j.모델번호 + '번 모델)' : '') + (j.AI교과목 && j.AI교과목.split('/')[0] !== j.AI교과목.split('/')[1] ? ' · AI 판단 교과목 ' + esc(j.AI교과목) + '(나머지는 규칙 근거)' : '') : '<span class="ab-warn">AI 응답이 없어 규칙(담당 교과목·이력·평가)만으로 만들었습니다.</span>';
+    if (j.보관) aiLine += ' · 10분 안에 만든 같은 조건의 초안을 다시 보여 드립니다';
     if (ab.kind === 'draft') {
       var nPick = cells.filter(function(c){ return c.pick; }).length;
       h += '<div class="ab-sum"><div class="ab-big"><b>' + nPick + '</b><span>/ ' + cells.length + '칸 초안</span></div><div class="ab-big"><b>' + j.요약.강사수 + '</b><span>명 배정</span></div>' +
@@ -4507,6 +4515,7 @@
   }
   function abModalClick(ev){
     var t = ev.target.closest ? ev.target.closest('button') : null; if (!t) return;
+    if (t.getAttribute('data-abretry')) { if (ab.busy) return; ab.busy = true; ab.modal.body.innerHTML = abLoadingHtml(); abRun(); return; }
     var w = t.getAttribute('data-abwhy'); if (w) { ab.open[w] = !ab.open[w]; abModalRender(); return; }
     var sw = t.getAttribute('data-abswap');
     if (sw) { var p = sw.split('|'); ab.sel[p[0]] = p[1]; var c = (ab.res.cells || []).filter(function(x){ return x.편성ID === p[0]; })[0]; ab.chk[p[0]] = ab.kind === 'draft' || !(c && c.현재 && c.현재.id === p[1]); abModalRender(); return; }
