@@ -678,6 +678,23 @@
     .bdc .btn, .bd-addsm{height:44px;}
     .bdc{padding:12px 14px 14px;}
   }
+
+  /* d2l: 평가관리 칸반 */
+  .ev-k .btn{width:100%;height:40px;font-size:14px;border-color:var(--navy);color:var(--navy);}
+  .ev-k .btn.primary.ab-ai{color:#fff;border-color:#2F6FB2;}
+  .ev-link{display:flex;gap:6px;align-items:baseline;font-size:12.5px;min-width:0;} .ev-link span{flex-shrink:0;font-weight:800;color:#475467;}
+  .ev-link a{color:var(--navy);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
+  .ev-nums{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:13px;color:#344054;} .ev-nums b{color:var(--navy);font-size:15px;}
+  .ev-ai{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;background:#EEF4FB;border-radius:8px;padding:8px 10px;font-size:13px;line-height:1.45;color:#101828;}
+  .ev-ai b{color:#1E4E86;} .ev-ai > span:last-child{flex-basis:100%;}
+  .ev-mock,.ev-rule{display:inline-flex;font-size:10.5px;font-weight:800;line-height:1;border-radius:4px;padding:3px 5px;background:#EEF1F5;color:#475467;}
+  .ev-links{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;}
+  .ev-links .ab-lnk{font-weight:700;text-underline-offset:2px;}
+  .ev-links .ab-lnk.danger{color:#B42318;margin-left:auto;}
+  .ai-did{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;background:#EEF4FB;border-radius:10px;padding:10px 12px;margin:0 0 10px;font-size:13.5px;color:#101828;}
+  .ai-did b{color:#1E4E86;} .ai-did small{color:#475467;font-size:12px;} .ai-did .ab-lnk{margin-left:auto;}
+  .ai-did.off{background:#FFF8F1;} .ai-did.off b{color:#9A3D0A;}
+  @media (max-width:760px){ .ev-k .btn{height:44px;} }
   .pf-v{display:none;flex-direction:column;gap:0;}
   .pf-vr{display:grid;grid-template-columns:30px 1fr auto;gap:2px 10px;align-items:center;padding:9px 0;border-top:1px solid #EEF1F5;}
   .pf-vr:first-child{border-top:none;}
@@ -1206,7 +1223,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d2k</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d2l</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -1782,8 +1799,9 @@
   var demoSt = null, demoStLoading = false;
   function demoStFetch(){
     if (demoStLoading) return; demoStLoading = true;
-    api({ action: 'demoStatus', password: getPw() }).then(function(j){ demoStLoading = false; demoSt = j && j.status === 'ok' ? j : { none: true }; demoSt.at = Date.now(); if (!currentKey) renderDemo(); })
-      .catch(function(){ demoStLoading = false; demoSt = { none: true, at: Date.now() }; if (!currentKey) renderDemo(); });
+    var after = function(){ if (currentKey) return; if (planMode === 'eval') { var el = document.querySelector('#planEval .ds'); if (el) el.outerHTML = demoStHtml(true); } else renderDemo(); };
+    api({ action: 'demoStatus', password: getPw() }).then(function(j){ demoStLoading = false; demoSt = j && j.status === 'ok' ? j : { none: true }; demoSt.at = Date.now(); after(); })
+      .catch(function(){ demoStLoading = false; demoSt = { none: true, at: Date.now() }; after(); });
   }
   function agoText(ms, now){
     var m = Math.max(0, Math.round((now - ms) / 60000));
@@ -1796,14 +1814,14 @@
     var same = d.getUTCFullYear() === t.getUTCFullYear() && d.getUTCMonth() === t.getUTCMonth() && d.getUTCDate() === t.getUTCDate();
     return (same ? '오늘 ' : (d.getUTCMonth() + 1) + '/' + d.getUTCDate() + ' ') + p2(d.getUTCHours()) + ':' + p2(d.getUTCMinutes());
   }
-  function demoStHtml(){
+  function demoStHtml(evPage){
     var j = demoSt, now = j ? j.지금 + (Date.now() - j.at) : Date.now();
     var msg = !j ? '<span>시연 상태를 확인하는 중입니다…</span>' : j.none ? '' :
       (j.변경 ? '<span class="ds-dirty">앞선 시험에서 바뀐 내용 ' + j.변경 + '건</span>' + (j.마지막변경 ? '<span>마지막 변경 ' + agoText(j.마지막변경, now) + '</span>' : '') : '<span class="ds-clean">처음 상태입니다</span>') +
       (j.초기화 ? '<span>마지막 초기화 ' + whenText(j.초기화) + (j.자동 ? '(새벽 자동)' : '') + '</span>' : '');
     var dirty = j && j.변경;
     return '<div class="ds' + (dirty ? ' dirty' : '') + '"><div class="ds-m"><div class="ds-t"><b>시연 데이터</b>' + msg + '</div>' +
-      '<div class="ds-ask">' + (demoExhausted.length ? '<b class="ds-ex">준비된 시연 과정(' + esc(demoExhausted.join(', ')) + ')을 모두 사용했습니다. [시연 처음 상태로]를 눌러 주세요.</b> ' : dirty ? '앞선 평가관이 바꾼 내용이 남아 있어도, 장면마다 손대지 않은 과정이 새로 올라와 있습니다. ' : '') + '시험을 마치시면 <b>다음 평가관을 위해</b> [시연 처음 상태로]를 눌러 주세요.</div></div>' +
+      '<div class="ds-ask">' + (!evPage && demoExhausted.length ? '<b class="ds-ex">준비된 시연 과정(' + esc(demoExhausted.join(', ')) + ')을 모두 사용했습니다. [시연 처음 상태로]를 눌러 주세요.</b> ' : dirty ? (evPage ? '앞선 평가관이 바꾼 내용이 남아 있습니다. 처음 상태에서 보시려면 먼저 눌러 주세요. ' : '앞선 평가관이 바꾼 내용이 남아 있어도, 장면마다 손대지 않은 과정이 새로 올라와 있습니다. ') : '') + '시험을 마치시면 <b>다음 평가관을 위해</b> [시연 처음 상태로]를 눌러 주세요.</div></div>' +
       (isViewer() ? '' : '<button type="button" class="btn ds-btn" id="demoReset">시연 처음 상태로</button>') + '</div>';
   }
   function nxHtml(st, cls){
@@ -1911,7 +1929,7 @@
     if (arrived && $('msgBox').className === 'ok') showMsg('');   // 편성 화면에서 첫 화면으로 돌아오면 지난 완료 알림을 지움
     demoWasOn = on;
     box.style.display = on ? '' : 'none';
-    if (!on) return;
+    if (!on) { box.innerHTML = ''; return; }   // 숨길 때 비워 같은 id(#demoReset 등)가 두 번 생기지 않게
     var order = ['ai', 'copy', 'cell'];
     var demos = plans.filter(function(p){ return DEMO_KEYS[p['과정+기수']] && !isCancelled(p); });
     demos.sort(function(a, b){ return order.indexOf(DEMO_KEYS[a['과정+기수']]) - order.indexOf(DEMO_KEYS[b['과정+기수']]); });
@@ -1942,7 +1960,7 @@
   document.addEventListener('click', function(ev){
     var t = ev.target.closest ? ev.target.closest('button') : null; if (!t) return;
     var k = t.getAttribute('data-demo-open'); if (k) { openCourse(k); return; }
-    var go = t.getAttribute('data-bdgo'); if (go) { var ln = $('bdl' + go); if (ln) ln.scrollIntoView({ behavior: window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); return; }
+    var go = t.getAttribute('data-bdgo'); if (go) { var ln = $(/^\d+$/.test(go) ? 'bdl' + go : go); if (ln) ln.scrollIntoView({ behavior: window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); return; }
     if (t.getAttribute('data-bdadd')) { var ob = {}; plans.forEach(function(p){ var kk = p['과정+기수']; if (DEMO_KEYS[kk] || (boardAdd || []).indexOf(kk) > -1) ob[kk] = true; }); boardPick(ob); return; }
     if (t.id === 'demoAll') { document.body.classList.toggle('showall'); renderDemo(); }
     if (t.id === 'demoReset') {
@@ -1952,7 +1970,7 @@
       t.disabled = true; t.textContent = '되돌리는 중입니다(30초 안팎)…';
       api({ action: 'demoReset', password: getPw() }).then(function(j){
         if (!j || j.status !== 'ok') { t.disabled = false; t.textContent = '시연 처음 상태로'; alert((j && j.message) || '되돌리지 못했습니다'); return; }
-        ab.held = {}; ab.heldOk = {}; ab.justDone = {}; ab.copied = {}; ab.manual = null; ab.msg = ''; cxRes = {}; boardAdd = null; stageSeen = {}; stageMoved = {}; demoSt = null; boardVis = null;
+        ab.held = {}; ab.heldOk = {}; ab.justDone = {}; ab.copied = {}; ab.manual = null; ab.msg = ''; cxRes = {}; boardAdd = null; stageSeen = {}; stageMoved = {}; demoSt = null; boardVis = null; evSeen = {}; evHot = {};
         instructors = null; instrById = {};
         bootClear();
         return loadAll(getPw()).then(function(){ showMsg('ok', '처음 상태로 되돌렸습니다.'); });
@@ -7217,6 +7235,7 @@
       };
       if (isXl) rd.readAsArrayBuffer(f); else rd.readAsText(f, 'utf-8');
       function send(csvText){
+        cxT0 = Date.now();
         api({ action: 'surveyPreview', password: getPw(), 개설키: key, csv: csvText, 모델: cx.modelPref }).then(function(j){
           if (j.status !== 'ok') { box.innerHTML = '<div class="note-err">' + esc(j.message || '처리하지 못했습니다') + '</div>'; return; }
           var d = j.data;
@@ -7227,8 +7246,11 @@
               '<td>' + cxStars(it.평균) + ' <b>' + Number(it.평균).toFixed(2) + '</b><br><span class="hint" style="white-space:nowrap;">50점 환산 ' + it.환산 + '점</span></td><td>' + it.응답수 + (few ? '<br><span class="cx8-low">참고용</span>' : '') + '</td>' +
               '<td>' + esc(it.좋았던점 || '-') + '</td><td>' + esc(it.개선할점 || '-') + '</td><td>' + (it.연결 === 'AI' ? '<span class="cx-tag ai">AI 연결</span>' : '<span class="cx-tag">규칙</span>') + '</td></tr>';
           }).join('');
+          var op0 = d.의견 || {}, nAiLink = d.items.filter(function(it){ return it.연결 === 'AI'; }).length, nOp = (op0.items || []).length, nCat = (op0.cats || []).length, aiSec = ((Date.now() - cxT0) / 1000).toFixed(1);
+          var aiDid = (op0.ai || d.ai.연결) ? '<div class="ai-did"><span class="ai-badge">AI 도움</span><b>AI가 한 일</b><span>' + [nAiLink ? '이름 빠진 문항 ' + nAiLink + '개를 교과목·강사에 연결' : '', op0.ai && nOp ? '서술형 의견 ' + nOp + '건을 ' + nCat + '개 항목으로 분류·요약' : ''].filter(Boolean).join(' · ') + '</span><small>' + esc(op0.ai || d.ai.연결 || '') + ' · ' + aiSec + '초</small>' + (nOp ? '<button type="button" class="ab-lnk" data-aijump="1">AI 결과 보기</button>' : '') + '</div>'
+            : '<div class="ai-did off"><b>AI가 응답하지 않아</b><span>점수는 규칙으로 계산했고, 의견은 낱말 규칙으로 분류했습니다.</span></div>';
           var cmHtml = (d.공통 && d.공통.length) ? '<div class="hint" style="margin-top:8px;"><b>교육 환경(참고·평가지표 제외)</b> ' + d.공통.map(function(c){ return esc(c.문항) + ' ' + Number(c.평균).toFixed(2); }).join(' · ') + '</div>' : '';
-          box.innerHTML = '<div class="hint" style="margin-bottom:6px;">응답 ' + d.응답자 + '건 · 평가 교과목 ' + d.items.length + '개' + (d.ai.요약 ? ' · 의견 요약 AI: ' + esc(d.ai.요약) : ' · 의견 요약: 원문 발췌(AI 미사용)') + (d.ai.연결 ? ' · 문항 연결 AI: ' + esc(d.ai.연결) : '') + '</div>' +
+          box.innerHTML = aiDid + '<div class="hint" style="margin-bottom:6px;">응답 ' + d.응답자 + '건 · 평가 교과목 ' + d.items.length + '개' + (d.ai.요약 ? ' · 의견 요약 AI: ' + esc(d.ai.요약) : ' · 의견 요약: 원문 발췌(AI 미사용)') + (d.ai.연결 ? ' · 문항 연결 AI: ' + esc(d.ai.연결) : '') + '</div>' +
             '<div style="overflow:auto;"><table class="cx-tbl"><thead><tr><th>교과목</th><th>강사</th><th>문항별 평균</th><th>종합(5점)</th><th>응답</th><th>좋았던 점(요약)</th><th>개선할 점(요약)</th><th>연결</th></tr></thead><tbody>' + rows + '</tbody></table></div>' + cmHtml +
             cxOpinionHtml(d.의견) +
             (d.미연결.length ? '<div class="note-warn" style="margin-top:8px;">강사와 연결하지 못한 문항 ' + d.미연결.length + '개는 반영하지 않습니다: ' + esc(d.미연결.slice(0, 3).join(' / ')) + '</div>' : '') +
@@ -7358,19 +7380,86 @@
     }
     return '<div class="ev2-card' + (S.stage < 5 ? ' on' : '') + '">' + tag + head + evFlow(S.st) + '<div class="ev2-b">' + body + '</div><div class="ev2-a">' + acts + '</div></div>';
   }
+  /* d2l: 평가관리 첫 화면 — 강의배정과 같은 칸반 보드(① 설문 준비 → ② 결과 반영 → ③ 강사 환류 → ④ 완료) */
+  var EV_STEPS = [
+    { t: '설문 준비', d: '교과목·강사별 설문 링크', tl: [['', '설문 링크·QR 만들기']] },
+    { t: '결과 반영', d: '응답 파일 올리기', tl: [['ai', '이름 빠진 문항 연결'], ['ai', '서술형 의견 분류·요약']] },
+    { t: '강사 환류', d: '강사별 결과 메일', tl: [['ai', '의견 요약을 메일에 담기'], ['hum', '보낼 강사 선택']] },
+    { t: '완료', d: '다음 강사 배정에 반영', tl: [['ai', 'AI 강사 배정의 근거로 쓰임']] }
+  ];
+  var evSeen = {}, evHot = {};
+  function evLane(S){ return S.stage >= 5 ? 4 : S.stage === 4 ? 3 : S.stage === 2 ? 2 : 1; }
+  function evAiLine(j){
+    var sm = (j.요약 || []).slice().sort(function(a, b){ return (Number(b['의견 수']) || 0) - (Number(a['의견 수']) || 0); })[0];
+    if (!sm || !sm['요약']) return '';
+    var how = String(sm['분류방식'] || ''), n = (j.의견 || []).length, k = (j.요약 || []).length;
+    var tag = /AI/.test(how) ? '<span class="ai-badge">AI 도움</span>' : /모의/.test(how) ? '<span class="ai-badge">AI 도움</span><span class="ev-mock">모의 데이터</span>' : '<span class="ev-rule">규칙 분류</span>';
+    var t = String(sm['요약']); if (t.length > 70) t = t.slice(0, 68) + '…';
+    return '<div class="ev-ai">' + tag + '<b>의견 ' + n + '건 → ' + k + '개 항목</b><span>' + esc(sm['분류']) + ': ' + esc(t) + '</span></div>';
+  }
+  function evCardB(p, j, err, hot){
+    var key = String(p['과정+기수']), kk = esc(key), ro = isViewer();
+    var head = '<div><div class="bdc-t">' + esc(cx8Title(p, key)) + '</div><div class="bdc-p">' + esc(cx8Period(p)) + ' · 계획 ' + (Number(p['계획인원']) || '-') + '명</div></div>';
+    if (err) return '<article class="bdc">' + head + '<div class="note-err">상태를 불러오지 못했습니다.</div></article>';
+    var S = evState(j), M = S.M, L = evLane(S), body = '', main = '', links = [];
+    var lk = function(attr, txt, cls){ return '<button type="button" class="ab-lnk' + (cls ? ' ' + cls : '') + '" ' + attr + '>' + txt + '</button>'; };
+    if (L === 1) {
+      body = '<div class="bdc-x">설문 링크를 만들어 교육생에게 보냅니다.</div>';
+      main = ro ? '' : '<button type="button" class="btn" data-evform="' + kk + '">설문 링크 만들기</button>';
+      links.push(lk('data-cxform="1" data-key="' + kk + '"', '설문지 미리보기'));
+      if (!ro) links.push(lk('data-cxsurvey="1" data-key="' + kk + '"', '응답 파일 바로 올리기'));
+    } else if (L === 2) {
+      body = '<div class="ev-link"><span>응답 링크</span><a href="' + esc(j.설문링크) + '" target="_blank" rel="noopener">' + esc(j.설문링크) + '</a></div>' +
+        '<div class="bdc-x">응답 파일을 올리면 AI가 이름 빠진 문항을 연결하고 서술형 의견을 분류·요약합니다.</div>';
+      main = ro ? '' : '<button type="button" class="btn primary ab-ai" data-cxsurvey="1" data-key="' + kk + '">결과 파일 올리기</button>';
+      links.push(lk('data-evcopy="' + kk + '"', '안내문 복사'), lk('data-evqr="' + kk + '"', 'QR 코드'), lk('data-cxform="1" data-key="' + kk + '"', '설문지 미리보기'));
+    } else {
+      var avg = M.ev.reduce(function(a, e){ return a + Number(e.평균); }, 0) / M.ev.length;
+      var low = M.ev.filter(function(e){ return Number(e.응답수) >= CX_MIN_RESP && Number(e.평균) < 3.5; }).length;
+      body = '<div class="ev-nums"><span><b>' + M.okN + '</b>명 응답' + (M.rate !== null ? ' (' + M.rate + '%)' : '') + '</span><span>평균 <b>' + avg.toFixed(2) + '</b></span>' + (low ? '<span class="ev2-low">3.5점 미만 ' + low + '건</span>' : '') + '</div>' + evAiLine(j) +
+        (L === 4 ? '<div class="bdc-x">강사 ' + j.환류.n + '명에게 환류 메일을 보냈습니다(' + esc(String(j.환류.at || '').slice(5, 16)) + '). 이 평가는 다음 AI 강사 배정의 근거가 됩니다.</div>' : '');
+      main = L === 3 && !ro ? '<button type="button" class="btn" data-evfb="' + kk + '">강사 환류 보내기</button>' : '';
+      links.push(lk('data-cxres="1" data-key="' + kk + '"', '결과지 보기'));
+      if (L === 4) links.push(lk('data-cxout="1"', '보낸 내용 보기'));
+      if (!ro) links.push(lk('data-evundo="' + kk + '"', '반영 취소', 'danger'));
+    }
+    return '<article class="bdc ev-k' + (hot ? ' moved' : '') + '">' + (hot ? '<span class="bdc-mv">방금 이동</span>' : '') + head + body + main + (links.length ? '<div class="ev-links">' + links.join('') + '</div>' : '') + '</article>';
+  }
+  function evBoardHtml(rows){
+    var lanes = [[], [], [], [], []], moves = [];
+    rows.forEach(function(r){
+      if (r.err || !r.j) { lanes[1].push(r); return; }
+      var key = String(r.p['과정+기수']), L = evLane(evState(r.j));
+      if (evSeen[key] !== undefined && L > evSeen[key]) { evHot[key] = Date.now(); moves.push(cx8Title(r.p, key) + '이(가) ' + L + '단계 \'' + EV_STEPS[L - 1].t + '\'(으)로 이동했습니다.'); }
+      evSeen[key] = L; r.L = L; lanes[L].push(r);
+    });
+    if (moves.length) setTimeout(function(){ moves.forEach(function(t){ stageToast(t, 0); }); }, 50);
+    var EMPTY = ['', '설문을 준비할 과정이 여기에 놓입니다.', '설문 링크를 만들어 응답을 모으는 과정이 여기에 놓입니다.', '결과를 반영하고 환류를 기다리는 과정이 여기에 놓입니다.', '환류를 마친 과정이 여기에 놓입니다. 이 평가는 다음 AI 강사 배정의 근거가 됩니다.'];
+    var h = '<section class="bd" aria-label="평가 단계와 과정 위치"><div class="bd-track">' + EV_STEPS.map(function(s, i){
+      var c = lanes[i + 1].length;
+      return '<div class="bd-st"><div class="bd-n">' + (i + 1) + (c ? '<span class="bd-cnt" aria-label="' + c + '과정">' + c + '</span>' : '') + '</div><div class="t">' + s.t + '</div><div class="d">' + s.d + '</div><div class="tls">' + s.tl.map(stTool).join('') + '</div></div>'; }).join('') + '</div>' +
+      '<nav class="bd-mini" aria-label="단계 바로가기">' + EV_STEPS.map(function(s, i){ var c = lanes[i + 1].length; return '<button type="button" data-bdgo="evl' + (i + 1) + '"' + (c ? '' : ' class="zero"') + '><i>' + (i + 1) + '</i>' + s.t + '<em>' + c + '</em></button>'; }).join('') + '</nav><div class="bd-lanes">';
+    EV_STEPS.forEach(function(s, i){
+      var L = lanes[i + 1];
+      h += '<div class="bd-lane' + (L.length ? '' : ' empty') + '" id="evl' + (i + 1) + '"><div class="bd-lh"><span>' + (i + 1) + '. ' + s.t + '</span>' + (L.length ? '<em>' + L.length + '과정</em>' : '<span>0</span>') + '</div>';
+      if (!L.length) h += '<div class="bd-empty">' + EMPTY[i + 1] + '</div>';
+      L.forEach(function(r){ var key = String(r.p['과정+기수']); h += evCardB(r.p, r.j, r.err, evHot[key] && Date.now() - evHot[key] < 5000); });
+      h += '</div>';
+    });
+    return h + '</div><div class="bd-foot"><span class="legend"><span class="ai-badge">AI 도움</span>AI가 문항을 연결하고 의견을 분류·요약합니다. 점수 계산은 규칙으로, 반영·발송은 담당자가 결정합니다.</span></div></section>';
+  }
   function renderEvalSimple(box){
     var seq = ++evalSeq;
     var list = EV_KEYS.map(planByKey).filter(function(p){ return p && !isCancelled(p); });
-    var flow = '<div class="cx-flow ev-flow"><span><b>1</b>설문 준비<small>설문문항 탭 → 구글 설문지</small></span><i>›</i><span><b>2</b>응답 수합<small>결과 파일 1개 올리기</small></span><i>›</i><span class="ai"><b>3</b>결과 반영<small>점수는 규칙, 의견은 AI 분류</small></span><i>›</i><span><b>4</b>강사 환류<small>환류지 · 메일 확인 후 발송</small></span><i>›</i><span class="ai"><b>5</b>다음 배정에 반영<small>평가·의견 → AI 강사 배정</small></span></div>';
-    box.innerHTML = '<div class="demo-h"><b>평가가 필요한 과정</b><span>교육이 끝났거나 끝나 가는 과정입니다.</span></div>' + flow +
-      '<div class="ev2-grid">' + list.map(function(p){ return '<div class="ev2-slot" data-evslot="' + esc(p['과정+기수']) + '"><div class="ev2-card"><div class="ev2-t">' + esc(cx8Title(p, p['과정+기수'])) + '</div><div class="info">불러오는 중입니다…</div></div></div>'; }).join('') + '</div>' +
-      '<div class="demo-all"><button type="button" class="btn" id="evAll">끝난 과정 전체 보기</button></div>' +
+    var foot = '<div class="demo-all"><button type="button" class="btn" id="evAll">끝난 과정 전체 보기</button></div>' +
       '<div class="demo-note">심사용 사본 · 모의 데이터입니다. 설문 결과는 화면의 예시 파일로 올려 볼 수 있고, 메일은 실제로 보내지 않습니다.</div>';
-    list.forEach(function(p){
-      var key = String(p['과정+기수']);
-      var put = function(html){ if (seq !== evalSeq) return; var el = box.querySelector('[data-evslot="' + (window.CSS && CSS.escape ? CSS.escape(key) : key) + '"]'); if (el) el.innerHTML = html; };
-      cxResGet(key).then(function(j){ put(evCard(p, j)); }).catch(function(){ put(evCard(p, null, true)); });
-    });
+    var ready = list.every(function(p){ return cxRes[String(p['과정+기수'])]; });
+    var draw = function(rows){ box.innerHTML = demoStHtml(true) + evBoardHtml(rows) + foot; };
+    if (ready) draw(list.map(function(p){ return { p: p, j: cxRes[String(p['과정+기수'])] }; }));
+    else box.innerHTML = demoStHtml(true) + '<div class="info">평가 진행 상황을 불러오는 중입니다…</div>' + foot;
+    if (!demoSt) demoStFetch();
+    Promise.all(list.map(function(p){ return cxResGet(String(p['과정+기수'])).then(function(j){ return { p: p, j: j }; }, function(){ return { p: p, err: true }; }); }))
+      .then(function(rows){ if (seq !== evalSeq) return; draw(rows); });
     $('hTitle').textContent = '평가관리';
     $('hSub').textContent = '설문 결과를 반영하고 강사에게 환류합니다. 반영한 평가는 다음 강사 배정의 근거가 됩니다.';
     if (!instructors) { try { ensureInstructors(); } catch (e) {} }
@@ -7555,6 +7644,11 @@
       (exc ? '<div class="hint" style="margin-top:6px;">과정 운영 의견 예: “' + esc(exc.t) + '” → ' + esc(exc.c) + ' · ' + esc(exc.p) + ' · 과정 공통(강사 환류지에는 넣지 않음)</div>' : '') +
       '<div class="hint" style="margin-top:4px;">AI가 응답하지 않으면 낱말 규칙으로 분류하고(분류방식 "규칙 분류"), 요약 대신 원문 일부를 씁니다.' + (mock ? ' 이 과정은 미리 넣어 둔 모의 데이터라 분류방식이 "모의 데이터(사전 입력)"로 표시됩니다. 반영 대기 과정에 예시 파일을 올리면 실제 AI 분류 결과가 나옵니다.' : '') + '</div></details>';
   }
+  var cxT0 = 0;
+  document.addEventListener('click', function(ev){
+    var t = ev.target.closest ? ev.target.closest('[data-aijump]') : null; if (!t) return;
+    var md = t.closest('.cx-md'), op = md && md.querySelector('.cx-op'); if (op) op.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
   function cxOpinionHtml(op){
     if (!op || !op.items || !op.items.length) return '';
     var how = op.ai ? '<span class="cx-tag ai">AI 분류</span> ' + esc(op.ai) : '<span class="cx-tag">규칙 분류</span> AI가 응답하지 않아 낱말 규칙으로 분류했습니다';
