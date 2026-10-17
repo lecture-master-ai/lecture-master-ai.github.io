@@ -5,7 +5,7 @@
      로그인은 비밀번호 없이 [로그인] 버튼 하나로, 강사 승인은 확인창으로 줄입니다. false로 바꾸면 원래 화면으로 돌아갑니다(코드는 지우지 않음). */
 window.CONTEST_CONFIG = {
   WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbzYdVSZsLnSw3JN01aIDuXa1Ubxh6ERWYC-0TEQxu6tRYrcI9-WNYEoKv3Cfk9qyUvJ/exec',
-  VERSION: '대회용 d2w',
+  VERSION: '대회용 d2y',
   ORG_NAME: '○○소방학교',
   SYS_ORG: '○○학교',   // d2w: 로그인 제목의 학교 이름(다른 학교에서 쓸 때 여기만 바꿈)
   SIMPLE: true,
@@ -219,6 +219,40 @@ window.CONTEST_CONFIG = {
       }, function (err) { fin(null); throw err; });
     };
   }
+  /* d2y: 다음 할 일 안내(모든 화면 공통) — 완료 한 줄 + "다음: 버튼 — 이유"를 6초 띄우고, 해야 할 버튼을 한 번 강조한 뒤 사라짐 */
+  window.cxGuide = function (done, next, sel) {
+    var esc = function (t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+    if (!document.getElementById('cxGdCss')) {
+      var st = document.createElement('style'); st.id = 'cxGdCss';
+      st.textContent = '#cxGd{position:fixed;left:50%;top:76px;transform:translateX(-50%);z-index:100001;display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;width:max-content;max-width:calc(100vw - 24px)}' +
+        '.cxg{display:flex;flex-direction:column;gap:3px;background:#1B3A5F;color:#fff;border-radius:12px;padding:9px 16px;box-shadow:0 4px 14px rgba(16,24,40,.25);font-size:13.5px;line-height:1.45;word-break:keep-all;transition:opacity .3s,transform .3s;max-width:min(560px,calc(100vw - 24px))}' +
+        '.cxg.out{opacity:0;transform:translateY(-6px)} .cxg-d{font-weight:700} .cxg-d:before{content:"\\2713";color:#7CD4A4;margin-right:6px;font-weight:800}' +
+        '.cxg-n{font-size:13px;color:#DCE4EE} .cxg-n b{display:inline-block;background:#E8762B;color:#fff;border-radius:999px;padding:0 8px;margin-right:6px;font-size:12px} .cxg-n i{font-style:normal;font-weight:800;color:#fff}' +
+        '@keyframes cxgP{0%{box-shadow:0 0 0 0 rgba(232,118,43,.75)}70%{box-shadow:0 0 0 10px rgba(232,118,43,0)}100%{box-shadow:0 0 0 0 rgba(232,118,43,0)}}' +
+        '.cxg-pulse{animation:cxgP 1.2s ease-out 2;outline:2px solid #E8762B !important;outline-offset:2px}@media (prefers-reduced-motion:reduce){.cxg-pulse{animation:none}}' +
+        '@media (max-width:600px){#cxGd{top:64px}}';
+      document.head.appendChild(st);
+    }
+    var box = document.getElementById('cxGd');
+    if (!box) { box = document.createElement('div'); box.id = 'cxGd'; box.setAttribute('role', 'status'); box.setAttribute('aria-live', 'polite'); document.body.appendChild(box); }
+    if (!done && !next) return;
+    Array.prototype.forEach.call(box.querySelectorAll('.cxg'), function (c) { c.parentNode.removeChild(c); });   // 앞 안내는 바로 지움(쌓이지 않게)
+    var el = document.createElement('div'); el.className = 'cxg';
+    el.innerHTML = (done ? '<span class="cxg-d">' + esc(done) + '</span>' : '') + (next ? '<span class="cxg-n"><b>다음</b>' + next + '</span>' : '');
+    box.appendChild(el);
+    setTimeout(function () { el.classList.add('out'); setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 300); }, 6000);
+    if (!sel) return;
+    clearTimeout(window.__cxgT); var tries = 0;
+    var find = function () {
+      var t = Array.prototype.filter.call(document.querySelectorAll(sel), function (x) { return x.offsetParent !== null && !x.disabled; })[0];
+      if (!t) { if (++tries < 40) window.__cxgT = setTimeout(find, 250); return; }
+      var r = t.getBoundingClientRect();
+      if (r.top < 70 || r.bottom > window.innerHeight - 10) t.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      t.classList.remove('cxg-pulse'); void t.offsetWidth; t.classList.add('cxg-pulse');
+      setTimeout(function () { t.classList.remove('cxg-pulse'); }, 2600);
+    };
+    window.__cxgT = setTimeout(find, 300);
+  };
   /* d2b: 긴 상세 카드는 위·아래 모두 [닫기] — 아래에만 [닫기]가 있는 카드의 머리 줄에 같은 동작의 버튼을 붙임 */
   function topClose() {
     ['#iCard', '#bCard', '#cCard'].forEach(function (sel) {

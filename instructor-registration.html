@@ -590,6 +590,7 @@
     cardState.written = true;
     cardState.aiCount = document.querySelectorAll('#cardMdl .is-ai').length + (cardState.aiFilled || 0);
     closeMdl('cardMdl'); renderCardBox(); renderFlow();
+    if (window.cxGuide) window.cxGuide('강사카드를 작성했습니다', '<i>확인하고 신청하기</i> — 담당자 승인 뒤 강사 후보에 들어갑니다', '#submitBtn');
   });
 
   /* ---------- 파일 → 글자 읽기(화면 안) → 개인정보 가림 → AI ---------- */
@@ -686,6 +687,7 @@
       $('upRes').innerHTML = 'AI가 <b>' + n + '칸</b>을 채웠습니다 (' + esc(j.모델 || '') + ', ' + ((j.소요ms || (Date.now() - t0)) / 1000).toFixed(1) + '초' + (masked ? ' · 개인정보 ' + masked + '곳 가림' : '') + '). 파란 칸을 확인하고 주황 칸만 입력해 주세요.';
       checkCard(true);
       renderFlow();
+      if (window.cxGuide) window.cxGuide('AI가 강사카드 ' + n + '칸을 채웠습니다', '내용을 확인하고 <i>작성 완료</i>를 누르세요', '#cardDone');
     }).catch(function(e){
       $('upSteps').style.display = 'none';
       $('upRes').className = 'up-res err'; $('upRes').textContent = (e && e.message) || '파일을 읽지 못했습니다. 직접 입력해 주세요.';
@@ -825,6 +827,6 @@
   renderCardBox(); renderFlow(); ensureRows(); checkCard();
 </script>
 
-  <div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 18px;font-family:'Pretendard',sans-serif;">화면 버전 2026-10-17 강사등록 d2c</div>
+  <div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 18px;font-family:'Pretendard',sans-serif;">화면 버전 2026-10-17 강사등록 d2d</div>
 </body>
 </html>

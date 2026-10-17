@@ -536,7 +536,7 @@
       <div id="schoolMsg" style="margin-top:12px;font-size:13px;display:none;"></div>
     </form>
   </div>
-  <div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:18px 0 0;">화면 버전 2026-10-17 강사관리 d2h</div>
+  <div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:18px 0 0;">화면 버전 2026-10-17 강사관리 d2i</div>
 </div>
 
 <script>
@@ -1314,6 +1314,7 @@
         alert(doneMsg);
         document.getElementById('overlay').style.display = 'none';
         loadData(pw);
+        if (decision === '승인' && window.cxGuide) window.cxGuide('승인했습니다 · 안내 메일 자동 발송', '이 강사는 이제 <i>강의배정 AI 일괄 배정</i> 후보에 포함됩니다', '');
       } else {
         if ((json.message||'').indexOf('권한 비밀번호') > -1) sessionStorage.removeItem('jsfa_admin_pw');
         alert('처리 중 오류가 발생했습니다: ' + (json.message || ''));
