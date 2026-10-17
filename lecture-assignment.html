@@ -735,6 +735,7 @@
   @media (max-width:640px){ .cx-op2{grid-template-columns:1fr;} .cx-opt{white-space:normal;} }
   @media print{ .cx-opt{white-space:normal;} }
   .ev-backbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;} .ev-backbar.c{justify-content:center;margin:16px 0 0;} .ev-backbar .btn{height:40px;padding:0 16px;font-weight:700;} .ev-backbar svg{width:16px;height:16px;}
+  .bp-g{font-size:13px;line-height:1.55;color:#475467;margin:0 0 10px;word-break:keep-all;} .bp-g > b:first-child{color:#1B3A5F;margin-right:4px;}
   /* d2l: 평가관리 칸반 */
   .ev-k .btn{width:100%;height:40px;font-size:14px;border-color:var(--navy);color:var(--navy);}
   .ev-k .btn.primary.ab-ai{color:#fff;border-color:#2F6FB2;}
@@ -1279,7 +1280,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d2w</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d2x</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -1849,7 +1850,7 @@
     });
   }
   function demoFoot(){
-    return '<div class="demo-all"><button type="button" class="btn" id="demoAll">' + (document.body.classList.contains('showall') ? '전체 과정 접기' : '전체 과정 보기 (' + plans.length + '개)') + '</button></div>' +
+    return '<div class="demo-all"><button type="button" class="btn" id="demoAll">' + (document.body.classList.contains('showall') ? '전체 과정 접기' : '전체 과정 보기 (끝난 과정 포함 ' + plans.length + '개)') + '</button></div>' +
       '';
   }
   /* d2d: 시연 상태 줄 — 평가관이 들어왔을 때 앞선 시험으로 바뀐 내용이 있는지 보고 처음 상태로 되돌림 */
@@ -1942,9 +1943,9 @@
   // d2f: 강의배정(ab)·평가관리(ev) 공용 — 이 브라우저의 보드 기록과 과정 고르기
   var DKIND = {
     ab: { store: 'jfsa_demo_board_v1', server: '', conf: 'DEMO_POOL', lane1: '교과목 편성',
-      guide: '고른 과정은 <b>교과목 편성 전(처음 상태)</b>으로 되돌린 뒤 1단계에 놓입니다. 1단계 지난 기수 편성 불러오기 → 2단계 AI 강사 일괄 배정 → 3단계 확인·적용 → 4단계 일괄 발송 순서로 진행해 보세요.' },
+      guide: '개강일이 가까운 순입니다.' },
     ev: { store: 'jfsa_demo_eval_v1', server: '평가', conf: 'DEMO_EVAL', lane1: '설문 준비',
-      guide: '고른 과정은 <b>설문 준비 전(처음 상태)</b>으로 되돌린 뒤 1단계에 놓입니다. 1단계 설문 링크 만들기 → 2단계 결과 파일 올리기(예시 파일 제공) → 3단계 강사 환류 → 4단계 완료 순서로 진행해 보세요.' }
+      guide: '최근 종료된 과정순입니다.' }
   };
   var dsMem = {}, dpInfo = {}, dWelcome = {};
   function dbs(kind){
@@ -1978,7 +1979,7 @@
       var recent = function(k){ return busyByOther(k); };
       var inHist = function(k){ return inHistKind(k, kind); };
       var rows = poolKeys(kind).map(planByKey).filter(function(p){ return p && !isCancelled(p); });
-      rows.sort(function(a, b){ return (recent(a['과정+기수']) ? 1 : 0) - (recent(b['과정+기수']) ? 1 : 0) || normYmd(a['입교 시작일']).localeCompare(normYmd(b['입교 시작일'])); });
+      rows.sort(function(a, b){ return (recent(a['과정+기수']) ? 1 : 0) - (recent(b['과정+기수']) ? 1 : 0) || (kind === 'ev' ? normYmd(b['입교 종료일']).localeCompare(normYmd(a['입교 종료일'])) : normYmd(a['입교 시작일']).localeCompare(normYmd(b['입교 시작일']))); });
       var row = function(p){
         var k = p['과정+기수'], mine = k === o.active, rc = recent(k);
         var src = kind === 'ab' ? defaultCopySource(p, copyCandidates(p)) : '';
@@ -1991,9 +1992,8 @@
           '</div><div class="bd-hb">' + (inHist(k) ? '<button type="button" class="btn primary" data-bpgo="' + esc(k) + '">이어서 하기</button><button type="button" class="btn" data-bpstart="' + esc(k) + '">처음부터</button>'
             : '<button type="button" class="btn' + (rc ? '' : ' primary') + '" data-bpstart="' + esc(k) + '">' + (mine ? '처음부터 다시' : '올리기') + '</button>') + '</div></div>';
       };
-      var m = cxModal('시연할 과정 고르기', '<div class="cx-guide">' + DKIND[kind].guide + '</div>' +
-        '<div class="cx-guide bp-save"><b>진행 중에 다른 과정을 골라도 됩니다.</b> 지금까지 한 내용은 단계마다 자동 저장되고, \'진행한 과정\'에서 [이어서 하기]로 다시 불러옵니다. 로그아웃해도 이 브라우저에서 다시 들어오면 이어집니다.' +
-        (o.active ? ' 지금 보드의 <b>' + esc(courseLabel(o.active)) + '</b>은(는) \'진행한 과정\'으로 옮겨집니다.' : '') + ' <span>다른 평가관이 같은 과정을 처음부터 시작하면 저장 내용도 처음으로 돌아갑니다.</span></div>' +
+      var m = cxModal('시연할 과정 고르기', '<div class="bp-g"><b>' + DKIND[kind].guide + '</b> 진행 중 다른 과정을 골라도 자동 저장되고, 보드 아래 \'진행한 과정\'에서 이어서 할 수 있습니다.' +
+        (o.active ? ' 지금 보드의 <b>' + esc(courseLabel(o.active)) + '</b>은(는) \'진행한 과정\'으로 옮겨집니다.' : '') + '</div>' +
         (rows.length ? '<div class="bp-l">' + rows.map(row).join('') + '</div>' : '<div class="cx-guide">시연용 과정을 찾지 못했습니다.</div>') + '<div id="bpMsg"></div>');
       m.body.addEventListener('click', function(ev){
         var g = ev.target.closest ? ev.target.closest('[data-bpgo]') : null;
