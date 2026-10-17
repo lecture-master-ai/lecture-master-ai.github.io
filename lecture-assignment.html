@@ -712,6 +712,13 @@
   .bp-r .bd-hb .btn{flex-shrink:0;}
   @media (max-width:600px){ .bp-r{flex-wrap:wrap;} .bp-r > div:first-child{flex:1 1 100%;} .bp-r .bd-hb{width:100%;} .bp-r .bd-hb .btn{flex:1;height:44px;justify-content:center;} .bd-done li{flex-wrap:wrap;} .bd-done li .bd-hb{width:100%;} .bd-done li .bd-hb .btn{flex:1;height:40px;justify-content:center;} }
   .bdc-ed, .bp-ed{font-size:12px;color:#5F6877;} .bdc-warn{font-size:12px;font-weight:700;color:#9A3D0A;background:#FFF4EC;border-radius:6px;padding:4px 8px;} .bd-rs{font-style:normal;font-weight:700;color:#9A3D0A;}
+  /* d2t: 강사관리에서 온 경우 — 그 강사 칸 강조·떠 있는 돌아가기 버튼 */
+  .gc.dbh{box-shadow:0 0 0 3px #E8762B !important;background:#FFF4EC !important;}
+  mark.dbm, .nmk.dbm{background:#FFE2CC;color:#7A2E00;border-radius:4px;padding:0 4px;font-weight:800;}
+  .db-fl{position:fixed;left:16px;bottom:16px;z-index:9000;display:inline-flex;align-items:center;gap:6px;height:44px;padding:0 16px;border-radius:22px;background:var(--navy);color:#fff;font-weight:800;font-size:14px;text-decoration:none;box-shadow:0 4px 14px rgba(16,24,40,.25);}
+  .db-fl svg{width:16px;height:16px;} .db-fl:focus-visible{outline:2px solid #E8762B;outline-offset:2px;}
+  @media (hover:hover){ .db-fl:hover{background:#245C96;} }
+  @media print{ .db-fl{display:none;} }
   /* d2l: 평가관리 칸반 */
   .ev-k .btn{width:100%;height:40px;font-size:14px;border-color:var(--navy);color:var(--navy);}
   .ev-k .btn.primary.ab-ai{color:#fff;border-color:#2F6FB2;}
@@ -1256,7 +1263,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d2s</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d2t</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -2591,10 +2598,21 @@
   var dashBack = null;
   function renderDashBack(){
     var el = $('dashBack'); if (!el) return;
-    if (!dashBack || dashBack.key !== currentKey) { el.style.display = 'none'; el.innerHTML = ''; return; }
-    el.innerHTML = '<a class="db-back" href="instructor-dashboard.html#i=' + encodeURIComponent(dashBack.id) + '">' + ic('arrowL', 'l') + (dashBack.name ? esc(dashBack.name) + ' 강사 상세로 돌아가기' : '강사 상세로 돌아가기') + '</a>' +
-      '<span class="db-note">강사관리의 강의 이력에서 이 과정 시간표로 왔습니다.</span>';
+    var fl = $('dashBackFl');
+    if (!dashBack || dashBack.key !== currentKey) { el.style.display = 'none'; el.innerHTML = ''; if (fl) fl.remove(); return; }
+    var href = 'instructor-dashboard.html#i=' + encodeURIComponent(dashBack.id), nm = dashBack.name ? esc(dashBack.name) + ' 강사' : '강사';
+    el.innerHTML = '<a class="db-back" href="' + href + '">' + ic('arrowL', 'l') + nm + ' 상세로 돌아가기</a>' +
+      '<span class="db-note">강사관리의 강의 이력에서 왔습니다. 시간표에서 <mark class="dbm">' + nm + '</mark> 칸을 주황색으로 표시했습니다.</span>';
     el.style.display = '';
+    // 화면을 내려도 늘 보이는 돌아가기 버튼
+    if (!fl) { fl = document.createElement('a'); fl.id = 'dashBackFl'; document.body.appendChild(fl); }
+    fl.className = 'db-fl'; fl.href = href; fl.innerHTML = ic('arrowL', 'l') + '<span>' + nm + ' 상세로</span>';
+    // 처음 들어왔을 때 그 강사 칸으로 스크롤
+    if (!dashBack.scrolled) {
+      dashBack.scrolled = true; var tries = 0;
+      var go = function(){ var c = document.querySelector('#sGridWrap .gc.dbh'); if (c) { c.scrollIntoView({ behavior: 'auto', block: 'center' }); return; } if (++tries < 15) setTimeout(go, 300); };
+      setTimeout(go, 300);
+    }
   }
   function showPlan(){
     currentKey = '';
@@ -2674,7 +2692,7 @@
   /* 교과목 목록·격자 아래 이동 줄: 다음 교과목 없는 과정 / 교과목 없는 과정 전체 보기 / 홈으로 */
   function renderBackBar(){
     var nb = $('navBar'); if (!nb) return;
-    if (!currentKey) { nb.style.display = 'none'; nb.innerHTML = ''; return; }
+    if (!currentKey || SIMPLE) { nb.style.display = 'none'; nb.innerHTML = ''; return; }   // 심사용: 이동 줄 숨김
     var html = '<span class="nlab">이동</span>';
     if (sessionsOk) {
       var nx = nextNoSubj();
@@ -5550,6 +5568,8 @@
     } else if (open.length) { cls = ' warn'; flag = '<span class="gf w">같은 반 겹침</span>'; }
     else if (cl.length) { cls = ' ok'; flag = '<span class="gf o">확인됨</span>'; }
     else if (!u.some(hasInstr)) cls = ' none';
+    var dbh = dashBack && dashBack.key === currentKey && u.some(function(x){ return String(x['강사ID']) === dashBack.id; });
+    if (dbh) cls += ' dbh';
     if (cont) flag += '<span class="gf c">이어짐</span>';
     var pt = periodText(r), multi = u.length > 1;
     var warns = []; u.forEach(function(x){ rowWarnings(x, p).forEach(function(w){ if (warns.indexOf(w) < 0) warns.push(w); }); });
@@ -5559,7 +5579,7 @@
       var nm;
       if (x['강사ID']) {
         var o = instrById[x['강사ID']];
-        nm = o ? '<span class="nmk" data-detail="' + esc(x['강사ID']) + '" title="강사 정보 보기">' + esc(o.name) + '</span>' + docBadge(o, x) : esc(x['강사명'] || x['강사ID']);
+        nm = o ? '<span class="nmk' + (dashBack && dashBack.id === String(x['강사ID']) ? ' dbm' : '') + '" data-detail="' + esc(x['강사ID']) + '" title="강사 정보 보기">' + esc(o.name) + '</span>' + docBadge(o, x) : esc(x['강사명'] || x['강사ID']);
       } else if (isOps(x)) nm = opsTag(x);
       else nm = esc(x['강사명']) + ' <span class="hint">(직접 입력)</span>';
       var eb = (multi && canEdit) ? '<button type="button" class="eb" data-act="edit" data-id="' + esc(x['편성ID']) + '" title="이 강사 줄 수정">' + ic('pencil') + '</button>' : '';
