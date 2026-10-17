@@ -682,6 +682,27 @@
     .bdc{padding:12px 14px 14px;}
   }
 
+  /* d2n: 빈 단계 칸 안내 */
+  .bd-ew{flex-direction:column;gap:5px;padding:16px 12px;}
+  .bd-ew b{font-size:13.5px;font-weight:800;color:var(--navy);}
+  .bd-ew > span{font-size:12.5px;color:#475467;line-height:1.5;}
+  .bd-ew .bd-ex{color:#5F6877;font-size:12px;}
+  .bd-from{display:inline-flex;align-items:center;gap:4px;font-size:11.5px !important;font-weight:700;color:#5F6877 !important;background:#E9EEF5;border-radius:999px;padding:2px 9px 2px 7px;margin-bottom:2px;}
+  .bd-from svg{width:12px;height:12px;flex-shrink:0;}
+  .bd-go{margin-top:4px;height:32px;padding:0 14px;border:1.5px solid var(--navy);border-radius:8px;background:#fff;color:var(--navy);font:inherit;font-size:12.5px;font-weight:800;cursor:pointer;}
+  .bd-go:focus-visible{outline:2px solid var(--navy);outline-offset:2px;}
+  @media (hover:hover){ .bd-go:hover{background:#E8EEF6;} }
+  .bd-lane{transition:box-shadow .2s ease-out;}
+  .bd-lane.bd-flash{box-shadow:0 0 0 2px #E8762B;}
+  @media (prefers-reduced-motion:reduce){ .bd-lane{transition:none;} }
+  @media (max-width:760px){
+    .bd-lane.empty:not(.first){background:rgba(255,255,255,.6);border-radius:10px;padding:12px 14px;gap:4px;}
+    .bd-lane.empty:not(.first) .bd-lh{background:transparent;padding:0;}
+    .bd-lane.empty:not(.first) .bd-empty.bd-ew{display:flex;border:none;padding:0;align-items:flex-start;text-align:left;gap:2px;}
+    .bd-ew .bd-from, .bd-lane.empty .bd-ew b{display:none;}
+    .bd-go{height:40px;}
+  }
+
   /* d2l: 평가관리 칸반 */
   .ev-k .btn{width:100%;height:40px;font-size:14px;border-color:var(--navy);color:var(--navy);}
   .ev-k .btn.primary.ab-ai{color:#fff;border-color:#2F6FB2;}
@@ -1226,7 +1247,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d2m</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d2n</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -1869,6 +1890,27 @@
     demoExhausted = ex;
     return demos.filter(function(p){ return show[p['과정+기수']]; });
   }
+  // d2n: 빈 단계 칸 안내 — 비어 있는 뜻과 앞 단계에서 어떻게 넘어오는지(칸반 공용)
+  var LANE_EMPTY = {
+    ab: { go: 'bdl', first: '앞으로 열릴 과정이 올라오면 여기서 시작합니다.', none: '1단계에 과정을 올리면 차례로 넘어옵니다.',
+      title: ['', '지금 처리할 과정 없음', '지금 처리할 과정 없음', '지금 처리할 과정 없음', '방금 안내를 보낸 과정 없음'],
+      act: ['', '', '교과목 편성을 마치면 자동으로 이곳에 놓입니다.', '강사 배정을 마치면 자동으로 이곳에 놓입니다.', '안내를 보내면 이곳을 거쳐 배정 완료 목록으로 옮겨집니다.'] },
+    ev: { go: 'evl', first: '교육이 끝난 과정이 여기서 시작합니다.', none: '교육이 끝난 과정이 생기면 1단계부터 차례로 넘어옵니다.',
+      title: ['', '지금 처리할 과정 없음', '지금 처리할 과정 없음', '지금 처리할 과정 없음', '아직 환류를 마친 과정 없음'],
+      act: ['', '', '설문 링크를 만들면 자동으로 이곳에 놓입니다.', '결과 파일을 반영하면 자동으로 이곳에 놓입니다.', '환류를 보내면 자동으로 이곳에 놓입니다.'] }
+  };
+  function laneEmptyHtml(kind, n, lanes, canGo, extra){
+    var C = LANE_EMPTY[kind], msg, chip = '', btn = '';
+    if (n === 1) msg = C.first;
+    else {
+      chip = '<span class="bd-from"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8h11M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>' + (n - 1) + '단계에서 넘어옴</span>';
+      var j = 0; for (var k = n - 1; k >= 1; k--) if (lanes[k].length) { j = k; break; }
+      if (j === n - 1) msg = j + '단계 ' + lanes[j].length + '과정이 ' + C.act[n];
+      else if (j) msg = j + '단계 ' + lanes[j].length + '과정이 앞 단계를 거쳐 차례로 넘어옵니다.';
+      else { msg = C.none; if (canGo && n === 2) btn = '<button type="button" class="bd-go" data-bdgo="' + C.go + '1">1단계로 가기</button>'; }
+    }
+    return '<div class="bd-empty bd-ew">' + chip + '<b>' + C.title[n] + '</b><span>' + msg + '</span>' + (extra ? '<span class="bd-ex">' + extra + '</span>' : '') + btn + '</div>';
+  }
   function renderDemoB(demos, arrived){
     if (boardAdd === null) boardFetch();
     if (arrived || !demoSt) demoStFetch();
@@ -1894,7 +1936,6 @@
       lanes[st.lane].push({ p: p, st: st });
     });
     var canEdit = !isViewer();
-    var EMPTY = ['', '교과목이 없는 과정이 여기에 놓입니다.', '강사 빈 칸이 있는 과정이 여기에 놓입니다.', '배정을 마치고 안내를 기다리는 과정이 여기에 놓입니다.', '방금 강사 안내를 마친 과정이 잠시 머문 뒤 배정 완료 목록으로 옮겨집니다.'];
     var h = demoStHtml() + '<section class="bd" aria-label="강의배정 절차와 과정 위치"><div class="bd-track">' + STEPS.map(function(s, i){
       var c = lanes[i + 1].length;
       return '<div class="bd-st"><div class="bd-n">' + (i + 1) + '</div><div class="t">' + s.t + '</div><div class="d">' + s.d + '</div><div class="bd-c' + (c ? '' : ' zero') + '">' + (c ? c + '과정' : '과정 없음') + '</div><div class="tls">' + s.tl.filter(function(x){ return x[0]; }).map(stTool).join('') + '</div></div>'; }).join('') + '</div>' +
@@ -1902,7 +1943,7 @@
     STEPS.forEach(function(s, i){
       var L = lanes[i + 1];
       h += '<div class="bd-lane' + (L.length ? '' : ' empty') + (i ? '' : ' first') + '" id="bdl' + (i + 1) + '"><div class="bd-lh"><span>' + (i + 1) + '. ' + s.t + '</span>' + (L.length ? '<em>' + L.length + '과정</em>' : '<span>0</span>') + '</div>';
-      if (!L.length) h += i === 0 && canEdit ? '<button type="button" class="bd-empty bd-add" data-bdadd="1"><b>+ 과정 올리기</b><span>앞으로 열릴 과정을 골라 올립니다</span></button>' : '<div class="bd-empty">' + EMPTY[i + 1] + '</div>';
+      if (!L.length) h += i === 0 && canEdit ? '<button type="button" class="bd-empty bd-add" data-bdadd="1"><b>+ 과정 올리기</b><span>앞으로 열릴 과정을 골라 올립니다</span></button>' : laneEmptyHtml('ab', i + 1, lanes, canEdit, i === 3 && doneList.length ? '배정 완료 ' + doneList.length + '과정은 아래 목록에 있습니다.' : '');
       L.forEach(function(r){
         var key = r.p['과정+기수'], st = r.st, dd = dDay(r.p), pct = st.n ? Math.round((st.n - st.empty) / st.n * 100) : 0;
         var mv = stageMoved[key], hot = mv && Date.now() - mv.at < 5 * 60000 && (!mv.shown || mv.visit === boardVisit);   // 처음 보이는 방문 동안만 강조
@@ -1963,7 +2004,7 @@
   document.addEventListener('click', function(ev){
     var t = ev.target.closest ? ev.target.closest('button') : null; if (!t) return;
     var k = t.getAttribute('data-demo-open'); if (k) { openCourse(k); return; }
-    var go = t.getAttribute('data-bdgo'); if (go) { var ln = $(/^\d+$/.test(go) ? 'bdl' + go : go); if (ln) ln.scrollIntoView({ behavior: window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); return; }
+    var go = t.getAttribute('data-bdgo'); if (go) { var ln = $(/^\d+$/.test(go) ? 'bdl' + go : go); if (ln) { ln.scrollIntoView({ behavior: window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); if (t.classList.contains('bd-go')) { ln.classList.add('bd-flash'); setTimeout(function(){ ln.classList.remove('bd-flash'); }, 1600); } } return; }
     if (t.getAttribute('data-bdadd')) { var ob = {}; plans.forEach(function(p){ var kk = p['과정+기수']; if (DEMO_KEYS[kk] || (boardAdd || []).indexOf(kk) > -1) ob[kk] = true; }); boardPick(ob); return; }
     if (t.id === 'demoAll') { document.body.classList.toggle('showall'); renderDemo(); }
     if (t.id === 'demoReset') {
@@ -7437,7 +7478,6 @@
       evSeen[key] = L; r.L = L; lanes[L].push(r);
     });
     if (moves.length) setTimeout(function(){ moves.forEach(function(t){ stageToast(t, 0); }); }, 50);
-    var EMPTY = ['', '설문을 준비할 과정이 여기에 놓입니다.', '설문 링크를 만들어 응답을 모으는 과정이 여기에 놓입니다.', '결과를 반영하고 환류를 기다리는 과정이 여기에 놓입니다.', '환류를 마친 과정이 여기에 놓입니다. 이 평가는 다음 AI 강사 배정의 근거가 됩니다.'];
     var h = '<section class="bd" aria-label="평가 단계와 과정 위치"><div class="bd-track">' + EV_STEPS.map(function(s, i){
       var c = lanes[i + 1].length;
       return '<div class="bd-st"><div class="bd-n">' + (i + 1) + '</div><div class="t">' + s.t + '</div><div class="d">' + s.d + '</div><div class="bd-c' + (c ? '' : ' zero') + '">' + (c ? c + '과정' : '과정 없음') + '</div><div class="tls">' + s.tl.map(stTool).join('') + '</div></div>'; }).join('') + '</div>' +
@@ -7445,7 +7485,7 @@
     EV_STEPS.forEach(function(s, i){
       var L = lanes[i + 1];
       h += '<div class="bd-lane' + (L.length ? '' : ' empty') + '" id="evl' + (i + 1) + '"><div class="bd-lh"><span>' + (i + 1) + '. ' + s.t + '</span>' + (L.length ? '<em>' + L.length + '과정</em>' : '<span>0</span>') + '</div>';
-      if (!L.length) h += '<div class="bd-empty">' + EMPTY[i + 1] + '</div>';
+      if (!L.length) h += laneEmptyHtml('ev', i + 1, lanes, false, '');
       L.forEach(function(r){ var key = String(r.p['과정+기수']); h += evCardB(r.p, r.j, r.err, evHot[key] && Date.now() - evHot[key] < 5000); });
       h += '</div>';
     });
