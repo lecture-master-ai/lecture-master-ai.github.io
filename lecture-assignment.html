@@ -632,6 +632,9 @@
   .bd-n, .bd-st.has .bd-n{background:#fff;border:2px solid var(--navy);color:var(--navy);}
   .bd-cnt{position:absolute;top:-6px;right:-10px;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:#E8762B;color:#fff;font-size:11.5px;font-weight:800;line-height:20px;text-align:center;box-shadow:0 0 0 2px #E3E8EF;}
   .bd-st .d{color:#475467;}
+  .bd-c{display:inline-block;margin-top:4px;font-size:12.5px;font-weight:800;color:#9A3D0A;background:#FFF1E6;border-radius:999px;padding:1px 10px;}
+  .bd-c.zero{color:#5F6877;background:transparent;font-weight:600;}
+
   .bd-lanes{gap:16px;}
   .bd-lane{background:rgba(255,255,255,.5);border-radius:12px;padding:8px;gap:8px;min-height:140px;}
   .bd-lh{padding:4px 4px 0;}
@@ -667,7 +670,7 @@
     .bd-mini{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 0 12px;}
     .bd-mini button{display:flex;align-items:center;justify-content:flex-start;gap:6px;height:44px;padding:0 10px;border:none;border-radius:10px;background:#fff;color:var(--navy);font:inherit;font-size:13px;font-weight:800;box-shadow:0 1px 2px rgba(16,24,40,.06);cursor:pointer;}
     .bd-mini button i{font-style:normal;width:20px;height:20px;border-radius:50%;border:1.5px solid var(--navy);display:inline-flex;align-items:center;justify-content:center;font-size:11px;}
-    .bd-mini button em{font-style:normal;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#E8762B;color:#fff;font-size:11px;line-height:18px;}
+    .bd-mini button em{font-style:normal;min-width:18px;height:18px;padding:0 7px;border-radius:999px;background:#E8762B;color:#fff;font-size:11px;line-height:18px;}
     .bd-mini button.zero em{background:#C9D2DD;}
     .bd-lane{background:transparent;padding:0;min-height:0;}
     .bd-mini button em{margin-left:auto;}
@@ -1223,7 +1226,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d2l</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d2m</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -1894,8 +1897,8 @@
     var EMPTY = ['', '교과목이 없는 과정이 여기에 놓입니다.', '강사 빈 칸이 있는 과정이 여기에 놓입니다.', '배정을 마치고 안내를 기다리는 과정이 여기에 놓입니다.', '방금 강사 안내를 마친 과정이 잠시 머문 뒤 배정 완료 목록으로 옮겨집니다.'];
     var h = demoStHtml() + '<section class="bd" aria-label="강의배정 절차와 과정 위치"><div class="bd-track">' + STEPS.map(function(s, i){
       var c = lanes[i + 1].length;
-      return '<div class="bd-st"><div class="bd-n">' + (i + 1) + (c ? '<span class="bd-cnt" aria-label="' + c + '과정">' + c + '</span>' : '') + '</div><div class="t">' + s.t + '</div><div class="d">' + s.d + '</div><div class="tls">' + s.tl.filter(function(x){ return x[0]; }).map(stTool).join('') + '</div></div>'; }).join('') + '</div>' +
-      '<nav class="bd-mini" aria-label="단계 바로가기">' + STEPS.map(function(s, i){ var c = lanes[i + 1].length; return '<button type="button" data-bdgo="' + (i + 1) + '"' + (c ? '' : ' class="zero"') + '><i>' + (i + 1) + '</i>' + s.t + '<em>' + c + '</em></button>'; }).join('') + '</nav><div class="bd-lanes">';
+      return '<div class="bd-st"><div class="bd-n">' + (i + 1) + '</div><div class="t">' + s.t + '</div><div class="d">' + s.d + '</div><div class="bd-c' + (c ? '' : ' zero') + '">' + (c ? c + '과정' : '과정 없음') + '</div><div class="tls">' + s.tl.filter(function(x){ return x[0]; }).map(stTool).join('') + '</div></div>'; }).join('') + '</div>' +
+      '<nav class="bd-mini" aria-label="단계 바로가기">' + STEPS.map(function(s, i){ var c = lanes[i + 1].length; return '<button type="button" data-bdgo="' + (i + 1) + '"' + (c ? '' : ' class="zero"') + '><i>' + (i + 1) + '</i>' + s.t + '<em>' + c + '과정</em></button>'; }).join('') + '</nav><div class="bd-lanes">';
     STEPS.forEach(function(s, i){
       var L = lanes[i + 1];
       h += '<div class="bd-lane' + (L.length ? '' : ' empty') + (i ? '' : ' first') + '" id="bdl' + (i + 1) + '"><div class="bd-lh"><span>' + (i + 1) + '. ' + s.t + '</span>' + (L.length ? '<em>' + L.length + '과정</em>' : '<span>0</span>') + '</div>';
@@ -7437,8 +7440,8 @@
     var EMPTY = ['', '설문을 준비할 과정이 여기에 놓입니다.', '설문 링크를 만들어 응답을 모으는 과정이 여기에 놓입니다.', '결과를 반영하고 환류를 기다리는 과정이 여기에 놓입니다.', '환류를 마친 과정이 여기에 놓입니다. 이 평가는 다음 AI 강사 배정의 근거가 됩니다.'];
     var h = '<section class="bd" aria-label="평가 단계와 과정 위치"><div class="bd-track">' + EV_STEPS.map(function(s, i){
       var c = lanes[i + 1].length;
-      return '<div class="bd-st"><div class="bd-n">' + (i + 1) + (c ? '<span class="bd-cnt" aria-label="' + c + '과정">' + c + '</span>' : '') + '</div><div class="t">' + s.t + '</div><div class="d">' + s.d + '</div><div class="tls">' + s.tl.map(stTool).join('') + '</div></div>'; }).join('') + '</div>' +
-      '<nav class="bd-mini" aria-label="단계 바로가기">' + EV_STEPS.map(function(s, i){ var c = lanes[i + 1].length; return '<button type="button" data-bdgo="evl' + (i + 1) + '"' + (c ? '' : ' class="zero"') + '><i>' + (i + 1) + '</i>' + s.t + '<em>' + c + '</em></button>'; }).join('') + '</nav><div class="bd-lanes">';
+      return '<div class="bd-st"><div class="bd-n">' + (i + 1) + '</div><div class="t">' + s.t + '</div><div class="d">' + s.d + '</div><div class="bd-c' + (c ? '' : ' zero') + '">' + (c ? c + '과정' : '과정 없음') + '</div><div class="tls">' + s.tl.map(stTool).join('') + '</div></div>'; }).join('') + '</div>' +
+      '<nav class="bd-mini" aria-label="단계 바로가기">' + EV_STEPS.map(function(s, i){ var c = lanes[i + 1].length; return '<button type="button" data-bdgo="evl' + (i + 1) + '"' + (c ? '' : ' class="zero"') + '><i>' + (i + 1) + '</i>' + s.t + '<em>' + c + '과정</em></button>'; }).join('') + '</nav><div class="bd-lanes">';
     EV_STEPS.forEach(function(s, i){
       var L = lanes[i + 1];
       h += '<div class="bd-lane' + (L.length ? '' : ' empty') + '" id="evl' + (i + 1) + '"><div class="bd-lh"><span>' + (i + 1) + '. ' + s.t + '</span>' + (L.length ? '<em>' + L.length + '과정</em>' : '<span>0</span>') + '</div>';
