@@ -719,6 +719,7 @@
   .db-fl svg{width:16px;height:16px;} .db-fl:focus-visible{outline:2px solid #E8762B;outline-offset:2px;}
   @media (hover:hover){ .db-fl:hover{background:#245C96;} }
   @media print{ .db-fl{display:none;} }
+  .navbar.dbnav{justify-content:center;background:transparent;box-shadow:none;border:none;} .db-plain{height:44px;padding:0 20px;font-size:14.5px;font-weight:700;background:#fff;color:#344054;border:1px solid var(--border);} .db-plain svg{width:16px;height:16px;}
   /* d2l: 평가관리 칸반 */
   .ev-k .btn{width:100%;height:40px;font-size:14px;border-color:var(--navy);color:var(--navy);}
   .ev-k .btn.primary.ab-ai{color:#fff;border-color:#2F6FB2;}
@@ -1263,7 +1264,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d2t</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d2u</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -2599,14 +2600,13 @@
   function renderDashBack(){
     var el = $('dashBack'); if (!el) return;
     var fl = $('dashBackFl');
-    if (!dashBack || dashBack.key !== currentKey) { el.style.display = 'none'; el.innerHTML = ''; if (fl) fl.remove(); return; }
+    if (!dashBack || dashBack.key !== currentKey) { el.style.display = 'none'; el.innerHTML = ''; if (fl) fl.remove(); try { renderBackBar(); } catch (e) {} return; }
     var href = 'instructor-dashboard.html#i=' + encodeURIComponent(dashBack.id), nm = dashBack.name ? esc(dashBack.name) + ' 강사' : '강사';
     el.innerHTML = '<a class="db-back" href="' + href + '">' + ic('arrowL', 'l') + nm + ' 상세로 돌아가기</a>' +
       '<span class="db-note">강사관리의 강의 이력에서 왔습니다. 시간표에서 <mark class="dbm">' + nm + '</mark> 칸을 주황색으로 표시했습니다.</span>';
     el.style.display = '';
-    // 화면을 내려도 늘 보이는 돌아가기 버튼
-    if (!fl) { fl = document.createElement('a'); fl.id = 'dashBackFl'; document.body.appendChild(fl); }
-    fl.className = 'db-fl'; fl.href = href; fl.innerHTML = ic('arrowL', 'l') + '<span>' + nm + ' 상세로</span>';
+    if (fl) fl.remove();
+    try { renderBackBar(); } catch (e) {}
     // 처음 들어왔을 때 그 강사 칸으로 스크롤
     if (!dashBack.scrolled) {
       dashBack.scrolled = true; var tries = 0;
@@ -2692,7 +2692,12 @@
   /* 교과목 목록·격자 아래 이동 줄: 다음 교과목 없는 과정 / 교과목 없는 과정 전체 보기 / 홈으로 */
   function renderBackBar(){
     var nb = $('navBar'); if (!nb) return;
-    if (!currentKey || SIMPLE) { nb.style.display = 'none'; nb.innerHTML = ''; return; }   // 심사용: 이동 줄 숨김
+    if (SIMPLE) {   // 심사용: 이동 줄 대신, 강사관리에서 왔을 때만 시간표 아래 가운데 돌아가기 버튼
+      if (currentKey && dashBack && dashBack.key === currentKey) { nb.className = 'navbar dbnav'; nb.style.display = ''; nb.innerHTML = '<a class="btn db-plain" href="instructor-dashboard.html#i=' + encodeURIComponent(dashBack.id) + '">' + ic('arrowL', 'l') + (dashBack.name ? esc(dashBack.name) + ' 강사 상세로 돌아가기' : '강사 상세로 돌아가기') + '</a>'; }
+      else { nb.className = 'navbar'; nb.style.display = 'none'; nb.innerHTML = ''; }
+      return;
+    }
+    if (!currentKey) { nb.style.display = 'none'; nb.innerHTML = ''; return; }
     var html = '<span class="nlab">이동</span>';
     if (sessionsOk) {
       var nx = nextNoSubj();
@@ -3297,6 +3302,7 @@
   function deleteRow(id, noConfirm){
     var r = allSessions.filter(function(x){ return String(x['편성ID']) === id; })[0];
     if (!r) return;
+    if (sessEnded(r['일자'])) { alert('이미 끝난 강의는 강의 실적으로 보관되어 삭제할 수 없습니다.'); return; }
     var pt = periodText(r);
     if (!noConfirm && !confirm('이 교과목을 삭제할까요?\n' + md(r['일자']) + ' ' + pt.txt + ' ' + r['교과목'] + '\n삭제하면 되돌릴 수 없습니다.')) return;
     api({ action: 'deleteSession', password: getPw(), 편성ID: id }).then(function(res){
@@ -6768,8 +6774,8 @@
     if (!row) return;
     if (act === 'del') deleteRow(id);
     else if ((act === 'edit' || act === 'assign') && sessEnded(row['일자'])) {
-      var ptE = periodText(row);
-      if (confirm('이미 종료된 일정입니다(강의일 당일 17:50 이후).\n교과목은 수정할 수 없고 삭제만 할 수 있습니다.\n\n' + md(row['일자']) + ' ' + ptE.txt + ' ' + row['교과목'] + '\n\n이 교과목을 삭제하시겠습니까?\n삭제하면 되돌릴 수 없습니다.')) deleteRow(id, true);
+      // d2u: 지난 강의는 강의 실적으로 보관 — 화면에서 수정·삭제하지 않음(필요하면 담당자가 시트에서 직접 처리)
+      alert('이미 끝난 강의입니다(강의일 당일 17:50 이후).\n지난 강의는 강의 실적으로 보관되어 화면에서 수정·삭제할 수 없습니다.');
     }
     else if (act === 'edit') fillForm(row, 'edit');
     else if (act === 'copy') fillForm(row, 'copy');
