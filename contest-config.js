@@ -5,7 +5,7 @@
      로그인은 비밀번호 없이 [로그인] 버튼 하나로, 강사 승인은 확인창으로 줄입니다. false로 바꾸면 원래 화면으로 돌아갑니다(코드는 지우지 않음). */
 window.CONTEST_CONFIG = {
   WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbzYdVSZsLnSw3JN01aIDuXa1Ubxh6ERWYC-0TEQxu6tRYrcI9-WNYEoKv3Cfk9qyUvJ/exec',
-  VERSION: '대회용 d2s',
+  VERSION: '대회용 d2w',
   ORG_NAME: '○○소방학교',
   SIMPLE: true,
   DEMO_PW: '0000',      // 심사용 담당자 권한(모의 데이터 전용). 운영판은 개인 비밀번호 사용
@@ -60,8 +60,21 @@ window.CONTEST_CONFIG = {
     if (form && btn && pins.length) {
       Array.prototype.forEach.call(pins, function (p) { p.parentNode.style.display = 'none'; });
       btn.textContent = '로그인';
-      var sub = document.querySelector('#loginCard .sub');
-      if (sub) sub.textContent = '담당자 로그인 · 심사용 사본은 비밀번호 없이 들어갑니다';
+      // d2w: 로그인 카드 표기 통일 — 시스템 이름 + 화면 이름 + 로그인 안내
+      var card = document.getElementById('loginCard');
+      if (card) {
+        var tt = card.querySelector('.title'), subs = card.querySelectorAll('.sub');
+        var pg = (String(document.title).split('·')[1] || '').trim();
+        if (tt) { tt.innerHTML = '소방학교 외래강사 <span style="color:#E8590C;">ON</span><span style="font-size:.7em;font-weight:700;opacity:.75;">(JFSA)</span>'; tt.style.lineHeight = '1.3'; }
+        Array.prototype.forEach.call(subs, function (x, i) { if (i < subs.length - 1) x.parentNode.removeChild(x); });
+        var last = card.querySelector('.sub');
+        if (last) {
+          last.textContent = '담당자 로그인 · 심사용 사본은 비밀번호 없이 들어갑니다'; last.style.wordBreak = 'keep-all';
+          var pn = document.createElement('div'); pn.className = 'sub'; pn.style.cssText = 'font-weight:700;margin-bottom:2px;word-break:keep-all;';
+          pn.textContent = (C.ORG_NAME || '○○소방학교') + ' 교육운영 관리 시스템' + (pg ? ' · ' + pg : '');
+          last.parentNode.insertBefore(pn, last);
+        }
+      }
       var fill = function () { Array.prototype.forEach.call(pins, function (p, i) { p.value = String(C.DEMO_PW).charAt(i) || ''; }); };
       btn.addEventListener('click', fill, true);
       form.addEventListener('submit', fill, true);
