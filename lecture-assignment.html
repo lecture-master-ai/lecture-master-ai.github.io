@@ -743,6 +743,8 @@
   @keyframes nxPulse{0%{box-shadow:0 0 0 0 rgba(232,118,43,.75)}70%{box-shadow:0 0 0 10px rgba(232,118,43,0)}100%{box-shadow:0 0 0 0 rgba(232,118,43,0)}}
   .nx-pulse{animation:nxPulse 1.2s ease-out 2;outline:2px solid #E8762B !important;outline-offset:2px;}
   @media (prefers-reduced-motion:reduce){ .nx-pulse{animation:none;} }
+  .all-h{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:28px 0 12px;padding-top:20px;border-top:1px solid #C9D3E0;text-align:left;}
+  .all-h b{display:block;font-size:17px;font-weight:800;color:var(--navy);} .all-h span{font-size:12.5px;color:#5F6877;} .all-h .btn{flex-shrink:0;height:34px;}
   /* d2l: 평가관리 칸반 */
   .ev-k .btn{width:100%;height:40px;font-size:14px;border-color:var(--navy);color:var(--navy);}
   .ev-k .btn.primary.ab-ai{color:#fff;border-color:#2F6FB2;}
@@ -1287,7 +1289,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d2y</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d2z</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -1860,8 +1862,10 @@
     });
   }
   function demoFoot(){
-    return '<div class="demo-all"><button type="button" class="btn" id="demoAll">' + (document.body.classList.contains('showall') ? '전체 과정 접기' : '전체 과정 보기 (끝난 과정 포함 ' + plans.length + '개)') + '</button></div>' +
-      '';
+    // d2z: 펼친 상태에서는 구분선 아래 '전체 과정 n개' 제목 줄 + 오른쪽 [접기]
+    if (document.body.classList.contains('showall'))
+      return '<div class="all-h"><div><b>전체 과정 ' + plans.length + '개</b><span>끝난 과정 포함 · 과정명을 누르면 편성 화면이 열립니다</span></div><button type="button" class="btn sm" id="demoAll" aria-expanded="true">접기 <span aria-hidden="true">▲</span></button></div>';
+    return '<div class="demo-all"><button type="button" class="btn" id="demoAll" aria-expanded="false">전체 과정 보기 (끝난 과정 포함 ' + plans.length + '개) <span aria-hidden="true">▼</span></button></div>';
   }
   /* d2d: 시연 상태 줄 — 평가관이 들어왔을 때 앞선 시험으로 바뀐 내용이 있는지 보고 처음 상태로 되돌림 */
   var demoSt = null, demoStLoading = false;
