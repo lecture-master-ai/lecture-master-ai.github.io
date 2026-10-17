@@ -745,6 +745,21 @@
   @media (prefers-reduced-motion:reduce){ .nx-pulse{animation:none;} }
   .all-h{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:28px 0 12px;padding-top:20px;border-top:1px solid #C9D3E0;text-align:left;}
   .all-h b{display:block;font-size:17px;font-weight:800;color:var(--navy);} .all-h span{font-size:12.5px;color:#5F6877;} .all-h .btn{flex-shrink:0;height:34px;}
+  /* d3b: 전체 과정 화면 다듬기 — 보기 전환을 제목 줄로, 안내 줄 1개로, 필터 4개, 표 가볍게 */
+  .all-h .all-r{display:flex;gap:8px;align-items:center;flex-shrink:0;} .all-h .vtabs{float:none;} .all-h .vtabs button{height:34px;}
+  body.simple .cards{grid-template-columns:repeat(auto-fit,minmax(170px,1fr));}
+  body.simple.demo-on .pmbar, body.simple #listHint, body.simple #planLegend, body.simple #count{display:none !important;}
+  body.simple #qmThis, body.simple #qmNext, body.simple #fCheck, body.simple #fStatus:not(.has), body.simple #reloadBtn, body.simple #oriTable{display:none !important;}
+  body.simple .tw.nochk .ck{display:none;}
+  body.simple td.chg .btn.sm{background:transparent;border-color:transparent;color:#475467;font-weight:600;text-decoration:underline;text-underline-offset:3px;padding:0 6px;}
+  body.simple td.chg .btn.sm:hover{color:var(--navy);background:#F2F4F7;}
+  tr.grp td{background:#F4F6F9;color:#475467;font-size:12.5px;font-weight:700;padding:8px 12px;border-top:1px solid #C9D3E0;}
+  tr.ended td{color:#667085;} tr.ended .clink{color:#475467;}
+  .rc-grp{margin:18px 2px 8px;font-size:13px;font-weight:700;color:#475467;}
+  .rc .rcm{margin-top:8px;font-size:13px;line-height:1.55;color:#344054;} .rc .rcm .l2{display:flex;justify-content:space-between;align-items:center;gap:8px;color:#5F6877;}
+  .rc .rcm .btn.sm{background:transparent;border-color:transparent;color:#475467;text-decoration:underline;text-underline-offset:3px;padding:0 4px;height:28px;}
+  .rc.ended{background:#FAFBFC;box-shadow:none;border:1px solid #E4E7EC;}
+  @media (max-width:720px){ .all-h{flex-wrap:wrap;} .all-h .all-r{width:100%;justify-content:space-between;} body.simple #planBar select{flex:1 1 30%;} body.simple #planBar input[type=search]{flex:1 1 100%;} body.simple #planBar .spacer{display:none;} body.simple #planBar .bgrp{width:100%;} body.simple #planBar .bgrp .btn{flex:1;justify-content:center;text-align:center;} }
   /* d2l: 평가관리 칸반 */
   .ev-k .btn{width:100%;height:40px;font-size:14px;border-color:var(--navy);color:var(--navy);}
   .ev-k .btn.primary.ab-ai{color:#fff;border-color:#2F6FB2;}
@@ -1251,7 +1266,7 @@
       <thead>
         <tr>
           <th>구분</th><th>과정 · 기수</th><th>입교</th><th>교육기간</th>
-          <th class="num">계획인원</th><th>강의실</th><th>합숙</th><th>편성 담당</th><th>강사 배정 현황</th><th>검사</th><th class="chg" id="thChg">변경</th>
+          <th class="num">계획인원</th><th>강의실</th><th>합숙</th><th>편성 담당</th><th>강사 배정 현황</th><th class="ck">검사</th><th class="chg" id="thChg">변경</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
@@ -1289,7 +1304,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d2z</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d3b</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -1864,7 +1879,9 @@
   function demoFoot(){
     // d2z: 펼친 상태에서는 구분선 아래 '전체 과정 n개' 제목 줄 + 오른쪽 [접기]
     if (document.body.classList.contains('showall'))
-      return '<div class="all-h"><div><b>전체 과정 ' + plans.length + '개</b><span>끝난 과정 포함 · 과정명을 누르면 편성 화면이 열립니다</span></div><button type="button" class="btn sm" id="demoAll" aria-expanded="true">접기 <span aria-hidden="true">▲</span></button></div>';
+      return '<div class="all-h"><div><b>전체 과정 ' + plans.length + '개</b><span>' + (shown.length < plans.length ? shown.length + '개 표시' + (plans.filter(isCancelled).length && !$('fStatus').value ? ' (취소 ' + plans.filter(isCancelled).length + '건 숨김)' : '') + ' · ' : '끝난 과정 포함 · ') + '과정명을 누르면 편성 화면이 열립니다</span></div>' +
+        '<div class="all-r">' + (planMode === 'table' || planMode === 'cal' ? '<span class="vtabs" role="tablist" aria-label="보기 전환"><button type="button" role="tab" data-pm="table" class="' + (planMode === 'table' ? 'on' : '') + '">표</button><button type="button" role="tab" data-pm="cal" class="' + (planMode === 'cal' ? 'on' : '') + '">월 캘린더</button></span>' : '') +
+        '<button type="button" class="btn sm" id="demoAll" aria-expanded="true">접기 <span aria-hidden="true">▲</span></button></div></div>';
     return '<div class="demo-all"><button type="button" class="btn" id="demoAll" aria-expanded="false">전체 과정 보기 (끝난 과정 포함 ' + plans.length + '개) <span aria-hidden="true">▼</span></button></div>';
   }
   /* d2d: 시연 상태 줄 — 평가관이 들어왔을 때 앞선 시험으로 바뀐 내용이 있는지 보고 처음 상태로 되돌림 */
@@ -2245,6 +2262,7 @@
     var cxAll = plans.filter(isCancelled).length;
     $('count').textContent = '전체 ' + plans.length + '개 중 ' + shown.length + '개 표시' + (cxAll && !$('fStatus').value ? ' (취소된 ' + cxAll + '건은 숨김 — 위 상태 선택에서 "취소 포함"으로 볼 수 있습니다)' : '');
     $('thChg').style.display = isViewer() ? 'none' : '';
+    $('fStatus').classList.toggle('has', !!(cxAll || $('fStatus').value));   // 심사용: 취소된 기수가 생겼을 때만 '취소 포함' 선택 표시
     planViewSync();
     if (planMode === 'cal') { renderPlanCal(); return; }
     if (planMode === 'room') { renderRoomFree(); return; }
@@ -2263,9 +2281,31 @@
     $('tableWrap').style.display = '';
 
     var rows = '', cards = '';
-    shown.forEach(function(p){
-      var cx = isCancelled(p), og = origText(p);
-      rows += '<tr' + (cx ? ' class="cx"' : '') + '>' +
+    // d3b 심사용: 진행·예정 과정을 위에, 끝난 과정은 아래에 최근 종료순으로 묶음 / 끝난 과정은 [변경] 숨김 / 검사 열은 걸린 과정이 있을 때만
+    var today0 = ymd(new Date());
+    function endedP(p){ var b = normYmd(p['입교 종료일']) || normYmd(p['입교 시작일']); return !!b && b < today0 && !isCancelled(p); }
+    var list = shown, nEnd = 0;
+    if (SIMPLE) {
+      var act = shown.filter(function(p){ return !endedP(p); }), ended = shown.filter(endedP).reverse();
+      nEnd = ended.length; list = act.concat(ended);
+      $('tableWrap').classList.toggle('nochk', !shown.some(function(p){ var c = checkClass(p['검사 결과']); return !isCancelled(p) && (c === 'warn' || c === 'err'); }));
+    }
+    list.forEach(function(p, i){
+      var cx = isCancelled(p), og = origText(p), ed = SIMPLE && endedP(p);
+      if (SIMPLE && ed && (i === 0 || !endedP(list[i - 1]))) {
+        rows += '<tr class="grp"><td colspan="20">끝난 과정 ' + nEnd + '개 · 최근 종료순</td></tr>';
+        cards += '<div class="rc-grp">끝난 과정 ' + nEnd + '개 · 최근 종료순</div>';
+      }
+      if (SIMPLE) {
+        cards += '<div class="rc' + (cx ? ' cx' : '') + (ed ? ' ended' : '') + '"><div class="top"><div><div class="nm"><button type="button" class="clink" data-open="' + esc(p['과정+기수']) + '">' + esc(p['과정명']) + ' ' + esc(p['기수'] || '') + '</button>' +
+          (cx ? ' <span class="tag t-err">취소됨</span>' : (changeInfo(p['과정+기수']).changed ? ' <span class="tag t-warn">일정 변경됨</span>' : '')) + '</div>' +
+          '<div class="meta">' + esc([p['구분'], p['세부구분']].filter(Boolean).join(' · ')) + '</div></div>' +
+          '<div>' + subjCell(p) + '</div></div>' +
+          '<div class="rcm"><div>' + esc(ipgyo(p)) + ' · ' + esc(p['계획인원'] === '' ? '-' : p['계획인원']) + '명 · ' + esc(camp(p)) + (og ? '<span class="orig">(' + esc(og) + ')</span>' : '') + '</div>' +
+          '<div class="l2"><span>' + esc(p['예정 강의실'] || '-') + ' · ' + esc(p['편성 담당'] || '-') + '</span>' + (isViewer() || ed ? '' : chgCell(p)) + '</div>' +
+          (checkCell(p) ? '<div>' + checkCell(p) + '</div>' : '') + '</div></div>';
+      }
+      rows += '<tr' + (cx ? ' class="cx"' : ed ? ' class="ended"' : '') + '>' +
         '<td class="nw">' + typeCell(p) + '</td>' +
         '<td>' + courseCell(p) + '</td>' +
         '<td class="nw">' + esc(range(p['입교 시작일'], p['입교 종료일']) || '날짜 미입력') + (og ? '<span class="orig">(' + esc(og) + ')</span>' : '') + '</td>' +
@@ -2275,10 +2315,10 @@
         '<td class="nw">' + esc(camp(p)) + '</td>' +
         '<td>' + esc(p['편성 담당'] || '-') + '</td>' +
         '<td class="nw">' + subjCell(p) + '</td>' +
-        '<td>' + checkCell(p) + '</td>' +
-        (isViewer() ? '' : '<td class="nw chg">' + chgCell(p) + '</td>') +
+        '<td class="ck">' + checkCell(p) + '</td>' +
+        (isViewer() ? '' : '<td class="nw chg">' + (ed ? '' : chgCell(p)) + '</td>') +
         '</tr>';
-      cards += '<div class="rc' + (cx ? ' cx' : '') + '"><div class="top"><div><div class="nm"><button type="button" class="clink" data-open="' + esc(p['과정+기수']) + '">' + esc(p['과정명']) + ' ' + esc(p['기수'] || '') + '</button>' +
+      if (!SIMPLE) cards += '<div class="rc' + (cx ? ' cx' : '') + '"><div class="top"><div><div class="nm"><button type="button" class="clink" data-open="' + esc(p['과정+기수']) + '">' + esc(p['과정명']) + ' ' + esc(p['기수'] || '') + '</button>' +
         (cx ? ' <span class="tag t-err">취소됨</span>' : (changeInfo(p['과정+기수']).changed ? ' <span class="tag t-warn">일정 변경됨</span>' : '')) + '</div>' +
         '<div class="meta">' + esc([p['구분'], p['세부구분']].filter(Boolean).join(' · ')) + '</div></div>' +
         '<div>' + subjCell(p) + '</div></div>' +
