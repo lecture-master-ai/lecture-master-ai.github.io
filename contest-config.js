@@ -5,7 +5,7 @@
      로그인은 비밀번호 없이 [로그인] 버튼 하나로, 강사 승인은 확인창으로 줄입니다. false로 바꾸면 원래 화면으로 돌아갑니다(코드는 지우지 않음). */
 window.CONTEST_CONFIG = {
   WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbzYdVSZsLnSw3JN01aIDuXa1Ubxh6ERWYC-0TEQxu6tRYrcI9-WNYEoKv3Cfk9qyUvJ/exec',
-  VERSION: '대회용 d2o',
+  VERSION: '대회용 d2q',
   ORG_NAME: '○○소방학교',
   SIMPLE: true,
   DEMO_PW: '0000',      // 심사용 담당자 권한(모의 데이터 전용). 운영판은 개인 비밀번호 사용
@@ -18,7 +18,7 @@ window.CONTEST_CONFIG = {
     '구급역량 향상과정 10기': 'copy', '구조역량 강화과정 14기': 'copy', '화재조사 전문과정 13기': 'copy',
     '화재조사 전문과정 12기': 'cell', '민관 합동 위험물 안전과정 6기': 'cell', '신임 관리자 리더십과정 17기': 'cell' },
   // 평가관리 첫 화면에 보여 줄 과정(반영 대기 2 + 반영 완료 1)
-  DEMO_EVAL: ['신임 관리자 리더십과정 16기', '구조역량 강화과정 13기', '소방관계법규 실무과정 7기']
+  DEMO_EVAL: ['신임 관리자 리더십과정 16기', '구조역량 강화과정 13기']
 };
 (function () {
   var C = window.CONTEST_CONFIG;
