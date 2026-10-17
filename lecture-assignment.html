@@ -720,6 +720,20 @@
   @media (hover:hover){ .db-fl:hover{background:#245C96;} }
   @media print{ .db-fl{display:none;} }
   .navbar.dbnav{justify-content:center;background:transparent;box-shadow:none;border:none;} .db-plain{height:44px;padding:0 20px;font-size:14.5px;font-weight:700;background:#fff;color:#344054;border:1px solid var(--border);} .db-plain svg{width:16px;height:16px;}
+  /* d2v: 서술형 의견 2단 */
+  .cx-opsum{font-size:13px;font-weight:700;color:#344054;margin:4px 0 8px;}
+  .cx-op2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .cx-ops{border-radius:10px;padding:10px 12px;background:#F5F8FC;}
+  .cx-ops.b{background:#FFF6EE;}
+  .cx-oph{font-size:13.5px;font-weight:800;color:#1B3A5F;margin-bottom:6px;} .cx-ops.b .cx-oph{color:#9A3D0A;} .cx-oph span{font-weight:600;color:#5F6877;font-size:12.5px;}
+  .cx-ops ul{list-style:none;margin:0;padding:0;}
+  .cx-ops li{display:grid;grid-template-columns:9em 22px 1fr;gap:8px;align-items:baseline;padding:5px 0;border-top:1px solid rgba(16,24,40,.06);font-size:13px;}
+  .cx-ops li:first-child{border-top:none;}
+  .cx-opc{font-weight:700;color:#344054;word-break:keep-all;} .cx-ops li b{text-align:right;color:#1B3A5F;} .cx-ops.b li b{color:#9A3D0A;}
+  .cx-opt{color:#475467;word-break:keep-all;}
+  .cx-more{margin-top:10px;} .cx-more summary{cursor:pointer;font-size:13px;font-weight:700;color:#1B3A5F;padding:4px 0;}
+  @media (max-width:640px){ .cx-op2{grid-template-columns:1fr;} .cx-opt{white-space:normal;} }
+  @media print{ .cx-opt{white-space:normal;} }
   /* d2l: 평가관리 칸반 */
   .ev-k .btn{width:100%;height:40px;font-size:14px;border-color:var(--navy);color:var(--navy);}
   .ev-k .btn.primary.ab-ai{color:#fff;border-color:#2F6FB2;}
@@ -1264,7 +1278,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d2u</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d2v</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -7329,9 +7343,35 @@
       '<div class="cx-leg">문항: 강의 = 태도·목표·전달·효과 / 실습 = 태도·준비성·전문성·적용성 &nbsp; 분포: <i style="background:#1B3A5F"></i>매우 만족 <i style="background:#5B7FA8"></i>만족 <i style="background:#B8C4D6"></i>보통 <i style="background:#E8A87C"></i>불만족 <i style="background:#C2410C"></i>매우 불만족</div>' +
       (M.cm.length ? '<h4 class="cx-ps">2. 교육 환경 <span class="hint">참고 · 강사 평가지표 제외</span></h4><div style="overflow:auto;"><table class="cx-tbl"><thead><tr><th>분야</th><th>문항</th><th style="text-align:center;">평균(5점)</th><th style="text-align:center;">응답</th></tr></thead><tbody>' + cmRows + '</tbody></table></div>' : '') +
       '<h4 class="cx-ps">' + (M.cm.length ? '3' : '2') + '. 서술형 의견 분류·요약 <span class="hint">' + (j.의견.length ? '의견 ' + j.의견.length + '건 · ' + esc(opHow) : '저장된 의견 분석 없음') + '</span></h4>' +
-      (j.요약.length ? '<div style="overflow:auto;"><table class="cx-tbl"><thead><tr><th>분류</th><th>의견 수</th><th>항목 요약</th><th>대표 의견</th></tr></thead><tbody>' + sumRows + '</tbody></table></div>' : '') +
+      (j.요약.length ? cx8OpSides(j) + '<details class="cx-more"><summary>분류별 자세히 보기</summary><div style="overflow:auto;"><table class="cx-tbl"><thead><tr><th>분류</th><th>의견 수</th><th>항목 요약</th><th>대표 의견</th></tr></thead><tbody>' + sumRows + '</tbody></table></div></details>' : '') +
       cx8Course(j) + cx8AiHow(j.의견) +
       '<div class="cx-pf">원본 파일: ' + esc(M.last.원본파일 || '-') + ' · 반영 방식: ' + esc(M.ev.length ? (M.ev[M.ev.length - 1].반영방식 || '-') : '-') + '</div></div>';
+  }
+  // d2v: 서술형 의견 한눈에 — 좋았던 점 / 개선할 점 2단(분류별 건수 순, 대표 의견 한 줄)
+  function cx8OpSides(j){
+    var side = function(good){
+      var by = {};
+      (j.의견 || []).forEach(function(o){
+        if ((o.구분 === '좋았던 점') !== good) return;
+        var k = String(o.분류 || '기타'), b = by[k] = by[k] || { n: 0, t: {} };
+        b.n++; b.t[o.의견] = (b.t[o.의견] || 0) + 1;
+      });
+      var keys = Object.keys(by);
+      if (!keys.length) {   // 의견 원문이 없으면 요약의 건수·대표 의견으로
+        (j.요약 || []).forEach(function(r){ var n = Number(r[good ? '좋았던 점 수' : '개선할 점 수']) || 0; if (n) { by[r.분류] = { n: n, t: {} }; by[r.분류].t[String(r['대표 의견'] || '').split(' / ')[0]] = 1; } });
+        keys = Object.keys(by);
+      }
+      keys.sort(function(a, b){ return by[b].n - by[a].n; });
+      var tot = keys.reduce(function(a, k){ return a + by[k].n; }, 0);
+      var rows = keys.slice(0, 6).map(function(k){
+        var t = Object.keys(by[k].t).sort(function(a, b){ return by[k].t[b] - by[k].t[a]; })[0] || '';
+        return '<li><span class="cx-opc">' + esc(k) + '</span><b>' + by[k].n + '</b><span class="cx-opt">' + esc(t) + '</span></li>';
+      }).join('');
+      return { tot: tot, html: '<div class="cx-ops ' + (good ? 'g' : 'b') + '"><div class="cx-oph">' + (good ? '좋았던 점' : '개선할 점') + ' <span>' + tot + '건</span></div>' +
+        (rows ? '<ul>' + rows + '</ul>' : '<div class="hint" style="padding:6px 0;">해당 의견 없음</div>') + '</div>' };
+    };
+    var g = side(true), b = side(false);
+    return '<div class="cx-opsum">의견 ' + (g.tot + b.tot) + '건 · 좋음 ' + g.tot + ' · 개선 ' + b.tot + ' <span class="hint">분류별 건수 순 · 대표 의견 1개</span></div><div class="cx-op2">' + g.html + b.html + '</div>';
   }
   function cx8Course(j){   // c9: 과정 운영 의견(과정 공통) — 강사 환류지에는 넣지 않음
     var co = j.의견.filter(function(o){ return !o.강사ID; });
