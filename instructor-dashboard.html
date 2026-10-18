@@ -797,7 +797,8 @@
     document.head.appendChild(st);
   })();
   function cxStars(avg){ var h = Math.round(avg * 2) / 2; return '<span class="cx-stars" style="--p:' + (h / 5 * 100) + '%">★★★★★</span>'; }
-  function cxRankOf(d){ var n = Number(d.평가응답수) || 0, a = d.평가평균 === '' || d.평가평균 == null ? null : Number(d.평가평균); return (n >= CX_MIN_RESP && a !== null && isFinite(a)) ? a : null; }
+  function cxPre(d){ return d && (d.상태 === '승인대기' || d.상태 === '보류중' || d.상태 === '반려'); }   // 승인 전 강사: 평가·랭크·강의 이력 없음
+  function cxRankOf(d){ if (cxPre(d)) return null; var n = Number(d.평가응답수) || 0, a = d.평가평균 === '' || d.평가평균 == null ? null : Number(d.평가평균); return (n >= CX_MIN_RESP && a !== null && isFinite(a)) ? a : null; }
   function cxSubjHit(d, q){
     if (!q) return 0;
     var ev = d.평가교과목 || {}, k = Object.keys(ev).filter(function(s){ return s.toLowerCase().indexOf(q) > -1; });
@@ -805,6 +806,7 @@
     return String(d.교과목명 || '').toLowerCase().indexOf(q) > -1 ? 1 : 0;   // 담당 가능 교과목에 등록
   }
   function cxRankLine(d, q){
+    if (cxPre(d)) return '<span class="cx-rl"><span class="w">승인 후 표시</span></span>';
     var r = cxRankOf(d), h = cxSubjHit(d, q);
     var tag = h === 2 ? '<span class="h">이 교과목 담당 이력</span>' : (h === 1 ? '<span class="h" style="background:#EEF2F6;color:#344054;">담당 가능 교과목</span>' : '');
     if (r === null) return '<span class="cx-rl"><span class="w">평가 자료 부족' + (d.평가응답수 ? '(응답 ' + d.평가응답수 + ')' : '') + '</span>' + tag + '</span>';
@@ -825,6 +827,7 @@
     return out;
   }
   function cxEvalBox(d){
+    if (cxPre(d)) return '<div class="cx-ev"><h4>교육 후 평가(랭크)</h4><div style="font-size:13px;color:#667085;">승인 전 강사입니다. 승인 후 강의를 마치고 설문이 반영되면 표시됩니다.</div></div>';
     var ev = d.평가교과목 || {}, ks = Object.keys(ev);
     var r = cxRankOf(d);
     var head = r === null ? '평가 자료 부족' + (d.평가응답수 ? ' (응답 ' + d.평가응답수 + '건, ' + CX_MIN_RESP + '건 이상부터 랭크 표시)' : ' (아직 반영된 설문이 없습니다)') : cxStars(r) + ' <b>' + r.toFixed(2) + '</b> / 5점 · 응답 ' + d.평가응답수 + '건 · 평가 ' + d.평가건수 + '회';
@@ -900,7 +903,7 @@
         '<td>' + esc(d.강사구분||'') + '</td>' +
         '<td>' + esc(d.전문분야||'') + '</td>' +
         '<td>' + esc(d.활동지역||'') + '</td>' +
-        '<td>' + (d.강의회차 || 0) + '회</td>' +
+        '<td>' + (cxPre(d) ? '-' : (d.강의회차 || 0) + '회') + '</td>' +
         '<td><span class="status ' + statusClass(d.상태) + '">' + esc(d.상태||'') + '</span></td>';
       tr.addEventListener('click', function(){ openDetail(d); });
       tbody.appendChild(tr);
@@ -1013,7 +1016,7 @@
         '<div class="fi"><div class="fk">주 교육 구분</div><div class="fv">' + esc(d.전문분야||'-') + '</div></div>' +
         '<div class="fi"><div class="fk">교과목명</div><div class="fv">' + esc(d.교과목명||'-') + '</div></div>' +
         '<div class="fi"><div class="fk">활동지역</div><div class="fv">' + esc(d.활동지역||'-') + '</div></div>' +
-        '<div class="fi"><div class="fk">강의회차</div><div class="fv">' + (d.강의회차 || 0) + '회</div></div>' +
+        '<div class="fi"><div class="fk">강의회차</div><div class="fv">' + (cxPre(d) ? '승인 후 표시' : (d.강의회차 || 0) + '회') + '</div></div>' +
         '<div class="fi"><div class="fk">등록일</div><div class="fv">' + esc(d.등록일||'-') + '</div></div>' +
         (isViewer ? '' : (function(){ var r = retentionInfo(d); return '<div class="fi"><div class="fk">보유기간 만료일 (3년)</div><div class="fv"' + (r.due ? ' style="color:#A32D2D;font-weight:700;"' : '') + '>' + esc(r.expire || '-') + (r.over ? ' (도래)' : (r.due ? ' (임박)' : '')) + '</div></div>' +
           '<div class="fi fi-reconsent"><div class="fk">재동의 확인</div><div class="fv">' + (d.재동의확인일 ? (esc(d.재동의확인일) + (d.재동의메모 ? '<br><span style="font-size:12px;font-weight:400;">' + esc(d.재동의메모) + '</span>' : '')) : '-') + '</div></div>'; })()) +
@@ -1715,7 +1718,7 @@
     if (!c || c.없음) return '<span style="color:#98A2B3;">강사카드 없음</span>';
     var car = (c.주요경력목록 || []).length, lec = (c.강의경력목록 || []).length;
     var ai = /AI/.test(c.작성방식 || '');
-    return '<span class="pd-chip">' + esc(c.학력 || '학력 없음') + '</span><span class="pd-chip">주요 경력 ' + car + '건</span><span class="pd-chip">강의 경력 ' + lec + '건</span>' +
+    return '<span class="pd-chip">' + esc(c.학력 || '학력 없음') + '</span><span class="pd-chip">주요 경력 ' + car + '건</span><span class="pd-chip">본인 기재 강의 경력 ' + lec + '건</span>' +
       (c.전문키워드 ? '<span class="pd-chip">' + esc(c.전문키워드) + '</span>' : '') + (ai ? '<span class="pd-chip ai">AI 자동 채우기 후 강사 확인</span>' : '');
   }
   function renderPending(){
@@ -1747,7 +1750,7 @@
     var row = function(k, v){ return '<div class="cd-r"><div class="cd-k">' + k + '</div><div class="cd-v">' + (v || '-') + '</div></div>'; };
     return (/AI/.test(c.작성방식 || '') ? '<div class="pd-chip ai" style="display:inline-block;margin-bottom:8px;">AI 자동 채우기 후 강사 확인 · ' + esc(c.작성일시 || '') + '</div>' : '') +
       row('학력', esc(c.학력)) + row('자격증', esc(c.자격증)) + row('주요 경력', lines(c.주요경력목록, ['기간', '기관', '업무'])) +
-      row('강의 경력', lines(c.강의경력목록, ['연도', '기관', '교과목', '시간'])) + row('키워드', esc(c.전문키워드)) + row('강의 방식', esc(c.강의방식)) +
+      row('강의 경력(본인 기재)', lines(c.강의경력목록, ['연도', '기관', '교과목', '시간'])) + row('키워드', esc(c.전문키워드)) + row('강의 방식', esc(c.강의방식)) +
       row('강의 소개', esc(c.강의소개)) + row('필요 기자재', esc(c.필요기자재)) + row('동의', '교육자료 ' + esc(c['교육자료 사용 동의'] || '-') + ' · 인력풀 ' + esc(c['인력풀 관리 동의'] || '-'));
   }
   function updateSummaryStats(){
