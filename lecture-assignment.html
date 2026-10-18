@@ -581,6 +581,16 @@
   .bdc.moved{box-shadow:0 0 0 2px #E8762B;animation:bdcIn .6s ease-out 1;}
   .bdc-mv{position:absolute;top:-9px;right:10px;font-size:11px;font-weight:800;color:#fff;background:#E8762B;border-radius:999px;padding:1px 8px;}
   .bd-pull{border-style:dashed;}
+  .bdc.paused{background:#F7F9FC;box-shadow:0 0 0 1px #D0D8E4;opacity:.92;} .bdc.paused .bdc-mv{background:#667085;} .bdc.paused .bdc-t{color:#344054;}
+  .bdc-gap{font-size:12.5px;font-weight:700;color:#7A4B00;background:#FFF8E6;border-radius:6px;padding:3px 8px;align-self:flex-start;}
+  .bdc-pb{display:flex;gap:8px;align-items:center;} .bdc-pb .btn{flex:1;} .bdc-re{border:none;background:none;font:inherit;font-size:12.5px;color:#475467;text-decoration:underline;cursor:pointer;padding:4px;white-space:nowrap;}
+  .dflow-s.df-warn{background:#FFF8E6;color:#7A4B00;border-color:#E3B341;}
+  .ab-bdg{display:inline-flex;align-items:center;gap:4px;margin-left:8px;font-size:12.5px;font-weight:800;border-radius:999px;padding:2px 10px;vertical-align:2px;}
+  .ab-bdg.ok{background:#E3F4EA;color:#14653F;box-shadow:inset 0 0 0 1px #9FD3B4;} .ab-bdg.warn{background:#FFF8E6;color:#7A4B00;box-shadow:inset 0 0 0 1px #E3B341;}
+  .ai-mdl{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:8px 0;background:#EEF4FF;border:1px solid #B2CCFF;border-radius:10px;padding:8px 12px;font-size:13.5px;color:#1D2939;}
+  .ai-mdl b{font-size:15px;color:#1849A9;} .ai-mdl-k{color:#475467;font-weight:700;} .ai-mdl-s{color:#475467;font-size:12.5px;background:#fff;border-radius:999px;padding:1px 8px;box-shadow:inset 0 0 0 1px #D0DCF5;}
+  .cx-none{margin-top:10px;background:#FFF8E6;border:1px solid #E3B341;border-radius:10px;padding:12px 14px;color:#5C3A00;font-size:13.5px;} .cx-none b{font-size:14.5px;} .cx-none ol{margin:6px 0 0 18px;padding:0;} .cx-none li{margin:2px 0;}
+  .ab-gap{margin-top:8px;background:#FFF8E6;border:1px solid #E3B341;border-radius:8px;padding:8px 12px;font-size:13.5px;color:#5C3A00;}
   .bdc.fin{box-shadow:0 0 0 2px #1E8E5A;transition:opacity .4s ease-out,transform .4s ease-out;} .bdc.fin .bdc-mv{background:#1E8E5A;} .bdc-fin{color:#14653F;font-weight:700;} .bdc.bdc-out{opacity:0;transform:translateY(12px);}
   .bp-done{align-self:center;font-size:12px;font-weight:800;color:#14653F;background:#E3F4EA;border-radius:999px;padding:3px 10px;}
   .cx-wait{margin-top:10px;background:#F4F7FB;border:1px dashed #B8C4D4;border-radius:10px;padding:22px 16px;text-align:center;color:#1B3A5F;font-size:15px;} .cx-wait .ai-spin{display:inline-block;vertical-align:-3px;margin-right:6px;} .cx-wait #cxWaitSec{font-weight:800;color:#2F6FB2;margin-left:4px;} .cx-wait .cxw-s{margin-top:6px;font-size:12.5px;color:#475467;}
@@ -1317,7 +1327,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-18 배정 d3h</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-18 배정 d3j</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -1406,7 +1416,10 @@
     var timer = ctl ? setTimeout(function(){ ctl.abort(); }, AI_WAIT[body && body.action] ? 90000 : 40000) : null;
     return fetch(WEBAPP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body), signal: ctl ? ctl.signal : undefined })
       .then(readJson)
-      .then(function(j){ if (timer) clearTimeout(timer); return j; }, function(err){ if (timer) clearTimeout(timer); throw err; });
+      .then(function(j){ if (timer) clearTimeout(timer);
+        // d3j: 저장·삭제로 안내 보류 목록이 바뀌면 다음 화면 그릴 때 다시 받아 3단계(일괄 발송) 표시를 맞춤
+        try { if (j && j.status === 'ok' && body && (body.action === 'saveSession' || body.action === 'deleteSession') && typeof ab !== 'undefined') { var hk = body.개설키 || currentKey; if (hk) { ab.held[hk] = undefined; ab.heldOk[hk] = false; } } } catch (e) {}
+        return j; }, function(err){ if (timer) clearTimeout(timer); throw err; });
   }
 
   /* ---------- 시작 데이터(bootstrap) · 탭 임시 저장 ----------
@@ -2108,7 +2121,7 @@
         allSessions = allSessions.filter(function(r){ return String(r['개설키']) !== k; });
         sessionsByKey = buildSessionMap(allSessions);
         try { refreshConflicts(); } catch (e) {}
-        delete ab.held[k]; delete ab.heldOk[k]; delete ab.justDone[k]; delete ab.copied[k]; delete stageSeen[k];
+        delete ab.held[k]; delete ab.heldOk[k]; delete ab.justDone[k]; delete ab.copied[k]; delete stageSeen[k]; if (ab.msgKey === k) ab.msg = '';
         stageMoved[k] = { at: Date.now(), from: 0, to: 1, shown: false, added: true };
       } else {
         delete cxRes[k]; delete evSeen[k]; evHot[k] = Date.now(); evAdded[k] = true;
@@ -2129,6 +2142,11 @@
   function laneHist(n){ var o = dbs('ab'); return o.hist.filter(function(x){ if (x.k === o.active || !planByKey(x.k)) return false; var s2 = courseStage(x.k); return s2.lane === n && s2.sure; }); }
   var LANE_GO = { 2: { sel: function(k){ var s2 = courseStage(k); return s2.empty === s2.n ? '#abBar [data-ab="draft"]' : '#sGridWrap .gc.none'; }, t: function(k){ var s2 = courseStage(k); return s2.empty === s2.n ? '<i>AI 강사 일괄 배정</i>을 눌러 보세요' : '빈 칸을 눌러 <i>적합한 강사 찾기</i>'; } },
                   3: { sel: function(){ return '#abBar [data-ab="send"]'; }, t: function(){ return '<i>강의배정 자동 일괄 발송</i>을 눌러 보세요'; } } };
+  /* d3j(P8-B): 멈춘 과정 카드 [이어서 하기] — 보드에 올리고 바로 편성 화면을 열어 그 단계에서 할 일을 말풍선으로 안내 */
+  function resumeOpen(k){
+    var n = courseStage(k).lane; demoResume(k, 'ab');
+    setTimeout(function(){ openCourse(k); setTimeout(function(){ var c = LANE_GO[n]; if (c) nextGuide('', c.t(k), c.sel(k)); }, 1200); }, 300);
+  }
   function lanePull(n){
     var L = laneHist(n), title = n + '단계 \'' + STEPS[n - 1].t + '\' 과정 불러오기';
     var body = L.length ? '<div class="bp-g"><b>' + n + '단계에서 멈춘 과정입니다.</b> 고르면 이 칸에 올라가고 바로 이어서 작업합니다.' + (dbs('ab').active ? ' 지금 보드의 <b>' + esc(courseLabel(dbs('ab').active)) + '</b>은(는) \'진행한 과정\'으로 옮겨집니다.' : '') + '</div><div class="bp-l">' +
@@ -2146,6 +2164,8 @@
     if (arrived || !demoSt) demoStFetch();
     if (arrived) boardVisit++;
     var o = bsStale('ab'), canEdit = !isViewer();
+    gapIdxM = null;   // d3j: 카드의 빈 교시 수를 새로 셈
+    var gapOf = function(p){ try { var g = slotStats(p); return g ? g.fut : 0; } catch (e) { return 0; } };
     if (!dpInfo.ab || (arrived && Date.now() - dpInfo.ab.at > 3000)) dpRefresh('ab', function(){ if (!currentKey && planMode === 'table') renderDemo(); });
     if (o.active && !dWelcome.ab) { dWelcome.ab = 1; var wk = o.active; setTimeout(function(){ stageToast('지난번 진행하던 ' + courseLabel(wk) + '을(를) 이어서 보여 드립니다.', 0); }, 300); } dWelcome.ab = 1;
     var lanes = [[], [], [], [], []], moves = [], k = o.active;
@@ -2173,6 +2193,9 @@
       }
     }
     var hist = o.hist.filter(function(x){ return x.k !== o.active && planByKey(x.k); });
+    // d3j(P8-B): 멈춘 과정(진행한 과정 중 1~3단계)도 각자 단계 칸에 흐린 카드로 놓음 → [이어서 하기]로 바로 작업
+    var histFin = [];
+    hist.forEach(function(x){ var s2 = courseStage(x.k); if (s2.lane === 4 && s2.sure) histFin.push(x); else if (s2.sure || s2.lane < 3) lanes[s2.lane].push({ p: planByKey(x.k), st: s2, paused: true }); });
     var h = '<section class="bd" aria-label="강의배정 절차와 과정 위치"><div class="bd-track">' + STEPS.map(function(s, i){
       var c = lanes[i + 1].length;
       return '<div class="bd-st"><div class="bd-n">' + (i + 1) + '</div><div class="t">' + s.t + '</div>' + (c ? '<div class="bd-c">' + c + '과정</div>' : '') + '<div class="tls">' + s.tl.filter(function(x){ return x[0]; }).map(stTool).join('') + '</div></div>'; }).join('') + '</div>' +
@@ -2185,23 +2208,30 @@
         : laneEmptyHtml('ab', i + 1, lanes);
       L.forEach(function(r){
         var key = r.p['과정+기수'], st = r.st, dd = dDay(r.p), pct = st.n ? Math.round((st.n - st.empty) / st.n * 100) : 0;
+        if (r.paused) {
+          h += '<article class="bdc paused" data-card-resume="' + esc(key) + '"><span class="bdc-mv">멈춤</span><div><div class="bdc-t">' + esc(key) + '</div><div class="bdc-p">' + esc(ipgyo(r.p)) + (dd ? ' · ' + dd : '') + '</div></div>' +
+            (st.n ? '<div class="bdc-pg"><span>강사 ' + (st.n - st.empty) + ' / ' + st.n + '칸</span><i><b style="width:' + pct + '%"></b></i></div>' : '') +
+            '<div class="bdc-x">' + esc(st.nx.x) + '</div>' + (st.n && gapOf(r.p) ? '<div class="bdc-gap">빈 교시 ' + gapOf(r.p) + '칸 남음</div>' : '') +
+            (canEdit ? '<div class="bdc-pb"><button type="button" class="btn" data-bdres="' + esc(key) + '">이어서 하기</button><button type="button" class="bdc-re" data-bsre="' + esc(key) + '">처음부터</button></div>' : '') + '</article>';
+          return;
+        }
         var mv = stageMoved[key], hot = mv && Date.now() - mv.at < 5 * 60000 && (!mv.shown || mv.visit === boardVisit);   // 처음 보이는 방문 동안만 강조
         if (hot && !mv.shown && !mv.added && !mv.toasted) moves.push(courseLabel(key) + '이(가) ' + st.lane + '단계 \'' + STEPS[st.lane - 1].t + '\'(으)로 이동했습니다.');
         if (hot && !mv.shown) { mv.shown = true; mv.visit = boardVisit; }
         if (r.fin) { h += '<article class="bdc fin moved" data-card-open="' + esc(key) + '"><span class="bdc-mv">완료</span><div><div class="bdc-t">' + esc(key) + '</div><div class="bdc-p">' + esc(ipgyo(r.p)) + '</div></div><div class="bdc-x bdc-fin">' + ic('check', 'l') + '배정·안내 완료 · 곧 \'진행한 과정\'으로 옮겨집니다</div></article>'; return; }
         h += '<article class="bdc' + (hot ? ' moved' : '') + '" data-card-open="' + esc(key) + '">' + (hot ? '<span class="bdc-mv">' + (mv.resumed ? '이어서' : mv.added ? '방금 올림' : '방금 이동') + '</span>' : '') + '<div><div class="bdc-t">' + esc(key) + '</div><div class="bdc-p">' + esc(ipgyo(r.p)) + (dd ? ' · ' + dd : '') + '</div></div>' +
           (st.n ? '<div class="bdc-pg"><span>강사 ' + (st.n - st.empty) + ' / ' + st.n + '칸</span><i><b style="width:' + pct + '%"></b></i></div>' : '') +
-          '<div class="bdc-x">' + (st.nx.ai ? '<span class="ai-badge">AI 도움</span>' : '') + esc(st.nx.x) + '</div>' +
+          '<div class="bdc-x">' + (st.nx.ai ? '<span class="ai-badge">AI 도움</span>' : '') + esc(st.nx.x) + '</div>' + (st.n && gapOf(r.p) ? '<div class="bdc-gap">빈 교시 ' + gapOf(r.p) + '칸 남음</div>' : '') +
           (restartedByOther(key, 'ab') ? '<div class="bdc-warn">다른 평가관이 ' + hmText(restartedByOther(key, 'ab')) + '에 처음부터 다시 시작했습니다</div>' : '') +
           (!restartedByOther(key, 'ab') && lastEditText(key) ? '<div class="bdc-ed">' + esc(lastEditText(key)) + '</div>' : '') +
           '<button type="button" class="btn" data-demo-open="' + esc(key) + '">편성 화면 열기</button></article>';
       });
       if (i === 0 && L.length && canEdit) h += '<button type="button" class="bd-addsm" data-bdadd="1">+ 다른 과정 올리기</button>';
-      if ((i === 1 || i === 2) && canEdit) { var nL = laneHist(i + 1).length; h += '<button type="button" class="bd-addsm bd-pull" data-bdlane="' + (i + 1) + '">' + (nL ? '이 단계 과정 불러오기 (' + nL + ')' : '이 단계 과정 불러오기') + '</button>'; }   // d3h: 진행한 과정 중 이 단계에서 멈춘 과정만
       h += '</div>';
     });
     h += '</div><div class="bd-foot"><span class="legend"><span class="ai-badge">AI 도움</span>AI가 근거를 붙여 제안하고, 적용은 담당자가 결정합니다.</span></div></section>';
-    if (hist.length) h += '<details class="bd-done" open><summary>진행한 과정 ' + hist.length + '개 <span>자동 저장됨 · 이어서 하거나 처음부터</span></summary><ul>' + hist.map(function(x){
+    hist = histFin;   // d3j: 멈춘 과정은 보드 칸에 있으므로 아래 목록에는 끝낸 과정만
+    if (hist.length) h += '<details class="bd-done" open><summary>진행한 과정 ' + hist.length + '개 <span>배정·안내까지 마친 과정 · 다시 하려면 처음부터</span></summary><ul>' + hist.map(function(x){
       var s2 = courseStage(x.k), fin = s2.lane === 4 && s2.sure;
       var rs = restartedByOther(x.k, 'ab'), le = lastEditText(x.k);
       return '<li><div><b>' + esc(x.k) + '</b><span>' + (rs ? '<em class="bd-rs">다른 평가관이 ' + hmText(rs) + '에 처음부터 다시 시작함</em> · ' : '') + (fin ? '배정 완료 · 강사 안내까지 마침' : s2.lane + '단계 \'' + STEPS[s2.lane - 1].t + '\'에서 멈춤') + (le ? ' · ' + esc(le) : '') + '</span></div><div class="bd-hb">' +
@@ -2244,6 +2274,7 @@
   // d2k: 카드 아무 곳이나 눌러도 편성 화면 열기(안의 버튼·링크는 각자 동작)
   document.addEventListener('click', function(ev){
     if (!ev.target.closest || ev.target.closest('button, a, input, label')) return;
+    var pr = ev.target.closest('[data-card-resume]'); if (pr) { if (!isViewer()) resumeOpen(pr.getAttribute('data-card-resume')); return; }   // d3j: 멈춘 과정 카드
     var c = ev.target.closest('[data-card-open]'); if (c) openCourse(c.getAttribute('data-card-open'));
   });
   document.addEventListener('click', function(ev){
@@ -2252,6 +2283,7 @@
     var go = t.getAttribute('data-bdgo'); if (go) { var ln = $(/^\d+$/.test(go) ? 'bdl' + go : go); if (ln) { ln.scrollIntoView({ behavior: window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); if (t.classList.contains('bd-go')) { ln.classList.add('bd-flash'); setTimeout(function(){ ln.classList.remove('bd-flash'); }, 1600); } } return; }
     if (t.getAttribute('data-bdadd')) { poolPick(); return; }
     var lp = t.getAttribute('data-bdlane'); if (lp) { lanePull(Number(lp)); return; }
+    var rs0 = t.getAttribute('data-bdres'); if (rs0) { resumeOpen(rs0); return; }
     var re = t.getAttribute('data-bsre'); if (re) { demoStart(re, t); return; }
     var rg = t.getAttribute('data-bsgo'); if (rg) { demoResume(rg, 'ab'); return; }
     var eg = t.getAttribute('data-evgo'); if (eg) { demoResume(eg, 'ev'); return; }
@@ -3520,12 +3552,16 @@
   /* 강사 안내(배정·변경·취소 메일+문자) 결과 표시. 백엔드가 저장·삭제·복사 응답의 '안내'에 담아 줌 */
   function noticeBoxHtml(list){
     if (!list || !list.length) return '';
+    var hold = list.filter(function(n){ return n.보류; }); list = list.filter(function(n){ return !n.보류; });   // d3j: 보류된 배정 안내는 3단계에서 일괄 발송
+    var holdHtml = hold.length ? '<div class="note-ok" style="margin-top:6px;"><b>강사 안내</b><br>' + hold.map(function(n){ return '· ' + esc(n['대상'] || '') + ' 선생님 배정 안내 — <b>보류</b>'; }).join('<br>') +
+      '<br><span class="hint">배정을 마친 뒤 3단계 <b>[강의배정 일괄 발송]</b>에서 강사별 1통으로 함께 보냅니다.</span></div>' : '';
+    if (!list.length) return holdHtml;
     var bad = list.some(function(n){ return n['메일'] !== '발송' || n['문자'] !== '발송'; });
     return '<div class="' + (bad ? 'note-warn' : 'note-ok') + '" style="margin-top:6px;"><b>강사 안내</b><br>' + list.map(function(n){
       return '· ' + esc(n['대상'] || '') + ' 선생님 ' + esc(n['종류'] || '') + ' 안내' + (Number(n['건수']) > 1 ? '(' + n['건수'] + '건 묶음)' : '') +
         ' — 메일 ' + esc(n['메일'] || '-') + ' · 문자 ' + esc(n['문자'] || '-');
     }).join('<br>') + (bad ? '<br><span class="hint">발송되지 않은 항목은 강사 연락처·이메일을 확인하거나 "안내 재발송"을 이용해 주세요.</span>' : '') +
-      '<br><span class="hint">(시연 모드: 실제 발송 없음)</span> <button type="button" class="btn sm" data-cxout="1">보낸 내용 보기</button></div>';
+      '<br><span class="hint">(시연 모드: 실제 발송 없음)</span> <button type="button" class="btn sm" data-cxout="1">보낸 내용 보기</button></div>' + holdHtml;
   }
   function noticeText(list){
     return (list || []).map(function(n){
@@ -5133,9 +5169,9 @@
       if (j && j.status === 'ok') { ab.held[key] = { 칸: j.칸 || 0, 강사: j.강사 || 0 }; ab.heldOk[key] = true; if (currentKey === key) abRender(); }
     }).catch(function(){});
   }
-  function abFlow(nAll, nEmpty, held){
+  function abFlow(nAll, nEmpty, held, gap){
     var st = [
-      { t: '교과목 편성', s: '완료 ' + nAll + '칸', c: 'done' },
+      { t: '교과목 편성', s: gap ? nAll + '칸 · 빈 교시 ' + gap + '칸' : '완료 ' + nAll + '칸', c: gap ? 'warn' : 'done' },
       { t: '강사 배정', s: nEmpty ? (nAll - nEmpty) + ' / ' + nAll + '칸' : '완료', c: nEmpty ? 'now' : 'done' },
       { t: '완료', s: nEmpty ? '남음' : '배정 확정', c: nEmpty ? 'todo' : 'done' },
       { t: '일괄 발송', s: held ? '대기 ' + held + '명' : (nEmpty ? '남음' : '완료'), c: held ? 'now' : (nEmpty ? 'todo' : 'done') }
@@ -5150,10 +5186,12 @@
     if (ab.held[currentKey] === undefined) { ab.held[currentKey] = { 칸: 0, 강사: 0 }; abHeldFetch(currentKey); }
     var all = list.filter(function(r){ return !isOps(r) && !sessEnded(r['일자']); });
     var empty = abEmpty(currentKey).length, held = ab.held[currentKey].강사 || 0;
+    var gap = 0; try { gapIdxM = null; var gs0 = slotStats(p); gap = gs0 ? gs0.fut : 0; } catch (e) {}   // d3j(P1-B): 남은 빈 교시(오늘 이후, 비워둠 처리 안 한 칸)
     var m = ab.manual && ab.manual.key === currentKey ? ab.manual : null;
     if (m && !empty && !m.t1) m.t1 = Date.now();
-    var h = '<div class="ab-top"><div><b class="ab-t">강사 배정</b><span class="ab-s">AI는 강사카드·설문 평가를 읽어 교과목 관련성을 판단하고, 일정·시간 조건은 규칙으로 거릅니다. 적용은 담당자가 확인한 뒤에만 됩니다.</span></div></div>' +
-      abFlow(all.length, empty, held);
+    var bdg = (!empty && !held && all.length && ab.heldOk[currentKey] && !m) ? (gap ? '<span class="ab-bdg warn">배정 완료 · 빈 교시 ' + gap + '칸</span>' : '<span class="ab-bdg ok">' + ic('check', 'l') + '배정 완료</span>') : '';   // d3j(P4)
+    var h = '<div class="ab-top"><div><b class="ab-t">강사 배정</b>' + bdg + '<span class="ab-s">AI는 강사카드·설문 평가를 읽어 교과목 관련성을 판단하고, 일정·시간 조건은 규칙으로 거릅니다. 적용은 담당자가 확인한 뒤에만 됩니다.</span></div></div>' +
+      abFlow(all.length, empty, held, gap);
     var act = '';
     if (m) {
       act = '<div class="ab-man' + (m.t1 ? ' done' : '') + '"><span class="ab-dot" aria-hidden="true"></span>' +
@@ -5173,7 +5211,8 @@
     }
     if (held) act += '<div class="ab-held"><div><b>' + (empty ? '' : '배정 완료 · ') + '안내 대기 ' + held + '명</b><span>강사별로 1통씩 보냅니다.</span></div>' +
       '<button type="button" class="btn primary" data-ab="send">강의배정 자동 일괄 발송 (' + held + '명)</button></div>';
-    if (ab.msg) act += '<div class="ab-msg">' + ab.msg + '</div>';
+    if (gap && !m) act += '<div class="ab-gap"><b>빈 교시 ' + gap + '칸</b>이 남아 있습니다. 교과목을 더 넣거나, 일부러 비우는 칸은 격자에서 [비워둠 처리]를 해 주세요. 위 단계 표시는 입력한 교과목 기준입니다.</div>';
+    if (ab.msg && ab.msgKey === currentKey) act += '<div class="ab-msg">' + ab.msg + '</div>';   // d3j: 다른 과정·처음부터 다시 한 뒤에는 이전 결과 문구를 보이지 않음
     box.innerHTML = h + act;
     box.style.display = '';
     var sa = $('sAiAll');   // d3c: 교과목 목록 머리에도 같은 AI 버튼(위 강사 배정 칸의 버튼과 같은 기능)
@@ -5238,8 +5277,9 @@
         ab.chk[c.편성ID] = ab.kind === 'draft' ? true : !!(c.현재 ? c.현재.id !== c.pick.id : true);
       });
       abModalRender();
-      var nPick = (j.cells || []).filter(function(c){ return c.pick; }).length;
-      nextGuide((ab.kind === 'draft' ? 'AI 초안 ' : 'AI 검토 ') + nPick + '칸을 만들었습니다', '<i>선택한 칸 적용</i> — 선정 이유를 확인한 뒤 적용합니다', '[data-ab="apply"]');
+      var nPick = (j.cells || []).filter(function(c){ return c.pick; }).length, nNone = (j.cells || []).length - nPick;
+      if (nNone && ab.kind === 'draft') { nextGuide('AI 초안 ' + nPick + '칸 · 후보 없음 ' + nNone + '칸', nPick ? '<i>선택한 칸 적용</i> — 후보 없음 칸은 빈 칸으로 남으니 검색으로 직접 지정합니다' : '후보 없음 칸은 편성 화면에서 강사를 직접 검색해 지정합니다', nPick ? '[data-ab="apply"]' : ''); }   // d3j(P6)
+      else nextGuide((ab.kind === 'draft' ? 'AI 초안 ' : 'AI 검토 ') + nPick + '칸을 만들었습니다', '<i>선택한 칸 적용</i> — 선정 이유를 확인한 뒤 적용합니다', '[data-ab="apply"]');
     }).catch(function(err){
       ab.busy = false; if (!ab.modal) return;
       var sec = Math.round((Date.now() - t0) / 1000);
@@ -5334,17 +5374,24 @@
       ab.busy = true; ab.modal.body.innerHTML = abLoadingHtml(); abRun();
     }).catch(function(){ btn.disabled = false; btn.textContent = '기본값으로 저장하고 다시 만들기'; $('abRMsg').innerHTML = '<div class="note-err">서버에 연결하지 못했습니다.</div>'; });
   }
+  /* d3j(P5): AI가 판단에 쓴 모델을 결과 맨 위에 배지로 표시 */
+  function aiModelBadge(model, slot, ms){
+    if (!model) return '';
+    return '<div class="ai-mdl"><span class="ai-badge">AI 판단</span><span class="ai-mdl-k">판단 모델</span><b>' + esc(model) + '</b>' + (slot ? '<span class="ai-mdl-s">' + slot + '번 모델</span>' : '') + (ms ? '<span class="ai-mdl-s">응답 ' + (Math.round(ms / 100) / 10) + '초</span>' : '') + '</div>';
+  }
   function abModalRender(){
     var j = ab.res; if (!j || !ab.modal) return;
     var cells = j.cells || [], h = '';
     if (!cells.length) { ab.modal.body.innerHTML = '<div class="cx-guide">' + esc(j.이유 || '배정할 칸이 없습니다') + '</div>'; return; }
-    var aiLine = j.ai ? 'AI 판단: ' + esc(j.모델) + (j.모델번호 ? '(' + j.모델번호 + '번 모델)' : '') + (j.AI교과목 && j.AI교과목.split('/')[0] !== j.AI교과목.split('/')[1] ? ' · AI 판단 교과목 ' + esc(j.AI교과목) + '(나머지는 규칙 근거)' : '') : '<span class="ab-warn">AI 응답이 없어 규칙(담당 교과목·이력·평가)만으로 만들었습니다.</span>';
+    var aiLine = j.ai ? (j.AI교과목 && j.AI교과목.split('/')[0] !== j.AI교과목.split('/')[1] ? 'AI 판단 교과목 ' + esc(j.AI교과목) + '(나머지는 규칙 근거)' : '') : '<span class="ab-warn">AI 응답이 없어 규칙(담당 교과목·이력·평가)만으로 만들었습니다.</span>';
     if (j.보관) aiLine += ' · 10분 안에 만든 같은 조건의 초안을 다시 보여 드립니다';
+    if (j.ai) h += aiModelBadge(j.모델, j.모델번호, j.보관 ? 0 : ab.ms);
     if (ab.kind === 'draft') {
       var nPick = cells.filter(function(c){ return c.pick; }).length;
       h += '<div class="ab-sum"><div class="ab-big"><b>' + nPick + '</b><span>/ ' + cells.length + '칸 초안</span></div><div class="ab-big"><b>' + j.요약.강사수 + '</b><span>명 배정</span></div>' +
         '<div class="ab-big"><b>' + j.요약.신규 + '</b><span>칸 신규 강사</span></div><div class="ab-big"><b>' + abFmt1(ab.ms) + '</b><span>소요</span></div></div>' +
-        '<div class="ab-line">' + aiLine + '</div>';
+        (aiLine ? '<div class="ab-line">' + aiLine.replace(/^ · /, '') + '</div>' : '') +
+        (cells.length - nPick ? '<div class="ab-gap" style="margin-top:6px;"><b>후보 없음 ' + (cells.length - nPick) + '칸</b> — 조건에 맞는 강사가 없어 빈 칸으로 남습니다. 적용한 뒤 편성 화면에서 강사를 직접 검색해 지정해 주세요.</div>' : '');
     } else {
       var same = 0, diff = 0, flagged = 0;
       var blank = 0;
@@ -5414,7 +5461,7 @@
       });
       sessionsByKey = buildSessionMap(allSessions); refreshConflicts();
       var nDone = items.length - Object.keys(skip).length;
-      ab.msg = ic('check', 'l') + (ab.kind === 'draft' ? 'AI 초안 ' : 'AI 제안 ') + nDone + '칸을 적용했습니다' + (Object.keys(skip).length ? ' (건너뜀 ' + Object.keys(skip).length + '칸: ' + esc(Object.keys(skip).map(function(k){ return skip[k]; }).join(', ')) + ')' : '') + '.';
+      ab.msgKey = currentKey; ab.msg = ic('check', 'l') + (ab.kind === 'draft' ? 'AI 초안 ' : 'AI 제안 ') + nDone + '칸을 적용했습니다' + (Object.keys(skip).length ? ' (건너뜀 ' + Object.keys(skip).length + '칸: ' + esc(Object.keys(skip).map(function(k){ return skip[k]; }).join(', ')) + ')' : '') + '.';
       if (ab.src === 'manual') ab.manual = null;
       if ((j.안내 || []).length) ab.msg += ' 바뀐 이전 강사 ' + j.안내.length + '명에게는 취소 안내를 보냈습니다.';
       ab.modal.close(); ab.modal = null;
@@ -5435,7 +5482,7 @@
       var n = (j.안내 || []).length;
       ab.held[key] = { 칸: 0, 강사: 0 }; ab.heldOk[key] = true; ab.copied[key] = false; ab.justDone[key] = 'pending';
       ab.stay = false;
-      ab.msg = ic('check', 'l') + '강사 ' + n + '명에게 강의배정 안내를 보냈습니다. <button type="button" class="ab-lnk" data-cxout="1">보낸 내용 보기</button>' +
+      ab.msgKey = key; ab.msg = ic('check', 'l') + '강사 ' + n + '명에게 강의배정 안내를 보냈습니다. <button type="button" class="ab-lnk" data-cxout="1">보낸 내용 보기</button>' +
         (SIMPLE ? ' <span id="abGoNote">· 잠시 뒤 보드로 이동합니다 <button type="button" class="ab-lnk" data-abstay="1">여기 머무르기</button></span>' : '');
       abRender();
       nextGuide('강사 ' + n + '명에게 안내를 보냈습니다', '4단계를 모두 마쳤습니다 · 보드에서 완료를 확인하세요', '');
@@ -5790,6 +5837,10 @@
     var byDay = {};
     wkList.forEach(function(r){ (byDay[r['일자']] = byDay[r['일자']] || []).push(r); });
     days = days.filter(function(d, i){ return i < 5 || byDay[d]; });
+    if (!all) {   // d3j: '이 과정만' 보기는 입교 기간 요일만(3일 과정이면 3칸). 기간 밖이라도 편성이 있는 날은 남김
+      var ps0 = normYmd(p['입교 시작일']), pe0 = normYmd(p['입교 종료일']);
+      if (ps0 && pe0) { var dIn = days.filter(function(d){ return (d >= ps0 && d <= pe0) || byDay[d]; }); if (dIn.length) days = dIn; }
+    }
     if (gridWantDate) { var wi2 = days.indexOf(gridWantDate); if (wi2 > -1) gridDay = wi2; gridWantDate = ''; }
     if (gridDay < 0 || gridDay >= days.length) {
       var ti = days.indexOf(today);
@@ -5850,7 +5901,9 @@
       if (lunch && n === lunch.after) body += '<tr class="lunch"><td colspan="' + (totalCols + 1) + '">점심시간' + (lunch.text ? ' ' + esc(lunch.text) : '') + '</td></tr>';
     });
     var opts = weeks.map(function(w, i){
-      return '<option value="' + w + '"' + (w === gridWeek ? ' selected' : '') + '>' + (i + 1) + '주차 · ' + esc(md(w).replace(/\(.\)/, '')) + '~' + esc(md(addDays(w, 4)).replace(/\(.\)/, '')) + '</option>';
+      var wa = w, wb = addDays(w, 4);   // d3j: '이 과정만'은 입교 기간으로 잘라 표시
+      if (!all) { var ps1 = normYmd(p['입교 시작일']), pe1 = normYmd(p['입교 종료일']); if (ps1 && ps1 > wa && ps1 <= wb) wa = ps1; if (pe1 && pe1 < wb && pe1 >= wa) wb = pe1; }
+      return '<option value="' + w + '"' + (w === gridWeek ? ' selected' : '') + '>' + (i + 1) + '주차 · ' + esc(md(wa).replace(/\(.\)/, '')) + '~' + esc(md(wb).replace(/\(.\)/, '')) + '</option>';
     }).join('');
     var dtabs = days.map(function(d, i){ return '<button type="button" data-gd="' + i + '" class="' + (i === gridDay ? 'on' : '') + '">' + esc(DOW[parseYmd(d).dow]) + ' ' + parseYmd(d).d + '</button>'; }).join('');
     var empty = !wkList.length ? '<div class="hint" style="margin:0 0 8px;">' + (canEdit ? '이 주에 편성된 교과목이 없습니다. 빈 칸을 눌러 추가하세요.' : '이 주에 편성된 교과목이 없습니다.') + '</div>' : '';
@@ -5878,7 +5931,7 @@
       '<select id="gWeek" aria-label="주 선택">' + opts + '</select>' +
       '<button type="button" class="btn sm" data-gw="next"' + (wi === weeks.length - 1 ? ' disabled' : '') + '>다음 주' + ic('chevR', 'r') + '</button>' +
       '<button type="button" class="btn sm" data-gw="today">이번 주</button>' +
-      '<span class="wk">' + (wi + 1) + '주차 / ' + weeks.length + '주 · ' + esc(md(mon)) + ' ~ ' + esc(md(addDays(mon, 4))) + '</span>' +
+      '<span class="wk">' + (wi + 1) + '주차 / ' + weeks.length + '주 · ' + esc(md(days[0])) + ' ~ ' + esc(md(days[days.length - 1])) + '</span>' +
       (all ? '' : (function(){ var cf = courseFill(p, gapIndex()); return cf.total ? '<span class="wk gfill">편성 현황 ' + cf.filled + '/' + cf.total + '교시' + (cf.done ? ' (비워둠 ' + cf.done + ')' : '') + '</span>' : ''; })()) +
       '</div>' + ctab +
       '<div class="glegend"><span><i style="background:#E3EBF5"></i>편성됨</span><span><i style="background:#fff;border:1.5px dashed #c9a400"></i>강사 미지정</span>' +
@@ -7093,6 +7146,7 @@
       '.cx-tbl{width:100%;border-collapse:collapse;font-size:12.5px}.cx-tbl th,.cx-tbl td{border-bottom:1px solid #EAECF0;padding:6px;text-align:left;vertical-align:top}.cx-tbl th{background:#F9FAFB;font-weight:800}' +
       '.cx-mail{border:1px solid #EAECF0;border-radius:8px;padding:10px;margin-bottom:10px}.cx-mail pre{white-space:pre-wrap;font-family:inherit;font-size:12.5px;margin:6px 0 0;line-height:1.55}' +
       '.rvl tr.rvgrp td{background:#F7FBFA}.rvl tr.rvsub td{font-size:12px;color:#475467;background:#FCFDFD}.rvtog{font-size:12px;margin-left:6px}.todo .tfold{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.todo .tfold .sum{font-size:13px;color:#475467}.todo .tunfold{margin-left:auto}.cx-paper{border:1px solid #CBD4E0;border-radius:8px;padding:14px 16px;background:#fff}.cx-ph{font-size:18px;font-weight:800;text-align:center;color:#1B2433}.cx-pm{text-align:center;color:#475467;font-size:13px;margin:2px 0 10px}.cx-pn{background:#F3F6FA;border-radius:6px;padding:8px 10px;font-size:13px;color:#344054;margin-bottom:10px}.cx-fl{padding-left:20px;margin:0}.cx-fl li{margin:0 0 10px}.cx-fq{font-weight:700;font-size:13.5px;margin-bottom:4px}.cx-fo{display:inline-block;margin:0 12px 2px 0;font-size:13px;color:#475467}.cx-fbox{border:1px dashed #B8C4D6;border-radius:6px;height:38px}.cx-ps{margin:14px 0 6px;font-size:14.5px;color:#1B3A5F}.cx-dist{display:flex;height:12px;border-radius:3px;overflow:hidden;background:#F2F4F7}.cx-dist i{display:block;height:100%}.cx-leg{font-size:11.5px;color:#475467;margin:2px 0 4px}.cx-leg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 3px 0 8px;vertical-align:-1px}.cx-pf{margin-top:10px;font-size:12px;color:#667085}@media (max-width:640px){.cx-paper{padding:10px}.cx-paper .cx-tbl{min-width:560px}}.cx-hb{display:inline-flex;gap:6px;flex-wrap:wrap;vertical-align:middle}.cx-flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:4px;margin:10px 0}.cx-flow span{flex:1 1 110px;background:#F3F6FA;border:1px solid #D5DCE6;border-radius:8px;padding:6px 8px;font-size:12.5px;font-weight:700;color:#1B3A5F;line-height:1.3}.cx-flow span b{display:inline-block;width:18px;height:18px;border-radius:50%;background:#1B3A5F;color:#fff;font-size:11px;text-align:center;line-height:18px;margin-right:5px}.cx-flow span small{display:block;font-weight:500;color:#667085;font-size:11.5px;margin-top:2px}.cx-flow span.ai{background:#EEF5FF;border-color:#B8C4D6}.cx-flow i{align-self:center;color:#98A2B3;font-style:normal}.cx-sample{background:#FFFBEB;border:1px solid #F3D88C;border-radius:8px;padding:8px 10px;font-size:13px;margin:0 0 10px}.cx-sample a{font-weight:700;color:#1B3A5F}@media (max-width:640px){.cx-flow i{display:none}.cx-flow span{flex-basis:45%}}.cx-op{margin-top:14px;border-top:1px solid #D5DCE6;padding-top:12px}.cx-op-h{font-weight:800;color:#1B3A5F;margin-bottom:6px;font-size:14px}.cx-q{font-size:12.5px;color:#344054;margin:2px 0;line-height:1.45}.cx-opall{margin-top:8px}.cx-opall summary{cursor:pointer;color:#1B3A5F;font-weight:700;font-size:13px}.cx-survey{margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#F4FBF9;border:1px solid #CDE7E0;border-radius:8px;padding:8px 10px;font-size:12.5px}' +
+      '.cx8-bq{font-size:13px;padding:4px 0}.cx8-bq+.cx8-bq{border-top:1px dashed #E4E7EC}.cx8-bc{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:3px;color:#344054}'+
       '.cx8-subj{border:1px solid #D5DCE6;border-radius:8px;padding:8px 10px;margin:0 0 10px;break-inside:avoid}.cx8-sh{font-size:14px;margin-bottom:6px;color:#1B2433}.cx8-sh span{color:#475467;margin-left:4px}.cx8-tt{font-style:normal;font-size:11px;font-weight:700;color:#93370D;background:#FEF0C7;border-radius:999px;padding:1px 7px;margin-left:4px}.cx8-grid{width:100%;border-collapse:collapse;font-size:12.5px}.cx8-grid th,.cx8-grid td{border:1px solid #D5DCE6;padding:5px 6px;vertical-align:middle}.cx8-grid th{background:#F3F6FA;font-weight:700;text-align:center}.cx8-sc{width:50px;font-size:11px;line-height:1.2}.cx8-ck{text-align:center;color:#98A2B3;width:50px}.cx8-lb{font-weight:800;text-align:center;width:58px;color:#1B3A5F;white-space:nowrap}.cx8-op{margin-top:6px;font-size:12.5px;color:#344054}.cx8-op>span{font-weight:800;color:#1B3A5F;margin-right:4px}.cx8-tabs{display:flex;gap:6px;margin:0 0 10px;flex-wrap:wrap}.cx8-tabs button{height:34px;padding:0 14px;border:1px solid #CBD4E0;border-radius:8px;background:#fff;font-weight:700;cursor:pointer;font-family:inherit;color:#344054}.cx8-tabs button.on{background:#1B3A5F;color:#fff;border-color:#1B3A5F}.cx8-meta{width:100%;border-collapse:collapse;font-size:12.5px;margin:0 0 8px}.cx8-meta th,.cx8-meta td{border:1px solid #D5DCE6;padding:5px 7px;text-align:left}.cx8-meta th{background:#F3F6FA;width:92px;font-weight:700}.cx8-it{font-size:10.5px;color:#667085;display:block;line-height:1.1}.cx8-few{background:#FFFBEB;border:1px solid #F3D88C;border-radius:6px;padding:7px 10px;font-size:12.5px;margin:6px 0}.cx8-fb{border:1px solid #CBD4E0;border-radius:8px;padding:14px 16px;margin:0 0 14px;background:#fff}.cx8-fbh{font-size:17px;font-weight:800;text-align:center;margin-bottom:10px;color:#1B2433}.cx8-fb h5{margin:10px 0 4px;font-size:13.5px;color:#1B3A5F}.cx8-close{margin-top:12px;font-size:13px;color:#344054;line-height:1.6}.cx8-sign{text-align:right;font-weight:800;margin-top:8px}.cx8-cnt{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;background:#F3F6FA;border:1px solid #D5DCE6;border-radius:8px;padding:8px 10px;margin-top:10px;font-size:13px}.cx8-cnt input{width:76px;height:30px;margin-left:4px}.cx8-low{color:#B42318;font-weight:700}.cx-tag{white-space:nowrap}@media (max-width:640px){.cx8-subj{overflow-x:auto}.cx8-grid{min-width:560px}.cx8-meta th{width:auto;white-space:nowrap}.cx8-meta td{word-break:keep-all}}.cx-paper .cx-tbl td b{white-space:nowrap}' +
       '.ev-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:4px 0 12px}.ev-card{background:#fff;border:1px solid #CBD4E0;border-radius:10px;padding:10px 12px}.ev-card .n{font-size:24px;font-weight:800;color:#1B2433}.ev-card .l{font-size:12.5px;color:#475467;font-weight:700}.ev-card.ok .n{color:#067647}.ev-card.wait{border-color:#F3D88C;background:#FFFBEB}.ev-card.wait .n{color:#B54708}.ev-h{font-size:15px;margin:14px 0 6px;color:#1B3A5F}.ev-wrap{overflow:auto}.ev-tbl{width:100%;border-collapse:collapse;font-size:13px;background:#fff}.ev-tbl th,.ev-tbl td{border-bottom:1px solid #EAECF0;padding:8px;text-align:left;vertical-align:middle}.ev-tbl th{background:#F3F6FA;font-weight:800;white-space:nowrap}.ev-c{text-align:center!important}.ev-act{white-space:nowrap}.ev-act .btn{margin:2px 0}.ev-tbl tr.ev-wait td{background:#FFFBEB}.ev-nm{font-weight:800;color:#1B3A5F;text-decoration:none}.ev-nm:hover{text-decoration:underline}.cx-flow span.ext{background:#fff;border-style:dashed}.cx8-mailrow{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:10px;border-top:1px dashed #D5DCE6;padding-top:8px}.cx8-src{font-size:12.5px;color:#667085;margin:0 0 8px}.cx8-src .cx-link{font-size:12.5px}.ev-svq{font-size:12.5px;color:#667085;margin:-4px 0 10px 2px}.ev-svq .cx-link{font-size:12.5px}.cx8-how{margin-top:10px;border:1px solid #B8C4D6;border-radius:8px;background:#F7F9FC;padding:8px 10px}.cx8-how summary{cursor:pointer;font-weight:800;color:#1B3A5F;font-size:13.5px}.cx8-hw{display:grid;gap:6px;margin-top:8px}.cx8-hs{display:flex;gap:8px;align-items:flex-start;background:#fff;border:1px solid #E4E8EF;border-radius:8px;padding:7px 9px}.cx8-hs>b{flex:0 0 auto;width:20px;height:20px;border-radius:50%;background:#1B3A5F;color:#fff;font-size:11px;text-align:center;line-height:20px}.cx8-hh{font-weight:800;font-size:13px;color:#1B2433;margin-bottom:2px}.cx8-hk{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;font-size:12.5px;margin:2px 0}.cx8-hk span{color:#667085}.cx8-hk b{background:#EEF5FF;border-radius:4px;padding:1px 6px;color:#1B3A5F}.cx8-coh{margin:12px 0 4px;font-size:13.5px;color:#1B3A5F}.cx8-mail{white-space:pre-wrap;font-family:inherit;font-size:13px;line-height:1.6;background:#F9FAFB;border:1px solid #EAECF0;border-radius:8px;padding:12px;margin:8px 0 0}@media (max-width:640px){.ev-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.ev-tbl{min-width:760px}.ev-tbl td:first-child{min-width:150px;word-break:keep-all}}' +
       '@media(max-width:640px){.cx-card{flex-wrap:wrap}.cx-act{flex-direction:row}}';
@@ -7220,8 +7274,11 @@
       pn.innerHTML = html + '<div class="cx-wait"><i class="ai-spin" aria-hidden="true"></i><b>AI가 후보를 고르는 중입니다</b> <span id="cxWaitSec">' + Math.floor((Date.now() - (cx.aiT0 || Date.now())) / 1000) + '초</span><div class="cxw-s">강사카드·담당 이력·평가를 읽고 교과목과의 관련성을 판단합니다</div></div>';
       pn.style.display = 'block'; $('cxSort').value = cx.sort; $('cxModel').value = String(cx.modelPref); return;
     }
+    if (!cx.aiFail && cx.aiModel && !cx.aiBusy) html += aiModelBadge(cx.aiModel, cx.aiSlot, cx.aiMs);
     if (SIMPLE && cx.aiFail && main.length) html += '<div class="cx-sec" style="margin-top:4px;">이력 기준 후보 <span style="font-weight:600;color:#667085;">(AI 응답이 없어 담당 이력·평가 순으로 보여 드립니다)</span></div>';
-    if (!main.length && !g.fresh.length) html += '<div class="cx-ex">조건에 맞는 후보가 없습니다. 위 검색창에서 이름·분야로 직접 찾아 선택할 수 있습니다.</div>';
+    if (!main.length && !g.fresh.length) html += '<div class="cx-none"><b>추천할 강사가 없습니다</b><div>이 교과목을 맡았거나 담당 교과목으로 등록한 강사 중, 이 시간에 가능한 강사가 없습니다.</div><ol>' +
+      '<li>위 <b>강사 검색창</b>에서 이름·분야로 직접 찾아 선택</li>' + (g.ex.length ? '<li>아래 <b>제외된 강사 ' + g.ex.length + '명</b>의 사유(일정 겹침·불가 일정)를 확인하고 시간 조정</li>' : '') +
+      '<li>강사관리에서 <b>새 강사 초대</b> 후 등록되면 다시 찾기</li></ol></div>';   // d3j(P6)
     main.slice(0, 3).forEach(function(it, k){ html += cxCard(it, '후보 ' + (k + 1), true); });
     if (main.length > 3) {
       html += '<div class="cx-sec">그 밖의 후보 ' + (main.length - 3) + '명 <button type="button" class="cx-link" id="cxMore">' + (cx.showMore ? '접기' : '펼치기') + '</button></div>';
@@ -7252,16 +7309,18 @@
     });
     cands.sort(function(a, b){ return b._r - a._r; });   // d2: 관련 낱말이 많은 강사부터 40명(AI로 보낼 후보 수 제한)
     cands.forEach(function(x){ delete x._r; });
-    cx.aiBusy = true; cx.aiFail = false; cx.aiT0 = Date.now(); cx.ai = {}; cx.aiNote = ''; cxRender();
+    cx.aiBusy = true; cx.aiFail = false; cx.aiT0 = Date.now(); cx.ai = {}; cx.aiNote = ''; cx.aiModel = ''; cxRender();
     clearInterval(cx.waitT); cx.waitT = setInterval(function(){ var e = $('cxWaitSec'); if (!cx.aiBusy || !e) { clearInterval(cx.waitT); return; } e.textContent = Math.floor((Date.now() - cx.aiT0) / 1000) + '초'; }, 500);
     api({ action: 'aiRecommend', password: getPw(), 교과목: c.subj, 후보: cands.slice(0, 40), 모델: cx.modelPref }).then(function(j){
       if (seq !== cx.reqSeq) return;
       cx.aiBusy = false;
       if (j.status === 'ok' && j.ai) {
         (j.items || []).forEach(function(it){ cx.ai[it.id] = it; });
-        cx.aiModel = j.모델 || ''; cx.aiNote = 'AI 연결: ' + cx.aiModel + (j.모델번호 ? '(' + j.모델번호 + '번)' : '');
+        cx.aiModel = j.모델 || ''; cx.aiSlot = j.모델번호 || ''; cx.aiMs = Date.now() - cx.aiT0; cx.aiNote = 'AI 연결: ' + cx.aiModel + (j.모델번호 ? '(' + j.모델번호 + '번)' : '');
         setTimeout(function(){   // d3c: 검토 인원과 실제로 보여 주는 추천 인원을 구분
           var g2 = cxCond() && cxCond().ok ? cxBuild(cxCond()) : null, nm = g2 ? g2.rel.concat(g2.aiOnly).length : 0, nf = g2 ? g2.fresh.length : 0, more = Math.max(0, nm - 3);
+          if (!nm && !nf) { nextGuide('추천할 강사가 없습니다', '강사 검색창에서 이름·분야로 직접 찾아 주세요', '#sInstr'); return; }   // d3j(P6)
+          if (!nm) { nextGuide('추천 후보는 없고 신규 강사 ' + nf + '명이 있습니다', '아래 신규 강사를 확인하거나 검색창에서 직접 찾아 주세요', '[data-cxpick]'); return; }
           nextGuide('AI가 ' + (j.items || []).length + '명 중 ' + nm + '명을 추천했습니다',
             (more ? '위 3명 먼저 · 나머지 ' + more + '명은 <i>펼치기</i>' : '<i>이 강사로 배정</i> → <i>저장</i>') + (nf ? ' · 신규 강사 ' + nf + '명은 아래' : ''), more ? '#cxMore' : '[data-cxpick]');
         }, 50);
@@ -7362,6 +7421,7 @@
   var CX8_OPQ = '이 교과목 또는 강사에 대한 의견을 자유롭게 적어 주세요(선택)';
   var CX8_COMMON = [['교육시설환경', ['교재의 품질', '강의실 및 교육기자재', '편의시설', '교직원의 친절도']], ['구내식당', ['구내식당 이용', '음식의 간', '메뉴의 다양성', '청결도', '친절도']]];
   var CX8_COPQ = '이번 과정 운영(일정·시설·안내 등)에 대한 의견을 자유롭게 적어 주세요(선택)';   // c9: 과정 운영 주관식(과정 공통, 강사 환류 제외)
+  var CX8_BASIC = [['소속', '소속을 선택해 주세요.', ['소방본부', '소방서', '소방학교', '기타']], ['근무기간', '소방 근무 기간을 선택해 주세요.', ['5년 미만', '5년 이상~10년 미만', '10년 이상~20년 미만', '20년 이상']], ['보직', '현재 맡고 있는 업무를 선택해 주세요.', ['화재진압', '구조', '구급', '예방·안전', '상황·통신', '행정', '기타']]];   // d3j: 첫 쪽 응답자 정보(필수, 성명 없음)
   var CX8_SCALE = ['①매우만족', '②만족', '③보통', '④불만족', '⑤매우불만족'];
   /* c6e 단순화 적용. c10: 설문 문항은 강의배정DB `설문문항` 탭에서 읽음(아래 CX8_* 값은 탭을 못 읽을 때 쓰는 기본틀). 열 때마다 새로 읽어 시트 수정이 바로 반영됨 */
   var CX8_INTRO = '교육생 여러분, 과정 운영 개선과 강사 환류를 위해 교과목·강사별 만족도를 여쭙니다. 응답은 통계로만 쓰이며 개인을 식별하지 않습니다. 해당하는 칸에 표시해 주십시오.';
@@ -7370,7 +7430,7 @@
     return api({ action: 'listSurveyItems', password: getPw() }).then(function(j){
       if (!j || j.status !== 'ok' || !j.문항) throw new Error((j && j.message) || '문항을 불러오지 못했습니다');
       var q = j.문항;
-      CX8_Q = { '강의': q.강의, '훈련': q.훈련 }; CX8_OPQ = q.의견; CX8_COPQ = q.과정의견; CX8_COMMON = q.공통 || []; CX8_INTRO = q.안내문;
+      CX8_Q = { '강의': q.강의, '훈련': q.훈련 }; CX8_OPQ = q.의견; CX8_COPQ = q.과정의견; CX8_COMMON = q.공통 || []; CX8_INTRO = q.안내문; if (q.기본) CX8_BASIC = q.기본;
       cx8Meta0 = { 출처: j.출처, 경고: j.경고 || [], 마지막변경: j.마지막변경 || '', 변경기록: j.변경기록 || [], 시트: j.시트 };
       return cx8Meta0;
     }).catch(function(e){ cx8Meta0 = { 출처: '기본 문항(서버에서 설문문항 탭을 읽지 못함)', 경고: [String(e && e.message || '연결 오류')], 마지막변경: '', 변경기록: [], 시트: '' }; return cx8Meta0; });
@@ -7393,7 +7453,7 @@
     var m = cxModal('설문 문항 기본틀·현재 문항', '<div class="info">설문문항 탭을 읽는 중입니다…</div>');
     cx8Load().then(function(){
       var row = function(g, k, q, e){ return '<tr><td>' + esc(g) + '</td><td><b>' + esc(k) + '</b></td><td>' + esc(q) + (e ? '<div class="hint">' + esc(e) + '</div>' : '') + '</td></tr>'; };
-      var rows = row('안내문', '-', CX8_INTRO) + CX8_Q['강의'].map(function(x){ return row('강의', x[0], x[1], x[2]); }).join('') + CX8_Q['훈련'].map(function(x){ return row('실습', x[0], x[1], x[2]); }).join('') +
+      var rows = CX8_BASIC.map(function(b){ return row('기본정보', b[0], b[1], '보기: ' + b[2].join(', ') + ' · 필수'); }).join('') + row('안내문', '-', CX8_INTRO) + CX8_Q['강의'].map(function(x){ return row('강의', x[0], x[1], x[2]); }).join('') + CX8_Q['훈련'].map(function(x){ return row('실습', x[0], x[1], x[2]); }).join('') +
         row('교과목 의견', '의견', CX8_OPQ) + CX8_COMMON.map(function(g){ return g[1].map(function(q){ return row('교육 환경', g[0], q); }).join(''); }).join('') + row('과정 운영 의견', '의견', CX8_COPQ);
       m.body.innerHTML = cx8SrcHtml() + '<div class="hint" style="margin:6px 0;">고치는 곳: 강의배정DB_대회용 › 설문문항 탭의 "문항" 칸. 강의·실습의 항목 이름과 개수는 점수 계산에 쓰여 고정이고, 교육 환경은 줄 추가·삭제(사용 N)가 됩니다. 바뀐 내용은 설문문항_변경기록 탭에 남습니다.</div><div style="overflow:auto;margin-top:8px;"><table class="cx-tbl"><thead><tr><th>구분</th><th>항목</th><th>문항(설문지에 그대로 쓰임)</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
     });
@@ -7428,6 +7488,7 @@
     var mins = Math.max(3, Math.round(list.length * 1.2 + 2));
     var html = '<div class="cx-paper cx8-form"><div class="cx-ph">교육 성과측정 설문지</div><div class="cx-pm">' + esc(title) + ' · 교육기간 ' + esc(cx8Period(p)) + '</div>' +
       '<div class="cx-pn">' + esc(CX8_INTRO) + ' (응답 시간 약 ' + mins + '분)</div>' +
+      '<h4 class="cx-ps">응답자 정보 <span class="hint">필수 · 이름·연락처는 묻지 않음 · 통계로만 씀</span></h4><div class="cx8-subj cx8-basic">' + CX8_BASIC.map(function(b){ return '<div class="cx8-bq"><b>' + esc(b[0]) + '</b> ' + esc(b[1]) + '<div class="cx8-bc">' + b[2].map(function(c){ return '<span>○ ' + esc(c) + '</span>'; }).join('') + '</div></div>'; }).join('') + '</div>' +
       '<h4 class="cx-ps">Ⅰ. 교과목·강사별 평가 <span class="hint">①매우만족=5점 … ⑤매우불만족=1점 · 종합 = 4문항 평균</span></h4>' + subjHtml +
       '<h4 class="cx-ps">Ⅱ. 교육 환경 <span class="hint">참고용 · 강사 평가에 포함하지 않음</span></h4><div style="overflow-x:auto;"><table class="cx8-grid"><thead><tr><th>분야</th><th>문항</th>' + scaleTh + '</tr></thead><tbody>' + common + '</tbody></table></div>' +
       '<div class="cx8-subj" style="margin-top:8px;"><div class="cx8-op" style="margin-top:0;"><span>과정 운영 의견</span>' + esc(CX8_COPQ) + '<div class="cx-fbox"></div></div></div>' +
@@ -7445,6 +7506,7 @@
       if (!ok) { alert('엑셀 만드는 도구를 불러오지 못했습니다.'); return; }
       var head = ['번호', '구분', '교과목', '강사', '항목', '폼 문항 제목(그대로 붙여넣기)', '응답 형식', '보기(①=5점 … ⑤=1점)', '필수'];
       var rows = [], cols = ['타임스탬프'], n = 0;
+      CX8_BASIC.forEach(function(b){ n++; rows.push([n, '응답자 정보', '', '', b[0], b[0], '객관식(하나 선택) · 설명: ' + b[1], b[2].join(' / '), '예']); cols.push(b[0]); });
       list.forEach(function(x){
         CX8_Q[x.t].forEach(function(q){ var h = cx8Head(x, q); n++; rows.push([n, x.t === '훈련' ? '실습(훈련)' : '강의', x.s, x.n, q[0], h, '객관식(5점 척도)', CX8_SCALE.join(' / '), '예']); cols.push(h); });
         var ho = x.s + ' | ' + x.n + ' 강사 | 의견: ' + CX8_OPQ; n++; rows.push([n, '의견', x.s, x.n, '의견', ho, '장문형(서술)', '', '아니오']); cols.push(ho);
@@ -7596,6 +7658,7 @@
     var css = 'body{font-family:Pretendard,"Malgun Gothic",sans-serif;color:#111;margin:14mm;font-size:12px;word-break:keep-all}.cx-ph{font-size:20px;font-weight:800;text-align:center;margin-bottom:4px}.cx-pm{text-align:center;color:#333;margin-bottom:10px}.cx-pn{border:1px solid #999;padding:6px 8px;margin-bottom:8px}' +
       'table{width:100%;border-collapse:collapse;margin:4px 0 8px}th,td{border:1px solid #666;padding:4px 6px;text-align:left;vertical-align:top}th{background:#E9EDF2}.cx-dist{display:flex;height:10px;border:1px solid #888}.cx-dist i{display:block;height:100%;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
       '.cx-leg i{display:inline-block;width:10px;height:10px;margin:0 3px 0 8px;-webkit-print-color-adjust:exact;print-color-adjust:exact}.cx-ps{margin:12px 0 4px;font-size:14px}.hint{color:#555;font-weight:400;font-size:11px}.cx-q{margin:1px 0}.cx-fo{margin-right:12px}.cx-fl li{margin:0 0 10px}.cx-fq{font-weight:700;margin-bottom:3px}.cx-fbox{border:1px solid #888;height:40px}.cx-pf{margin-top:8px;color:#444;font-size:11px}' +
+      '.cx8-bq{font-size:12px;padding:3px 0}.cx8-bc{display:flex;flex-wrap:wrap;gap:2px 12px}'+
       '.cx8-subj{border:1px solid #999;padding:6px 8px;margin:0 0 8px;break-inside:avoid}.cx8-sh{font-size:13px;margin-bottom:4px}.cx8-sh span{margin-left:4px}.cx8-tt{font-style:normal;font-size:10px;border:1px solid #999;padding:0 5px;margin-left:4px}.cx8-grid td,.cx8-grid th{border:1px solid #666;padding:3px 5px}.cx8-grid th{text-align:center}.cx8-sc{width:44px;font-size:10px}.cx8-ck{text-align:center;width:44px}.cx8-lb{font-weight:700;text-align:center;width:52px}.cx8-op{margin-top:4px}.cx8-op>span{font-weight:700;margin-right:4px}.cx8-meta th{width:80px}.cx8-it{display:block;font-size:9px;color:#555}.cx8-low{font-weight:700}.cx8-few{border:1px solid #999;padding:5px 8px;margin:4px 0}.cx8-fb{break-after:page;page-break-after:always;padding:2mm 0}.cx8-fb:last-child{break-after:auto;page-break-after:auto}.cx8-fbh{font-size:18px;font-weight:800;text-align:center;margin-bottom:8px}.cx8-fb h5{margin:8px 0 3px;font-size:13px}.cx8-close{margin-top:10px;line-height:1.6}.cx8-sign{text-align:right;font-weight:800;margin-top:6px}.cx-guide{display:none}.cx8-mailrow{display:none}.cx8-how{display:none}.cx8-coh{margin:10px 0 3px;font-size:13px}';
     w.document.write('<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>' + esc(name) + '</title><style>' + css + '</style></head><body>' + inner + '<script>setTimeout(function(){window.print();},300)<\/script></body></html>');
     w.document.close();
