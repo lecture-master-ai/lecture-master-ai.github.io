@@ -5,7 +5,7 @@
      로그인은 비밀번호 없이 [로그인] 버튼 하나로, 강사 승인은 확인창으로 줄입니다. false로 바꾸면 원래 화면으로 돌아갑니다(코드는 지우지 않음). */
 window.CONTEST_CONFIG = {
   WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbzYdVSZsLnSw3JN01aIDuXa1Ubxh6ERWYC-0TEQxu6tRYrcI9-WNYEoKv3Cfk9qyUvJ/exec',
-  VERSION: '대회용 d3j',
+  VERSION: '대회용 d3k',
   ORG_NAME: '○○소방학교',
   SYS_ORG: '○○소방학교',   // d3e: 로그인 카드 아래 운영기관 이름(다른 학교에서 쓸 때 여기만 바꿈)
   SIMPLE: true,
@@ -235,11 +235,12 @@ window.CONTEST_CONFIG = {
       st.textContent = '#cxGd{position:fixed;left:50%;top:78px;transform:translateX(-50%);z-index:100001;pointer-events:none;width:max-content;max-width:calc(100vw - 24px)}' +
         '.cxg{pointer-events:auto;cursor:pointer;background:#1B3A5F;color:#fff;border-radius:999px;padding:8px 18px;box-shadow:0 6px 18px rgba(16,24,40,.22);font-size:14px;font-weight:700;line-height:1.45;word-break:keep-all;text-align:center;opacity:0;transform:translateY(-6px);transition:opacity .2s ease-out,transform .2s ease-out}' +
         '.cxg.in{opacity:1;transform:none} .cxg.out{opacity:0} .cxg .ck{color:#7CD4A4;margin-right:6px} .cxg .nx{font-weight:600;color:#DCE4EE;margin-left:8px} .cxg .nx i{font-style:normal;font-weight:800;color:#fff}' +
-        '.cxtip{position:fixed;z-index:100002;max-width:min(320px,calc(100vw - 24px));background:#1B3A5F;color:#fff;border-radius:12px;padding:11px 34px 11px 14px;box-shadow:0 10px 28px rgba(16,24,40,.28);font-size:14px;line-height:1.5;word-break:keep-all;opacity:0;transform:translateY(4px) scale(.98);transition:opacity .18s ease-out,transform .18s ease-out;pointer-events:auto}' +
+        '.cxtip{position:fixed;z-index:100002;max-width:min(320px,calc(100vw - 24px));background:linear-gradient(180deg,#FFFDF0,#FFF7CF);color:#3B2F00;border:1.5px dashed #E6CE6B;border-radius:18px;padding:11px 34px 12px 15px;box-shadow:0 12px 26px -10px rgba(190,150,0,.42),0 2px 5px rgba(190,150,0,.12);font-size:14px;line-height:1.5;word-break:keep-all;opacity:0;transform:translateY(4px) scale(.98);transition:opacity .18s ease-out,transform .18s ease-out,box-shadow .18s ease-out;pointer-events:auto}' +
         '.cxtip.in{opacity:1;transform:none} .cxtip.up{transform:translateY(-4px) scale(.98)} .cxtip.up.in{transform:none}' +
-        '.cxtip b.tg{display:inline-block;background:#2F6FB2;color:#fff;border-radius:6px;padding:0 6px;margin-right:6px;font-size:11.5px;font-weight:800;vertical-align:1px} .cxtip i{font-style:normal;font-weight:800;color:#FFD3B5}' +
-        '.cxtip .x{position:absolute;top:6px;right:8px;border:none;background:transparent;color:#B9C7D8;font-size:16px;line-height:1;cursor:pointer;padding:2px 4px}' +
-        '.cxtip .ar{position:absolute;width:12px;height:12px;background:#1B3A5F;transform:rotate(45deg)} .cxtip .ar.t{top:-6px} .cxtip .ar.b{bottom:-6px}' +
+        '.cxtip.in:hover{transform:translateY(-2px);box-shadow:0 16px 30px -10px rgba(190,150,0,.5),0 3px 6px rgba(190,150,0,.14)}' +
+        '.cxtip b.tg{display:inline-flex;align-items:center;background:#fff;border:1px solid #F0DE95;color:#7A5B00;border-radius:99px;padding:0 8px;margin-right:6px;font-size:11.5px;font-weight:800;vertical-align:1px} .cxtip i{font-style:normal;font-weight:800;color:#9A5200}' +
+        '.cxtip .x{position:absolute;top:7px;right:9px;border:none;background:transparent;color:#A8923D;font-size:16px;line-height:1;cursor:pointer;padding:2px 4px} .cxtip .x:hover{color:#3B2F00}' +
+        '.cxtip .ar{position:absolute;width:13px;height:13px;transform:rotate(45deg);border-radius:3px} .cxtip .ar.t{top:-7px;background:#FFFDF0;border-left:1.5px dashed #E6CE6B;border-top:1.5px dashed #E6CE6B} .cxtip .ar.b{bottom:-7px;background:#FFF7CF;border-right:1.5px dashed #E6CE6B;border-bottom:1.5px dashed #E6CE6B}' +
         '@keyframes cxgP{0%{box-shadow:0 0 0 0 rgba(232,118,43,.7)}70%{box-shadow:0 0 0 10px rgba(232,118,43,0)}100%{box-shadow:0 0 0 0 rgba(232,118,43,0)}}' +
         '.cxg-pulse{animation:cxgP 1.4s ease-out 3;outline:2px solid #E8762B !important;outline-offset:2px}' +
         '@media (prefers-reduced-motion:reduce){.cxg-pulse{animation:none}.cxg,.cxtip{transition:none}}' +
@@ -280,7 +281,7 @@ window.CONTEST_CONFIG = {
         if (gTip !== my) return;
         var isAi = !!(t.closest && (t.closest('.ai-btn') || /AI/.test(t.textContent || '')));
         var el = document.createElement('div'); el.className = 'cxtip'; el.setAttribute('role', 'tooltip');
-        el.innerHTML = (isAi ? '<b class="tg">AI</b>' : '') + n + (/눌러|누르/.test(n) ? '' : '<div style="font-size:12.5px;color:#C9D6E5;margin-top:2px;">여기를 눌러 보세요</div>') + '<button type="button" class="x" aria-label="닫기">×</button><span class="ar"></span>';
+        el.innerHTML = (isAi ? '<b class="tg">AI</b>' : '') + n + (/눌러|누르/.test(n) ? '' : '<div style="font-size:12.5px;color:#8A6F12;margin-top:2px;">여기를 눌러 보세요</div>') + '<button type="button" class="x" aria-label="닫기">×</button><span class="ar"></span>';
         document.body.appendChild(el);
         my.el = el; my.t = t;
         t.classList.remove('cxg-pulse'); void t.offsetWidth; t.classList.add('cxg-pulse');
