@@ -232,7 +232,7 @@ window.CONTEST_CONFIG = {
     var esc = function (t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
     if (!document.getElementById('cxGdCss')) {
       var st = document.createElement('style'); st.id = 'cxGdCss';
-      st.textContent = '#cxGd{position:fixed;left:50%;top:45%;transform:translate(-50%,-50%);z-index:100001;pointer-events:none;width:min(560px,calc(100vw - 32px))}' +
+      st.textContent = '#cxGd{position:fixed;left:50%;top:70%;transform:translate(-50%,-50%);z-index:100001;pointer-events:none;width:min(560px,calc(100vw - 32px))}' +
         '.cxg{pointer-events:auto;cursor:pointer;display:flex;flex-direction:column;gap:10px;background:#1B3A5F;color:#fff;border-radius:16px;padding:22px 26px;box-shadow:0 12px 36px rgba(16,24,40,.32);line-height:1.45;word-break:keep-all;text-align:center;opacity:0;transform:scale(.96);transition:opacity .22s ease-out,transform .22s ease-out}' +
         '.cxg.in{opacity:1;transform:none} .cxg.out{opacity:0;transform:scale(.98)}' +
         '.cxg-d{font-size:19px;font-weight:800} .cxg-d:before{content:"\\2713";color:#7CD4A4;margin-right:8px}' +

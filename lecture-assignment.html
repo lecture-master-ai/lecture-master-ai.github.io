@@ -580,6 +580,9 @@
   .bdc{position:relative;}
   .bdc.moved{box-shadow:0 0 0 2px #E8762B;animation:bdcIn .6s ease-out 1;}
   .bdc-mv{position:absolute;top:-9px;right:10px;font-size:11px;font-weight:800;color:#fff;background:#E8762B;border-radius:999px;padding:1px 8px;}
+  .bdc.fin{box-shadow:0 0 0 2px #1E8E5A;transition:opacity .4s ease-out,transform .4s ease-out;} .bdc.fin .bdc-mv{background:#1E8E5A;} .bdc-fin{color:#14653F;font-weight:700;} .bdc.bdc-out{opacity:0;transform:translateY(12px);}
+  .bp-done{align-self:center;font-size:12px;font-weight:800;color:#14653F;background:#E3F4EA;border-radius:999px;padding:3px 10px;}
+  .cx-wait{margin-top:10px;background:#F4F7FB;border:1px dashed #B8C4D4;border-radius:10px;padding:22px 16px;text-align:center;color:#1B3A5F;font-size:15px;} .cx-wait .ai-spin{display:inline-block;vertical-align:-3px;margin-right:6px;} .cx-wait #cxWaitSec{font-weight:800;color:#2F6FB2;margin-left:4px;} .cx-wait .cxw-s{margin-top:6px;font-size:12.5px;color:#475467;}
   @keyframes bdcIn{0%{transform:translateY(-6px);opacity:.4}100%{transform:none;opacity:1}}
   @media (prefers-reduced-motion:reduce){.bdc.moved{animation:none;}}
   .bd-done{margin-top:14px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px 16px;text-align:left;}
@@ -1313,7 +1316,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-18 배정 d3f</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-18 배정 d3g</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -2029,7 +2032,8 @@
           (sub ? '<div class="bp-w">' + sub + '</div>' : '') +
           (lastEditText(k) ? '<div class="bp-ed">' + esc(lastEditText(k)) + '</div>' : '') +
           (rc ? '<div class="bp-warn">다른 평가관이 ' + agoText(rc, Date.now()) + ' 수정했습니다. 진행 중일 수 있어 다른 과정을 권합니다.</div>' : '') +
-          '</div><div class="bd-hb">' + (inHist(k) ? '<button type="button" class="btn primary" data-bpgo="' + esc(k) + '">이어서 하기</button><button type="button" class="btn" data-bpstart="' + esc(k) + '">처음부터</button>'
+          '</div><div class="bd-hb">' + (inHist(k) && laneOf(k, kind) === 4 ? '<span class="bp-done">완료</span><button type="button" class="btn" data-bpstart="' + esc(k) + '">처음부터 다시</button>'
+            : inHist(k) ? '<button type="button" class="btn primary" data-bpgo="' + esc(k) + '">이어서 하기</button><button type="button" class="btn" data-bpstart="' + esc(k) + '">처음부터</button>'
             : '<button type="button" class="btn' + (rc ? '' : ' primary') + '" data-bpstart="' + esc(k) + '">' + (mine ? '처음부터 다시' : '올리기') + '</button>') + '</div></div>';
       };
       var m = cxModal('시연할 과정 고르기', '<div class="bp-g"><b>' + DKIND[kind].guide + '</b> 진행 중 다른 과정을 골라도 자동 저장되고, 보드 아래 \'진행한 과정\'에서 이어서 할 수 있습니다.' +
@@ -2130,10 +2134,21 @@
     if (k) {
       var st = courseStage(k), jd = ab.justDone[k];
       noteStage(k, st, false);
-      if (st.lane === 4 && st.sure && (jd === 'done' || (jd === 'shown' && arrived) || (!jd && arrived))) {
-        // 안내까지 마친 과정: 한 번 4단계 칸에 보여 준 뒤, 다음에 첫 화면을 열면 '진행한 과정'(배정 완료)으로 옮기고 보드를 비움
-        ab.justDone[k] = 'done'; bsHistAdd(k); o.active = ''; bsSave();
-        moves.push(courseLabel(k) + '을(를) 배정 완료로 옮겼습니다. 다른 과정을 올려 보세요.');
+      if (st.lane === 4 && st.sure && jd === 'done') {
+        bsHistAdd(k); o.active = ''; bsSave();
+      } else if (st.lane === 4 && st.sure && (arrived || jd === 'pending' || jd === 'leaving')) {
+        // d3g: 안내까지 마친 과정은 4단계 칸에 '배정·안내 완료'로 잠시 보여 준 뒤 '진행한 과정'으로 옮기고 보드를 비움
+        lanes[4].push({ p: planByKey(k), st: st, fin: true });
+        if (jd !== 'leaving') {
+          ab.justDone[k] = 'leaving';
+          setTimeout(function(){
+            var card = document.querySelector('.bdc.fin'); if (card) card.classList.add('bdc-out');
+            setTimeout(function(){
+              ab.justDone[k] = 'done'; var o2 = dbs('ab'); if (o2.active === k) { bsHistAdd(k); o2.active = ''; bsSave(); }
+              if (!currentKey && planMode === 'table') { renderDemo(); nextGuide(courseLabel(k) + ' 배정·안내를 마쳤습니다', '\'진행한 과정\'에 완료로 남았습니다 · <i>+ 과정 올리기</i>로 다른 과정을 시험해 보세요', '[data-bdadd]'); }
+            }, 450);
+          }, 3500);
+        }
       } else {
         if (st.lane === 4 && jd === 'pending' && arrived) ab.justDone[k] = 'shown';
         lanes[st.lane].push({ p: planByKey(k), st: st });
@@ -2155,6 +2170,7 @@
         var mv = stageMoved[key], hot = mv && Date.now() - mv.at < 5 * 60000 && (!mv.shown || mv.visit === boardVisit);   // 처음 보이는 방문 동안만 강조
         if (hot && !mv.shown && !mv.added && !mv.toasted) moves.push(courseLabel(key) + '이(가) ' + st.lane + '단계 \'' + STEPS[st.lane - 1].t + '\'(으)로 이동했습니다.');
         if (hot && !mv.shown) { mv.shown = true; mv.visit = boardVisit; }
+        if (r.fin) { h += '<article class="bdc fin moved" data-card-open="' + esc(key) + '"><span class="bdc-mv">완료</span><div><div class="bdc-t">' + esc(key) + '</div><div class="bdc-p">' + esc(ipgyo(r.p)) + '</div></div><div class="bdc-x bdc-fin">' + ic('check', 'l') + '배정·안내 완료 · 곧 \'진행한 과정\'으로 옮겨집니다</div></article>'; return; }
         h += '<article class="bdc' + (hot ? ' moved' : '') + '" data-card-open="' + esc(key) + '">' + (hot ? '<span class="bdc-mv">' + (mv.resumed ? '이어서' : mv.added ? '방금 올림' : '방금 이동') + '</span>' : '') + '<div><div class="bdc-t">' + esc(key) + '</div><div class="bdc-p">' + esc(ipgyo(r.p)) + (dd ? ' · ' + dd : '') + '</div></div>' +
           (st.n ? '<div class="bdc-pg"><span>강사 ' + (st.n - st.empty) + ' / ' + st.n + '칸</span><i><b style="width:' + pct + '%"></b></i></div>' : '') +
           '<div class="bdc-x">' + (st.nx.ai ? '<span class="ai-badge">AI 도움</span>' : '') + esc(st.nx.x) + '</div>' +
@@ -2775,7 +2791,11 @@
   function renderBackBar(){
     var nb = $('navBar'); if (!nb) return;
     if (SIMPLE) {   // 심사용: 이동 줄 대신, 강사관리에서 왔을 때만 시간표 아래 가운데 돌아가기 버튼
-      if (currentKey && dashBack && dashBack.key === currentKey) { nb.className = 'navbar dbnav'; nb.style.display = ''; nb.innerHTML = '<a class="btn db-plain" href="instructor-dashboard.html#i=' + encodeURIComponent(dashBack.id) + '">' + ic('arrowL', 'l') + (dashBack.name ? esc(dashBack.name) + ' 강사 상세로 돌아가기' : '강사 상세로 돌아가기') + '</a>'; }
+      if (currentKey) {   // d3g: 과정 화면 맨 아래 가운데 [닫기 · 보드로] (강사관리에서 왔으면 강사 상세로 돌아가기도 함께)
+        nb.className = 'navbar dbnav'; nb.style.display = '';
+        nb.innerHTML = '<button type="button" class="btn db-plain" data-bdback="1">' + ic('x', 'l') + '닫기 · 보드로</button>' +
+          (dashBack && dashBack.key === currentKey ? '<a class="btn db-plain" href="instructor-dashboard.html#i=' + encodeURIComponent(dashBack.id) + '">' + ic('arrowL', 'l') + (dashBack.name ? esc(dashBack.name) + ' 강사 상세로 돌아가기' : '강사 상세로 돌아가기') + '</a>' : '');
+      }
       else { nb.className = 'navbar'; nb.style.display = 'none'; nb.innerHTML = ''; }
       return;
     }
@@ -5394,9 +5414,12 @@
       if (!j || j.status !== 'ok') { btn.disabled = false; btn.textContent = '강의배정 자동 일괄 발송'; alert((j && j.message) || '보내지 못했습니다'); return; }
       var n = (j.안내 || []).length;
       ab.held[key] = { 칸: 0, 강사: 0 }; ab.heldOk[key] = true; ab.copied[key] = false; ab.justDone[key] = 'pending';
-      ab.msg = ic('check', 'l') + '강사 ' + n + '명에게 강의배정 안내를 보냈습니다. <button type="button" class="ab-lnk" data-cxout="1">보낸 내용 보기</button>';
+      ab.stay = false;
+      ab.msg = ic('check', 'l') + '강사 ' + n + '명에게 강의배정 안내를 보냈습니다. <button type="button" class="ab-lnk" data-cxout="1">보낸 내용 보기</button>' +
+        (SIMPLE ? ' <span id="abGoNote">· 잠시 뒤 보드로 이동합니다 <button type="button" class="ab-lnk" data-abstay="1">여기 머무르기</button></span>' : '');
       abRender();
-      nextGuide('강사 ' + n + '명에게 안내를 보냈습니다', '4단계를 모두 마쳤습니다 · 보드로 돌아가 다른 과정을 올려 보세요', '.gnav a[href*="lecture-assignment"]');
+      nextGuide('강사 ' + n + '명에게 안내를 보냈습니다', '4단계를 모두 마쳤습니다 · 보드에서 완료를 확인하세요', '');
+      if (SIMPLE) setTimeout(function(){ if (!ab.stay && currentKey === key) { stageMoved[key] = { at: Date.now(), from: 3, to: 4, shown: false, toasted: true }; location.hash = '#v=table'; } }, 3200);
     }).catch(function(){ btn.disabled = false; btn.textContent = '강의배정 자동 일괄 발송'; alert('서버에 연결하지 못했습니다.'); });
   }
   document.addEventListener('click', function(ev){
@@ -5407,6 +5430,20 @@
     else if (a === 'manual') { ab.msg = ''; ab.manual = { key: currentKey, t0: Date.now(), clicks: 0, t1: 0 }; if (viewMode !== 'grid') setView('grid'); abRender(); }
     else if (a === 'mstop') { ab.manual = null; abRender(); }
     else if (a === 'send') abSend(t);
+  });
+  document.addEventListener('click', function(ev){   // d3g: [닫기 · 보드로] — 보드로 가서 이 과정이 놓인 단계 칸을 강조
+    var t = ev.target.closest ? ev.target.closest('[data-bdback]') : null; if (!t) return;
+    var k = currentKey; if (!k) return;
+    var st = courseStage(k), o = dbs('ab');
+    if (o.active === k && st.lane >= 1 && st.lane <= 4) {
+      stageMoved[k] = { at: Date.now(), from: 0, to: st.lane, shown: false, toasted: true };
+      setTimeout(function(){ var c = $('bdl' + st.lane); if (c) c.scrollIntoView({ block: 'center', behavior: 'smooth' }); nextGuide(st.lane + '단계 \'' + STEPS[st.lane - 1].t + '\'에 놓였습니다', '카드를 누르면 이어서 진행합니다', ''); }, 350);
+    }
+    location.hash = '#v=table';
+  });
+  document.addEventListener('click', function(ev){   // d3g: 발송 후 자동 이동 대신 이 화면에 머무르기
+    var t = ev.target.closest ? ev.target.closest('[data-abstay]') : null; if (!t) return;
+    ab.stay = true; var g = $('abGoNote'); if (g) g.textContent = '· 이 화면에 머무릅니다';
   });
 
 
@@ -7159,6 +7196,11 @@
       '<span id="cxAiState" style="color:#475467;font-weight:700;">' + esc(cx.aiBusy ? 'AI가 비슷한 교과목을 확인하는 중…' : (cx.aiNote || '')) + '</span>' +
       '<button type="button" class="cx-link" id="cxClose" style="margin-left:auto;display:inline-flex;align-items:center;gap:3px;">닫기 ' + ic('x') + '</button></div>';
     var main = g.rel.concat(g.aiOnly);
+    if (SIMPLE && cx.aiBusy) {   // d3g: AI 결과가 오기 전에는 후보를 미리 보여 주지 않음(AI가 이미 고른 것처럼 보이지 않게)
+      pn.innerHTML = html + '<div class="cx-wait"><i class="ai-spin" aria-hidden="true"></i><b>AI가 후보를 고르는 중입니다</b> <span id="cxWaitSec">' + Math.floor((Date.now() - (cx.aiT0 || Date.now())) / 1000) + '초</span><div class="cxw-s">강사카드·담당 이력·평가를 읽고 교과목과의 관련성을 판단합니다</div></div>';
+      pn.style.display = 'block'; $('cxSort').value = cx.sort; $('cxModel').value = String(cx.modelPref); return;
+    }
+    if (SIMPLE && cx.aiFail && main.length) html += '<div class="cx-sec" style="margin-top:4px;">이력 기준 후보 <span style="font-weight:600;color:#667085;">(AI 응답이 없어 담당 이력·평가 순으로 보여 드립니다)</span></div>';
     if (!main.length && !g.fresh.length) html += '<div class="cx-ex">조건에 맞는 후보가 없습니다. 위 검색창에서 이름·분야로 직접 찾아 선택할 수 있습니다.</div>';
     main.slice(0, 3).forEach(function(it, k){ html += cxCard(it, '후보 ' + (k + 1), true); });
     if (main.length > 3) {
@@ -7190,7 +7232,8 @@
     });
     cands.sort(function(a, b){ return b._r - a._r; });   // d2: 관련 낱말이 많은 강사부터 40명(AI로 보낼 후보 수 제한)
     cands.forEach(function(x){ delete x._r; });
-    cx.aiBusy = true; cx.ai = {}; cx.aiNote = ''; cxRender();
+    cx.aiBusy = true; cx.aiFail = false; cx.aiT0 = Date.now(); cx.ai = {}; cx.aiNote = ''; cxRender();
+    clearInterval(cx.waitT); cx.waitT = setInterval(function(){ var e = $('cxWaitSec'); if (!cx.aiBusy || !e) { clearInterval(cx.waitT); return; } e.textContent = Math.floor((Date.now() - cx.aiT0) / 1000) + '초'; }, 500);
     api({ action: 'aiRecommend', password: getPw(), 교과목: c.subj, 후보: cands.slice(0, 40), 모델: cx.modelPref }).then(function(j){
       if (seq !== cx.reqSeq) return;
       cx.aiBusy = false;
@@ -7203,10 +7246,10 @@
             (more ? '위 3명 먼저 · 나머지 ' + more + '명은 <i>펼치기</i>' : '<i>이 강사로 배정</i> → <i>저장</i>') + (nf ? ' · 신규 강사 ' + nf + '명은 아래' : ''), more ? '#cxMore' : '[data-cxpick]');
         }, 50);
       } else {
-        cx.aiNote = (j && j.이유) || 'AI 응답을 받지 못해 규칙 결과만 표시합니다';
+        cx.aiNote = (j && j.이유) || 'AI 응답을 받지 못해 규칙 결과만 표시합니다'; cx.aiFail = true;
       }
       cxRender();
-    }).catch(function(){ if (seq !== cx.reqSeq) return; cx.aiBusy = false; cx.aiNote = 'AI 연결 실패 → 규칙 결과만 표시합니다'; cxRender(); });
+    }).catch(function(){ if (seq !== cx.reqSeq) return; cx.aiBusy = false; cx.aiFail = true; cx.aiNote = 'AI 연결 실패 → 규칙 결과만 표시합니다'; cxRender(); });
   }
   function cxOpen(){
     var c = cxCond();
