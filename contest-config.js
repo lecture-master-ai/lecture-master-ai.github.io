@@ -5,7 +5,7 @@
      로그인은 비밀번호 없이 [로그인] 버튼 하나로, 강사 승인은 확인창으로 줄입니다. false로 바꾸면 원래 화면으로 돌아갑니다(코드는 지우지 않음). */
 window.CONTEST_CONFIG = {
   WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbzYdVSZsLnSw3JN01aIDuXa1Ubxh6ERWYC-0TEQxu6tRYrcI9-WNYEoKv3Cfk9qyUvJ/exec',
-  VERSION: '대회용 d2y',
+  VERSION: '대회용 d3c',
   ORG_NAME: '○○소방학교',
   SYS_ORG: '○○학교',   // d2w: 로그인 제목의 학교 이름(다른 학교에서 쓸 때 여기만 바꿈)
   SIMPLE: true,
@@ -194,6 +194,7 @@ window.CONTEST_CONFIG = {
     wkN = Math.max(0, wkN - 1); if (wkN > 0 || aiN > 0) return;
     clearInterval(wkTick);
     var el = aiTop(), ok = !!(j && j.status === 'ok'), sec = ((Date.now() - wkT0) / 1000).toFixed(1);
+    if (ok) { el.style.display = 'none'; return; }   // d3c: 완료는 가운데 안내 카드가 알려 주므로 위쪽 '완료' 표시는 생략
     el.className = ok ? 'done aiwk' : 'warn';
     el.querySelector('.msg').innerHTML = ok ? WORK_ACT[act][1] + ' 완료 <small>· ' + sec + '초</small>' : '끝나지 않았습니다 <small>· 화면의 안내를 확인해 주세요</small>';
     clearTimeout(aiHide); aiHide = setTimeout(function () { el.style.display = 'none'; }, ok ? 2500 : 5000);
@@ -219,39 +220,69 @@ window.CONTEST_CONFIG = {
       }, function (err) { fin(null); throw err; });
     };
   }
-  /* d2y: 다음 할 일 안내(모든 화면 공통) — 완료 한 줄 + "다음: 버튼 — 이유"를 6초 띄우고, 해야 할 버튼을 한 번 강조한 뒤 사라짐 */
+  /* d3c: 다음 할 일 안내(모든 화면 공통) — 화면 가운데 큰 카드 1장. 결과 한 줄 + "다음: 버튼"만.
+     거의 동시에(1초 안) 온 알림은 한 카드로 합치고, 그 뒤 새 알림이 오면 앞 카드를 바로 닫고 새 카드만 보여 줌(겹치지 않음). 4초 뒤 사라지고, 누르면 바로 닫힘 */
+  var gQ = [], gCur = null;
   window.cxGuide = function (done, next, sel) {
     var esc = function (t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
     if (!document.getElementById('cxGdCss')) {
       var st = document.createElement('style'); st.id = 'cxGdCss';
-      st.textContent = '#cxGd{position:fixed;left:50%;top:76px;transform:translateX(-50%);z-index:100001;display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none;width:max-content;max-width:calc(100vw - 24px)}' +
-        '.cxg{display:flex;flex-direction:column;gap:3px;background:#1B3A5F;color:#fff;border-radius:12px;padding:9px 16px;box-shadow:0 4px 14px rgba(16,24,40,.25);font-size:13.5px;line-height:1.45;word-break:keep-all;transition:opacity .3s,transform .3s;max-width:min(560px,calc(100vw - 24px))}' +
-        '.cxg.out{opacity:0;transform:translateY(-6px)} .cxg-d{font-weight:700} .cxg-d:before{content:"\\2713";color:#7CD4A4;margin-right:6px;font-weight:800}' +
-        '.cxg-n{font-size:13px;color:#DCE4EE} .cxg-n b{display:inline-block;background:#E8762B;color:#fff;border-radius:999px;padding:0 8px;margin-right:6px;font-size:12px} .cxg-n i{font-style:normal;font-weight:800;color:#fff}' +
+      st.textContent = '#cxGd{position:fixed;left:50%;top:45%;transform:translate(-50%,-50%);z-index:100001;pointer-events:none;width:min(560px,calc(100vw - 32px))}' +
+        '.cxg{pointer-events:auto;cursor:pointer;display:flex;flex-direction:column;gap:10px;background:#1B3A5F;color:#fff;border-radius:16px;padding:22px 26px;box-shadow:0 12px 36px rgba(16,24,40,.32);line-height:1.45;word-break:keep-all;text-align:center;opacity:0;transform:scale(.96);transition:opacity .22s ease-out,transform .22s ease-out}' +
+        '.cxg.in{opacity:1;transform:none} .cxg.out{opacity:0;transform:scale(.98)}' +
+        '.cxg-d{font-size:19px;font-weight:800} .cxg-d:before{content:"\\2713";color:#7CD4A4;margin-right:8px}' +
+        '.cxg-n{font-size:17px;color:#E6ECF3} .cxg-d ~ .cxg-n{border-top:1px solid rgba(255,255,255,.18);padding-top:10px} .cxg-n b{display:inline-block;background:#E8762B;color:#fff;border-radius:999px;padding:1px 10px;margin-right:8px;font-size:14px;vertical-align:2px} .cxg-n i{font-style:normal;font-weight:800;color:#fff}' +
+        '.cxg-x{font-size:12px;color:#9FB2C8}' +
         '@keyframes cxgP{0%{box-shadow:0 0 0 0 rgba(232,118,43,.75)}70%{box-shadow:0 0 0 10px rgba(232,118,43,0)}100%{box-shadow:0 0 0 0 rgba(232,118,43,0)}}' +
-        '.cxg-pulse{animation:cxgP 1.2s ease-out 2;outline:2px solid #E8762B !important;outline-offset:2px}@media (prefers-reduced-motion:reduce){.cxg-pulse{animation:none}}' +
-        '@media (max-width:600px){#cxGd{top:64px}}';
+        '.cxg-pulse{animation:cxgP 1.2s ease-out 2;outline:2px solid #E8762B !important;outline-offset:2px}' +
+        '@media (prefers-reduced-motion:reduce){.cxg-pulse{animation:none}.cxg{transition:none}}' +
+        '@media (max-width:600px){.cxg{padding:18px 18px}.cxg-d{font-size:17px}.cxg-n{font-size:15.5px}}';
       document.head.appendChild(st);
     }
     var box = document.getElementById('cxGd');
     if (!box) { box = document.createElement('div'); box.id = 'cxGd'; box.setAttribute('role', 'status'); box.setAttribute('aria-live', 'polite'); document.body.appendChild(box); }
     if (!done && !next) return;
-    Array.prototype.forEach.call(box.querySelectorAll('.cxg'), function (c) { c.parentNode.removeChild(c); });   // 앞 안내는 바로 지움(쌓이지 않게)
-    var el = document.createElement('div'); el.className = 'cxg';
-    el.innerHTML = (done ? '<span class="cxg-d">' + esc(done) + '</span>' : '') + (next ? '<span class="cxg-n"><b>다음</b>' + next + '</span>' : '');
-    box.appendChild(el);
-    setTimeout(function () { el.classList.add('out'); setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 300); }, 6000);
-    if (!sel) return;
-    clearTimeout(window.__cxgT); var tries = 0;
-    var find = function () {
-      var t = Array.prototype.filter.call(document.querySelectorAll(sel), function (x) { return x.offsetParent !== null && !x.disabled; })[0];
-      if (!t) { if (++tries < 40) window.__cxgT = setTimeout(find, 250); return; }
-      var r = t.getBoundingClientRect();
-      if (r.top < 70 || r.bottom > window.innerHeight - 10) t.scrollIntoView({ block: 'center', behavior: 'smooth' });
-      t.classList.remove('cxg-pulse'); void t.offsetWidth; t.classList.add('cxg-pulse');
-      setTimeout(function () { t.classList.remove('cxg-pulse'); }, 2600);
-    };
-    window.__cxgT = setTimeout(find, 300);
+    if (next) next = String(next).split(' — ')[0];   // 핵심만: 버튼 이름까지만 남기고 설명은 뺌
+    // 방금(1초 안) 뜬 카드가 있으면 그 카드에 합침
+    if (gCur && Date.now() - gCur.at < 1000) { addTo(gCur, done, next, sel); return; }
+    if (gCur) { gQ = [[done, next, sel]]; hide(gCur, true); return; }   // 새 안내가 오면 앞 카드는 빨리 닫고 새 카드만(지난 안내가 늦게 뜨지 않게)
+    show(done, next, sel);
+    function addTo(c, d, n, s) {
+      if (d) { var e1 = document.createElement('div'); e1.className = 'cxg-d'; e1.innerHTML = esc(d); var nx = c.el.querySelector('.cxg-n'); c.el.insertBefore(e1, nx || c.el.querySelector('.cxg-x')); }
+      if (n) { var old = c.el.querySelector('.cxg-n'); if (old) old.parentNode.removeChild(old); var e2 = document.createElement('div'); e2.className = 'cxg-n'; e2.innerHTML = '<b>다음</b>' + n; c.el.insertBefore(e2, c.el.querySelector('.cxg-x')); }
+      if (s) c.sel = s;
+      clearTimeout(c.t); c.t = setTimeout(function () { hide(c); }, 4200);
+    }
+    function show(d, n, s) {
+      var el = document.createElement('div'); el.className = 'cxg'; el.innerHTML = '<div class="cxg-x">누르면 닫힙니다</div>';
+      box.appendChild(el);
+      var c = { el: el, at: Date.now(), sel: '' }; gCur = c;
+      addTo(c, d, n, s);
+      requestAnimationFrame(function () { el.classList.add('in'); });
+      el.addEventListener('click', function () { hide(c); });
+    }
+    function hide(c, quick) {
+      if (c.gone) return; c.gone = true; clearTimeout(c.t);
+      c.el.classList.remove('in'); c.el.classList.add('out');
+      if (c.sel && !quick) pulse(c.sel);   // 카드가 사라질 때 눌러야 할 버튼을 한 번 강조(가리지 않게)
+      setTimeout(function () {
+        if (c.el.parentNode) c.el.parentNode.removeChild(c.el);
+        if (gCur === c) gCur = null;
+        var q = gQ.shift(); if (q) show(q[0], q[1], q[2]);
+      }, 240);
+    }
+    function pulse(sel) {
+      clearTimeout(window.__cxgT); var tries = 0;
+      var find = function () {
+        var t = Array.prototype.filter.call(document.querySelectorAll(sel), function (x) { return x.offsetParent !== null && !x.disabled; })[0];
+        if (!t) { if (++tries < 20) window.__cxgT = setTimeout(find, 250); return; }
+        var r = t.getBoundingClientRect();
+        if (r.top < 70 || r.bottom > window.innerHeight - 10) t.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        t.classList.remove('cxg-pulse'); void t.offsetWidth; t.classList.add('cxg-pulse');
+        setTimeout(function () { t.classList.remove('cxg-pulse'); }, 2600);
+      };
+      window.__cxgT = setTimeout(find, 60);
+    }
   };
   /* d2b: 긴 상세 카드는 위·아래 모두 [닫기] — 아래에만 [닫기]가 있는 카드의 머리 줄에 같은 동작의 버튼을 붙임 */
   function topClose() {

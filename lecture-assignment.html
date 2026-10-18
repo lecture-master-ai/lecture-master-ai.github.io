@@ -526,7 +526,7 @@
   .tl .auto{background:#EEF1F5;color:#475467;}
   .wk-h{display:flex;align-items:baseline;gap:8px;margin:0 2px 10px;} .wk-h b{font-size:16px;color:var(--navy);} .wk-h span{font-size:13px;color:var(--text-muted);}
   .wk-grid{text-align:left;display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px;}
-  .wk{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;}
+  article.wk{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;}
   .wk-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
   .wk-t{font-size:17px;font-weight:800;color:#101828;letter-spacing:-0.3px;line-height:1.3;} .wk-p{font-size:13px;color:#475467;margin-top:2px;}
   .wk-dd{flex-shrink:0;font-size:12px;font-weight:800;color:var(--navy);background:#E8EEF6;border-radius:6px;padding:3px 7px;}
@@ -537,8 +537,8 @@
   .wk-next{background:#FFF4EC;border-radius:8px;padding:9px 11px;font-size:14px;color:#101828;line-height:1.45;flex:1;}
   .wk-next small{display:block;font-size:11.5px;font-weight:800;color:#9A3D0A;margin-bottom:2px;}
   .wk-next.fin{background:#F2F4F7;} .wk-next.fin small{color:#475467;}
-  .wk .btn{width:100%;height:40px;font-size:14.5px;border-color:var(--navy);color:var(--navy);}
-  .wk .btn:hover{background:#E8EEF6;}
+  article.wk .btn{width:100%;height:40px;font-size:14.5px;border-color:var(--navy);color:var(--navy);}
+  article.wk .btn:hover{background:#E8EEF6;}
   /* 시안 B: 단계별 보드 */
   .bd{background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px 18px 18px;}
   .bd-track{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;position:relative;margin-bottom:14px;}
@@ -751,6 +751,8 @@
   body.simple.demo-on .pmbar, body.simple #listHint, body.simple #planLegend, body.simple #count{display:none !important;}
   body.simple #qmThis, body.simple #qmNext, body.simple #fCheck, body.simple #fStatus:not(.has), body.simple #reloadBtn, body.simple #oriTable{display:none !important;}
   body.simple .tw.nochk .ck{display:none;}
+  body.simple #sReload{display:none !important;}
+  #sAiAll{background:#2F6FB2;color:#fff;border-color:#2F6FB2;font-weight:700;} #sAiAll .ab-tag{background:#fff;color:#2F6FB2;border-radius:4px;padding:0 5px;margin-right:6px;font-size:11px;font-weight:800;}
   body.simple td.chg .btn.sm{background:transparent;border-color:transparent;color:#475467;font-weight:600;text-decoration:underline;text-underline-offset:3px;padding:0 6px;}
   body.simple td.chg .btn.sm:hover{color:var(--navy);background:#F2F4F7;}
   tr.grp td{background:#F4F6F9;color:#475467;font-size:12.5px;font-weight:700;padding:8px 12px;border-top:1px solid #C9D3E0;}
@@ -1287,7 +1289,7 @@
     <div class="panel" id="abBar" style="display:none;"></div>
     <div class="panel" id="sFormPanel"></div>
     <div class="panel" id="sListPanel">
-      <h3>교과목 목록 <span class="hint">(날짜별)</span> <button class="btn sm" id="sReload" type="button" style="margin-left:8px;">새로고침</button>
+      <h3>교과목 목록 <span class="hint">(날짜별)</span> <button class="btn sm" id="sReload" type="button" style="margin-left:8px;">새로고침</button><button class="btn sm ab-ai" id="sAiAll" type="button" style="margin-left:8px;display:none;"></button>
         <span id="sPrintBox" style="margin-left:6px;white-space:nowrap;"><select class="porient" id="oriList" data-ori="list" aria-label="인쇄 용지 방향" style="height:30px;"></select> <button class="btn sm" id="sPrint" type="button">인쇄</button></span>
         <span class="vtabs" role="tablist" aria-label="보기 전환"><button type="button" id="vList" class="on" role="tab">목록</button><button type="button" id="vGrid" role="tab">격자</button></span></h3>
       <div id="sGridWrap" style="display:none;"></div>
@@ -1304,7 +1306,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-17 배정 d3b</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-18 배정 d3c</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -1826,12 +1828,12 @@
     var prev = stageSeen[key]; stageSeen[key] = st.lane;
     if (prev === undefined || st.lane <= prev) return;
     stageMoved[key] = { at: Date.now(), from: prev, to: st.lane, shown: false, toasted: !!toast };
-    if (toast) stageToast(courseLabel(key) + '이(가) ' + st.lane + '단계 \'' + STEPS[st.lane - 1].t + '\'(으)로 이동했습니다.', st.lane);
+    if (toast) stageToast(SIMPLE ? st.lane + '단계 \'' + STEPS[st.lane - 1].t + '\'로 넘어갔습니다' : courseLabel(key) + '이(가) ' + st.lane + '단계 \'' + STEPS[st.lane - 1].t + '\'(으)로 이동했습니다.', st.lane);
   }
   /* d2y: 다음 할 일 안내 — 완료 한 줄 + "다음: 버튼 — 이유"를 잠깐 띄우고, 해야 할 버튼을 한 번 강조한 뒤 사라짐(심사용 화면) */
   function nextGuide(done, next, sel){ if (SIMPLE && window.cxGuide) window.cxGuide(done, next, sel); }
   function stageToast(text, lane){
-    if (SIMPLE && window.cxGuide && !$('cxGd')) window.cxGuide('', '', '');   // 단계 이동 알림도 다음 할 일 안내와 같은 자리에 차례로 쌓음
+    if (SIMPLE && window.cxGuide) { window.cxGuide(text, '', ''); return; }   // d3c: 가운데 안내 카드 한 장에 합침   // 단계 이동 알림도 다음 할 일 안내와 같은 자리에 차례로 쌓음
     var box = SIMPLE && $('cxGd') ? $('cxGd') : $('stToast');
     if (!box) { box = document.createElement('div'); box.id = 'stToast'; box.setAttribute('role', 'status'); box.setAttribute('aria-live', 'polite'); document.body.appendChild(box); }
     var el = document.createElement('div'); el.className = 'st-t';
@@ -5097,7 +5099,7 @@
   function abRender(){
     var box = $('abBar'); if (!box) return;
     var p = planByKey(currentKey), list = p ? sessionsOf(currentKey) : [];
-    if (!currentKey || isViewer() || !p || isCancelled(p) || !list.length || cxEnded(p)) { box.style.display = 'none'; return; }
+    if (!currentKey || isViewer() || !p || isCancelled(p) || !list.length || cxEnded(p)) { box.style.display = 'none'; if ($('sAiAll')) $('sAiAll').style.display = 'none'; return; }
     if (ab.held[currentKey] === undefined) { ab.held[currentKey] = { 칸: 0, 강사: 0 }; abHeldFetch(currentKey); }
     var all = list.filter(function(r){ return !isOps(r) && !sessEnded(r['일자']); });
     var empty = abEmpty(currentKey).length, held = ab.held[currentKey].강사 || 0;
@@ -5127,8 +5129,22 @@
     if (ab.msg) act += '<div class="ab-msg">' + ab.msg + '</div>';
     box.innerHTML = h + act;
     box.style.display = '';
+    var sa = $('sAiAll');   // d3c: 교과목 목록 머리에도 같은 AI 버튼(위 강사 배정 칸의 버튼과 같은 기능)
+    if (sa) {
+      var kind = m ? '' : (empty ? 'draft' : 'review');
+      sa.style.display = SIMPLE && kind ? '' : 'none';
+      sa.setAttribute('data-k', kind);
+      sa.innerHTML = '<span class="ab-tag">AI</span>' + (kind === 'draft' ? 'AI 전 과목 강사 배정 (빈 칸 ' + empty + '개)' : '모든 칸 배정됨 · AI로 다시 검토');
+    }
     if (SIMPLE) noteStage(currentKey, courseStage(currentKey), true);   // d2d: 다음 단계로 넘어가면 화면 위에 알림
   }
+  document.addEventListener('click', function(ev){
+    var sa = ev.target && ev.target.closest ? ev.target.closest('#sAiAll') : null; if (!sa) return;
+    var k = sa.getAttribute('data-k'), b = $('abBar') && $('abBar').querySelector('[data-ab="' + k + '"]');
+    if (!b) return;
+    $('abBar').scrollIntoView({ block: 'start', behavior: 'smooth' });
+    b.click();
+  });
   setInterval(function(){
     var m = ab.manual; if (!m || m.t1) return;
     var el = $('abClock'); if (el) el.textContent = abFmt(Date.now() - m.t0);
@@ -5359,7 +5375,7 @@
       ab.heldOk[key] = false; abHeldFetch(key);
       var bar = $('abBar'); if (bar) bar.scrollIntoView({ block: 'nearest' });
       var left = abEmpty(key).length;
-      nextGuide((ab.kind === 'draft' ? 'AI 초안 ' : 'AI 제안 ') + nDone + '칸을 적용했습니다', left ? '빈 칸 ' + left + '개를 눌러 <i>적합한 강사 찾기</i> — AI가 후보를 근거와 함께 보여 줍니다' : '<i>강의배정 자동 일괄 발송</i> — 강사에게 1통씩 안내합니다', left ? '#sGridWrap .gc.none' : '#abBar [data-ab="send"]');
+      nextGuide((ab.kind === 'draft' ? 'AI 초안 ' : 'AI 제안 ') + nDone + '칸을 적용했습니다', left ? '빈 칸 ' + left + '개를 눌러 <i>적합한 강사 찾기</i>' : '<i>강의배정 자동 일괄 발송</i> · 과목별로 바꾸려면 시간표 칸을 누르세요', left ? '#sGridWrap .gc.none' : '#abBar [data-ab="send"]');
     }).catch(function(){ btn.disabled = false; btn.textContent = '다시 적용'; $('abMsg').innerHTML = '<div class="note-err">서버에 연결하지 못했습니다.</div>'; });
   }
   function abSend(btn){
@@ -7172,7 +7188,11 @@
       if (j.status === 'ok' && j.ai) {
         (j.items || []).forEach(function(it){ cx.ai[it.id] = it; });
         cx.aiModel = j.모델 || ''; cx.aiNote = 'AI 연결: ' + cx.aiModel + (j.모델번호 ? '(' + j.모델번호 + '번)' : '');
-        setTimeout(function(){ nextGuide('AI가 후보 ' + (j.items || []).length + '명을 추천했습니다', '근거를 확인하고 <i>이 강사로 배정</i> → <i>저장</i>', '[data-cxpick]'); }, 50);
+        setTimeout(function(){   // d3c: 검토 인원과 실제로 보여 주는 추천 인원을 구분
+          var g2 = cxCond() && cxCond().ok ? cxBuild(cxCond()) : null, nm = g2 ? g2.rel.concat(g2.aiOnly).length : 0, nf = g2 ? g2.fresh.length : 0, more = Math.max(0, nm - 3);
+          nextGuide('AI가 ' + (j.items || []).length + '명 중 ' + nm + '명을 추천했습니다',
+            (more ? '위 3명 먼저 · 나머지 ' + more + '명은 <i>펼치기</i>' : '<i>이 강사로 배정</i> → <i>저장</i>') + (nf ? ' · 신규 강사 ' + nf + '명은 아래' : ''), more ? '#cxMore' : '[data-cxpick]');
+        }, 50);
       } else {
         cx.aiNote = (j && j.이유) || 'AI 응답을 받지 못해 규칙 결과만 표시합니다';
       }
