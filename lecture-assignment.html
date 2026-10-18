@@ -580,6 +580,7 @@
   .bdc{position:relative;}
   .bdc.moved{box-shadow:0 0 0 2px #E8762B;animation:bdcIn .6s ease-out 1;}
   .bdc-mv{position:absolute;top:-9px;right:10px;font-size:11px;font-weight:800;color:#fff;background:#E8762B;border-radius:999px;padding:1px 8px;}
+  .bd-pull{border-style:dashed;}
   .bdc.fin{box-shadow:0 0 0 2px #1E8E5A;transition:opacity .4s ease-out,transform .4s ease-out;} .bdc.fin .bdc-mv{background:#1E8E5A;} .bdc-fin{color:#14653F;font-weight:700;} .bdc.bdc-out{opacity:0;transform:translateY(12px);}
   .bp-done{align-self:center;font-size:12px;font-weight:800;color:#14653F;background:#E3F4EA;border-radius:999px;padding:3px 10px;}
   .cx-wait{margin-top:10px;background:#F4F7FB;border:1px dashed #B8C4D4;border-radius:10px;padding:22px 16px;text-align:center;color:#1B3A5F;font-size:15px;} .cx-wait .ai-spin{display:inline-block;vertical-align:-3px;margin-right:6px;} .cx-wait #cxWaitSec{font-weight:800;color:#2F6FB2;margin-left:4px;} .cx-wait .cxw-s{margin-top:6px;font-size:12.5px;color:#475467;}
@@ -1316,7 +1317,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-18 배정 d3g</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-18 배정 d3h</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -2124,6 +2125,23 @@
         kind === 'ab' ? '[data-demo-open="' + k.replace(/"/g, '') + '"]' : '[data-evform="' + k.replace(/"/g, '') + '"]');
     }).catch(function(){ back('서버에 연결하지 못했습니다.'); });
   }
+  // d3h: 진행한 과정 중 n단계에서 멈춘 과정(보드에 올라 있는 과정 제외)
+  function laneHist(n){ var o = dbs('ab'); return o.hist.filter(function(x){ if (x.k === o.active || !planByKey(x.k)) return false; var s2 = courseStage(x.k); return s2.lane === n && s2.sure; }); }
+  var LANE_GO = { 2: { sel: function(k){ var s2 = courseStage(k); return s2.empty === s2.n ? '#abBar [data-ab="draft"]' : '#sGridWrap .gc.none'; }, t: function(k){ var s2 = courseStage(k); return s2.empty === s2.n ? '<i>AI 강사 일괄 배정</i>을 눌러 보세요' : '빈 칸을 눌러 <i>적합한 강사 찾기</i>'; } },
+                  3: { sel: function(){ return '#abBar [data-ab="send"]'; }, t: function(){ return '<i>강의배정 자동 일괄 발송</i>을 눌러 보세요'; } } };
+  function lanePull(n){
+    var L = laneHist(n), title = n + '단계 \'' + STEPS[n - 1].t + '\' 과정 불러오기';
+    var body = L.length ? '<div class="bp-g"><b>' + n + '단계에서 멈춘 과정입니다.</b> 고르면 이 칸에 올라가고 바로 이어서 작업합니다.' + (dbs('ab').active ? ' 지금 보드의 <b>' + esc(courseLabel(dbs('ab').active)) + '</b>은(는) \'진행한 과정\'으로 옮겨집니다.' : '') + '</div><div class="bp-l">' +
+        L.map(function(x){ var p = planByKey(x.k), s2 = courseStage(x.k), le = lastEditText(x.k);
+          return '<div class="bp-r"><div><div class="bp-t">' + esc(x.k) + '</div><div class="bp-p">' + esc(ipgyo(p)) + ' · ' + esc(dDay(p)) + '</div><div class="bp-w">' + esc(s2.nx.x) + '</div>' + (le ? '<div class="bp-ed">' + esc(le) + '</div>' : '') + '</div><div class="bd-hb"><button type="button" class="btn primary" data-lpgo="' + esc(x.k) + '">불러오기</button></div></div>'; }).join('') + '</div>'
+      : '<div class="cx-guide">' + n + '단계에서 멈춘 과정이 없습니다. ' + (n === 2 ? '1단계에서 교과목을 채우고 닫으면 여기서 이어서 강사를 배정할 수 있습니다.' : '2단계에서 강사를 배정하고 닫으면 여기서 이어서 발송할 수 있습니다.') + '</div>';
+    var m = cxModal(title, body);
+    m.body.addEventListener('click', function(ev){
+      var g = ev.target.closest ? ev.target.closest('[data-lpgo]') : null; if (!g) return;
+      var k = g.getAttribute('data-lpgo'); m.close(); demoResume(k, 'ab');
+      setTimeout(function(){ openCourse(k); setTimeout(function(){ var c = LANE_GO[n]; if (c) nextGuide('', c.t(k), c.sel(k)); }, 1200); }, 300);
+    });
+  }
   function renderDemoB(demos, arrived){
     if (arrived || !demoSt) demoStFetch();
     if (arrived) boardVisit++;
@@ -2179,6 +2197,7 @@
           '<button type="button" class="btn" data-demo-open="' + esc(key) + '">편성 화면 열기</button></article>';
       });
       if (i === 0 && L.length && canEdit) h += '<button type="button" class="bd-addsm" data-bdadd="1">+ 다른 과정 올리기</button>';
+      if ((i === 1 || i === 2) && canEdit) { var nL = laneHist(i + 1).length; h += '<button type="button" class="bd-addsm bd-pull" data-bdlane="' + (i + 1) + '">' + (nL ? '이 단계 과정 불러오기 (' + nL + ')' : '이 단계 과정 불러오기') + '</button>'; }   // d3h: 진행한 과정 중 이 단계에서 멈춘 과정만
       h += '</div>';
     });
     h += '</div><div class="bd-foot"><span class="legend"><span class="ai-badge">AI 도움</span>AI가 근거를 붙여 제안하고, 적용은 담당자가 결정합니다.</span></div></section>';
@@ -2232,6 +2251,7 @@
     var k = t.getAttribute('data-demo-open'); if (k) { openCourse(k); return; }
     var go = t.getAttribute('data-bdgo'); if (go) { var ln = $(/^\d+$/.test(go) ? 'bdl' + go : go); if (ln) { ln.scrollIntoView({ behavior: window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); if (t.classList.contains('bd-go')) { ln.classList.add('bd-flash'); setTimeout(function(){ ln.classList.remove('bd-flash'); }, 1600); } } return; }
     if (t.getAttribute('data-bdadd')) { poolPick(); return; }
+    var lp = t.getAttribute('data-bdlane'); if (lp) { lanePull(Number(lp)); return; }
     var re = t.getAttribute('data-bsre'); if (re) { demoStart(re, t); return; }
     var rg = t.getAttribute('data-bsgo'); if (rg) { demoResume(rg, 'ab'); return; }
     var eg = t.getAttribute('data-evgo'); if (eg) { demoResume(eg, 'ev'); return; }

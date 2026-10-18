@@ -5,7 +5,7 @@
      로그인은 비밀번호 없이 [로그인] 버튼 하나로, 강사 승인은 확인창으로 줄입니다. false로 바꾸면 원래 화면으로 돌아갑니다(코드는 지우지 않음). */
 window.CONTEST_CONFIG = {
   WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbzYdVSZsLnSw3JN01aIDuXa1Ubxh6ERWYC-0TEQxu6tRYrcI9-WNYEoKv3Cfk9qyUvJ/exec',
-  VERSION: '대회용 d3e',
+  VERSION: '대회용 d3h',
   ORG_NAME: '○○소방학교',
   SYS_ORG: '○○소방학교',   // d3e: 로그인 카드 아래 운영기관 이름(다른 학교에서 쓸 때 여기만 바꿈)
   SIMPLE: true,
@@ -225,69 +225,94 @@ window.CONTEST_CONFIG = {
       }, function (err) { fin(null); throw err; });
     };
   }
-  /* d3c: 다음 할 일 안내(모든 화면 공통) — 화면 가운데 큰 카드 1장. 결과 한 줄 + "다음: 버튼"만.
-     거의 동시에(1초 안) 온 알림은 한 카드로 합치고, 그 뒤 새 알림이 오면 앞 카드를 바로 닫고 새 카드만 보여 줌(겹치지 않음). 4초 뒤 사라지고, 누르면 바로 닫힘 */
-  var gQ = [], gCur = null;
+  /* d3h: 안내 방식 — ① 완료·이동 같은 짧은 알림은 화면 위 작은 알림 한 줄(2.6초)
+     ② 다음에 누를 버튼은 그 버튼 옆에 말풍선(코치마크)으로: 버튼을 살짝 강조하고 "여기를 눌러 보세요" 문구. 버튼을 누르거나 ×, 9초 뒤 사라짐
+     버튼을 찾지 못하면 말풍선 대신 작은 알림에 다음 할 일을 함께 보여 줌 */
+  var gToastT = null, gTip = null;
   window.cxGuide = function (done, next, sel) {
-    var esc = function (t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
     if (!document.getElementById('cxGdCss')) {
       var st = document.createElement('style'); st.id = 'cxGdCss';
-      st.textContent = '#cxGd{position:fixed;left:50%;top:70%;transform:translate(-50%,-50%);z-index:100001;pointer-events:none;width:min(560px,calc(100vw - 32px))}' +
-        '.cxg{pointer-events:auto;cursor:pointer;display:flex;flex-direction:column;gap:10px;background:#1B3A5F;color:#fff;border-radius:16px;padding:22px 26px;box-shadow:0 12px 36px rgba(16,24,40,.32);line-height:1.45;word-break:keep-all;text-align:center;opacity:0;transform:scale(.96);transition:opacity .22s ease-out,transform .22s ease-out}' +
-        '.cxg.in{opacity:1;transform:none} .cxg.out{opacity:0;transform:scale(.98)}' +
-        '.cxg-d{font-size:19px;font-weight:800} .cxg-d:before{content:"\\2713";color:#7CD4A4;margin-right:8px}' +
-        '.cxg-n{font-size:17px;color:#E6ECF3} .cxg-d ~ .cxg-n{border-top:1px solid rgba(255,255,255,.18);padding-top:10px} .cxg-n b{display:inline-block;background:#E8762B;color:#fff;border-radius:999px;padding:1px 10px;margin-right:8px;font-size:14px;vertical-align:2px} .cxg-n i{font-style:normal;font-weight:800;color:#fff}' +
-        '.cxg-x{font-size:12px;color:#9FB2C8}' +
-        '@keyframes cxgP{0%{box-shadow:0 0 0 0 rgba(232,118,43,.75)}70%{box-shadow:0 0 0 10px rgba(232,118,43,0)}100%{box-shadow:0 0 0 0 rgba(232,118,43,0)}}' +
-        '.cxg-pulse{animation:cxgP 1.2s ease-out 2;outline:2px solid #E8762B !important;outline-offset:2px}' +
-        '@media (prefers-reduced-motion:reduce){.cxg-pulse{animation:none}.cxg{transition:none}}' +
-        '@media (max-width:600px){.cxg{padding:18px 18px}.cxg-d{font-size:17px}.cxg-n{font-size:15.5px}}';
+      st.textContent = '#cxGd{position:fixed;left:50%;top:78px;transform:translateX(-50%);z-index:100001;pointer-events:none;width:max-content;max-width:calc(100vw - 24px)}' +
+        '.cxg{pointer-events:auto;cursor:pointer;background:#1B3A5F;color:#fff;border-radius:999px;padding:8px 18px;box-shadow:0 6px 18px rgba(16,24,40,.22);font-size:14px;font-weight:700;line-height:1.45;word-break:keep-all;text-align:center;opacity:0;transform:translateY(-6px);transition:opacity .2s ease-out,transform .2s ease-out}' +
+        '.cxg.in{opacity:1;transform:none} .cxg.out{opacity:0} .cxg .ck{color:#7CD4A4;margin-right:6px} .cxg .nx{font-weight:600;color:#DCE4EE;margin-left:8px} .cxg .nx i{font-style:normal;font-weight:800;color:#fff}' +
+        '.cxtip{position:fixed;z-index:100002;max-width:min(320px,calc(100vw - 24px));background:#1B3A5F;color:#fff;border-radius:12px;padding:11px 34px 11px 14px;box-shadow:0 10px 28px rgba(16,24,40,.28);font-size:14px;line-height:1.5;word-break:keep-all;opacity:0;transform:translateY(4px) scale(.98);transition:opacity .18s ease-out,transform .18s ease-out;pointer-events:auto}' +
+        '.cxtip.in{opacity:1;transform:none} .cxtip.up{transform:translateY(-4px) scale(.98)} .cxtip.up.in{transform:none}' +
+        '.cxtip b.tg{display:inline-block;background:#2F6FB2;color:#fff;border-radius:6px;padding:0 6px;margin-right:6px;font-size:11.5px;font-weight:800;vertical-align:1px} .cxtip i{font-style:normal;font-weight:800;color:#FFD3B5}' +
+        '.cxtip .x{position:absolute;top:6px;right:8px;border:none;background:transparent;color:#B9C7D8;font-size:16px;line-height:1;cursor:pointer;padding:2px 4px}' +
+        '.cxtip .ar{position:absolute;width:12px;height:12px;background:#1B3A5F;transform:rotate(45deg)} .cxtip .ar.t{top:-6px} .cxtip .ar.b{bottom:-6px}' +
+        '@keyframes cxgP{0%{box-shadow:0 0 0 0 rgba(232,118,43,.7)}70%{box-shadow:0 0 0 10px rgba(232,118,43,0)}100%{box-shadow:0 0 0 0 rgba(232,118,43,0)}}' +
+        '.cxg-pulse{animation:cxgP 1.4s ease-out 3;outline:2px solid #E8762B !important;outline-offset:2px}' +
+        '@media (prefers-reduced-motion:reduce){.cxg-pulse{animation:none}.cxg,.cxtip{transition:none}}' +
+        '@media (max-width:600px){#cxGd{top:64px}.cxg{font-size:13px;padding:7px 14px}}';
       document.head.appendChild(st);
     }
     var box = document.getElementById('cxGd');
     if (!box) { box = document.createElement('div'); box.id = 'cxGd'; box.setAttribute('role', 'status'); box.setAttribute('aria-live', 'polite'); document.body.appendChild(box); }
     if (!done && !next) return;
-    if (next) next = String(next).split(' — ')[0];   // 핵심만: 버튼 이름까지만 남기고 설명은 뺌
-    // 방금(1초 안) 뜬 카드가 있으면 그 카드에 합침
-    if (gCur && Date.now() - gCur.at < 1000) { addTo(gCur, done, next, sel); return; }
-    if (gCur) { gQ = [[done, next, sel]]; hide(gCur, true); return; }   // 새 안내가 오면 앞 카드는 빨리 닫고 새 카드만(지난 안내가 늦게 뜨지 않게)
-    show(done, next, sel);
-    function addTo(c, d, n, s) {
-      if (d) { var e1 = document.createElement('div'); e1.className = 'cxg-d'; e1.innerHTML = esc(d); var nx = c.el.querySelector('.cxg-n'); c.el.insertBefore(e1, nx || c.el.querySelector('.cxg-x')); }
-      if (n) { var old = c.el.querySelector('.cxg-n'); if (old) old.parentNode.removeChild(old); var e2 = document.createElement('div'); e2.className = 'cxg-n'; e2.innerHTML = '<b>다음</b>' + n; c.el.insertBefore(e2, c.el.querySelector('.cxg-x')); }
-      if (s) c.sel = s;
-      clearTimeout(c.t); c.t = setTimeout(function () { hide(c); }, 4200);
+    if (next) next = String(next).split(' — ')[0];
+    if (sel && next) { tip(next, sel, function(){ toast(done, next); }); if (done) toast(done, ''); }
+    else toast(done, next);
+
+    function toast(d, n) {
+      if (!d && !n) return;
+      var prev = box.querySelector('.cxg');   // 1초 안에 온 알림은 한 줄로 합침(단계 이동 + 완료)
+      if (prev && Date.now() - Number(prev.getAttribute('data-at') || 0) < 1000 && d && !n && !prev.querySelector('.nx')) { prev.insertAdjacentHTML('beforeend', ' · ' + escH(d)); clearTimeout(gToastT); gToastT = setTimeout(function () { prev.classList.remove('in'); setTimeout(function () { if (prev.parentNode) prev.parentNode.removeChild(prev); }, 220); }, 3000); return; }
+      Array.prototype.forEach.call(box.querySelectorAll('.cxg'), function (c) { c.parentNode.removeChild(c); });
+      var el = document.createElement('div'); el.className = 'cxg'; el.setAttribute('data-at', String(Date.now()));
+      el.innerHTML = (d ? '<span class="ck">✓</span>' + escH(d) : '') + (n ? '<span class="nx">' + (d ? '· ' : '') + '다음: ' + n + '</span>' : '');
+      box.appendChild(el); requestAnimationFrame(function () { el.classList.add('in'); });
+      var kill = function () { el.classList.remove('in'); el.classList.add('out'); setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 220); };
+      el.addEventListener('click', kill); clearTimeout(gToastT); gToastT = setTimeout(kill, n ? 4200 : 2600);
     }
-    function show(d, n, s) {
-      var el = document.createElement('div'); el.className = 'cxg'; el.innerHTML = '<div class="cxg-x">누르면 닫힙니다</div>';
-      box.appendChild(el);
-      var c = { el: el, at: Date.now(), sel: '' }; gCur = c;
-      addTo(c, d, n, s);
-      requestAnimationFrame(function () { el.classList.add('in'); });
-      el.addEventListener('click', function () { hide(c); });
-    }
-    function hide(c, quick) {
-      if (c.gone) return; c.gone = true; clearTimeout(c.t);
-      c.el.classList.remove('in'); c.el.classList.add('out');
-      if (c.sel && !quick) pulse(c.sel);   // 카드가 사라질 때 눌러야 할 버튼을 한 번 강조(가리지 않게)
-      setTimeout(function () {
-        if (c.el.parentNode) c.el.parentNode.removeChild(c.el);
-        if (gCur === c) gCur = null;
-        var q = gQ.shift(); if (q) show(q[0], q[1], q[2]);
-      }, 240);
-    }
-    function pulse(sel) {
-      clearTimeout(window.__cxgT); var tries = 0;
+    function tip(n, sl, fallback) {
+      closeTip();
+      var tries = 0, my = {};
+      gTip = my;
       var find = function () {
-        var t = Array.prototype.filter.call(document.querySelectorAll(sel), function (x) { return x.offsetParent !== null && !x.disabled; })[0];
-        if (!t) { if (++tries < 20) window.__cxgT = setTimeout(find, 250); return; }
+        if (gTip !== my) return;
+        var t = Array.prototype.filter.call(document.querySelectorAll(sl), function (x) { return x.offsetParent !== null && !x.disabled; })[0];
+        if (!t) { if (++tries < 16) my.ft = setTimeout(find, 250); else { gTip = null; fallback(); } return; }
         var r = t.getBoundingClientRect();
-        if (r.top < 70 || r.bottom > window.innerHeight - 10) t.scrollIntoView({ block: 'center', behavior: 'smooth' });
-        t.classList.remove('cxg-pulse'); void t.offsetWidth; t.classList.add('cxg-pulse');
-        setTimeout(function () { t.classList.remove('cxg-pulse'); }, 2600);
+        if (r.top < 80 || r.bottom > window.innerHeight - 90) { t.scrollIntoView({ block: 'center', behavior: 'smooth' }); my.ft = setTimeout(function () { show(t); }, 450); }
+        else show(t);
       };
-      window.__cxgT = setTimeout(find, 60);
+      var show = function (t) {
+        if (gTip !== my) return;
+        var isAi = !!(t.closest && (t.closest('.ai-btn') || /AI/.test(t.textContent || '')));
+        var el = document.createElement('div'); el.className = 'cxtip'; el.setAttribute('role', 'tooltip');
+        el.innerHTML = (isAi ? '<b class="tg">AI</b>' : '') + n + (/눌러|누르/.test(n) ? '' : '<div style="font-size:12.5px;color:#C9D6E5;margin-top:2px;">여기를 눌러 보세요</div>') + '<button type="button" class="x" aria-label="닫기">×</button><span class="ar"></span>';
+        document.body.appendChild(el);
+        my.el = el; my.t = t;
+        t.classList.remove('cxg-pulse'); void t.offsetWidth; t.classList.add('cxg-pulse');
+        place(); requestAnimationFrame(function () { el.classList.add('in'); });
+        my.onMove = function () { if (!document.body.contains(t) || t.offsetParent === null) { closeTip(); return; } place(); };
+        window.addEventListener('scroll', my.onMove, true); window.addEventListener('resize', my.onMove);
+        my.onClick = function (ev) { if (t.contains(ev.target) || (ev.target.closest && ev.target.closest('.cxtip .x'))) closeTip(); };
+        document.addEventListener('click', my.onClick, true);
+        my.tt = setTimeout(closeTip, 9000);
+      };
+      var place = function () {
+        var el = my.el, t = my.t; if (!el || !t) return;
+        var r = t.getBoundingClientRect(), w = el.offsetWidth, h = el.offsetHeight, vw = window.innerWidth, vh = window.innerHeight;
+        var below = vh - r.bottom > h + 24 || r.top < h + 24;
+        var top = below ? r.bottom + 12 : r.top - h - 12;
+        var left = Math.max(10, Math.min(vw - w - 10, r.left + r.width / 2 - w / 2));
+        el.style.top = Math.round(top) + 'px'; el.style.left = Math.round(left) + 'px';
+        el.classList.toggle('up', !below);
+        var ar = el.querySelector('.ar'); ar.className = 'ar ' + (below ? 't' : 'b');
+        ar.style.left = Math.round(Math.max(14, Math.min(w - 26, r.left + r.width / 2 - left - 6))) + 'px';
+      };
+      find();
     }
+    function closeTip() {
+      var g = gTip; gTip = null; if (!g) return;
+      clearTimeout(g.ft); clearTimeout(g.tt);
+      if (g.onMove) { window.removeEventListener('scroll', g.onMove, true); window.removeEventListener('resize', g.onMove); }
+      if (g.onClick) document.removeEventListener('click', g.onClick, true);
+      if (g.t) g.t.classList.remove('cxg-pulse');
+      if (g.el) { var e = g.el; e.classList.remove('in'); setTimeout(function () { if (e.parentNode) e.parentNode.removeChild(e); }, 200); }
+    }
+    function escH(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   };
   /* d2b: 긴 상세 카드는 위·아래 모두 [닫기] — 아래에만 [닫기]가 있는 카드의 머리 줄에 같은 동작의 버튼을 붙임 */
   function topClose() {
