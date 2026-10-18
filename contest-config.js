@@ -5,9 +5,9 @@
      로그인은 비밀번호 없이 [로그인] 버튼 하나로, 강사 승인은 확인창으로 줄입니다. false로 바꾸면 원래 화면으로 돌아갑니다(코드는 지우지 않음). */
 window.CONTEST_CONFIG = {
   WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbzYdVSZsLnSw3JN01aIDuXa1Ubxh6ERWYC-0TEQxu6tRYrcI9-WNYEoKv3Cfk9qyUvJ/exec',
-  VERSION: '대회용 d3c',
+  VERSION: '대회용 d3e',
   ORG_NAME: '○○소방학교',
-  SYS_ORG: '○○학교',   // d2w: 로그인 제목의 학교 이름(다른 학교에서 쓸 때 여기만 바꿈)
+  SYS_ORG: '○○소방학교',   // d3e: 로그인 카드 아래 운영기관 이름(다른 학교에서 쓸 때 여기만 바꿈)
   SIMPLE: true,
   DEMO_PW: '0000',      // 심사용 담당자 권한(모의 데이터 전용). 운영판은 개인 비밀번호 사용
   DEMO_ADMIN: '1111',   // 심사용 승인 권한(화면에서는 묻지 않고 확인창만 표시)
@@ -65,7 +65,7 @@ window.CONTEST_CONFIG = {
       var card = document.getElementById('loginCard');
       if (card) {
         var tt = card.querySelector('.title'), subs = card.querySelectorAll('.sub');
-        var pg = (String(document.title).split('·')[1] || '').trim();
+        var tparts = String(document.title).split(' · '), pg = (tparts.length > 1 ? tparts[tparts.length - 1] : '').trim();
         // d3c: 운영 로그인 카드 B안과 같은 모양 — 화면 이름 칸 → 고딕 굵은 시스템 이름(ON만 주황) → 부제 한 줄. '담당자 전용·비밀번호' 안내 줄은 뺌(운영 d334b96과 같음)
         if (!document.getElementById('lgCss')) { var ls = document.createElement('style'); ls.id = 'lgCss';
           ls.textContent = '#loginCard .lg-pg{display:inline-block;font-size:12px;font-weight:700;color:#1B3A5F;background:#EEF2F7;border-radius:999px;padding:3px 10px;margin-bottom:12px;}' +
@@ -74,11 +74,12 @@ window.CONTEST_CONFIG = {
             '#loginCard.lg-dark .lg-name{color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.45);} #loginCard.lg-dark .lg-on{color:#FFB38A;}';   // 사진 배경(강사관리)은 밝은 글자
           document.head.appendChild(ls); }
         try { var bg = getComputedStyle(card).backgroundColor, m = /rgba?\(([\d.]+), ([\d.]+), ([\d.]+)(?:, ([\d.]+))?\)/.exec(bg); if (m && (m[4] !== undefined && Number(m[4]) < 0.6)) card.classList.add('lg-dark'); } catch (e) {}
-        if (tt) { tt.className = 'title lg-name'; tt.removeAttribute('style'); tt.innerHTML = (C.SYS_ORG || '○○학교') + ' 외래강사 <span class="lg-on">ON</span><span style="font-size:.7em;font-weight:700;opacity:.75;">(JFSA)</span>';
+        if (tt) { tt.className = 'title lg-name'; tt.removeAttribute('style'); tt.innerHTML = '소방교육 외래강사 <span class="lg-on">ON</span>';
           if (pg && !card.querySelector('.lg-pg')) { var chip = document.createElement('div'); chip.className = 'lg-pg'; chip.textContent = pg; tt.parentNode.insertBefore(chip, tt); } }
         Array.prototype.forEach.call(subs, function (x, i) { if (i > 0) x.parentNode.removeChild(x); });
         var last = card.querySelector('.sub');
-        if (last) { last.className = 'sub lg-s1'; last.removeAttribute('style'); last.textContent = '교육운영 관리 시스템'; }
+        if (last) { last.className = 'sub lg-s1'; last.removeAttribute('style'); last.textContent = 'AI 강사 추천·평가·환류 시스템'; last.style.marginBottom = '4px';
+          var org = document.createElement('div'); org.className = 'sub'; org.style.cssText = 'margin-bottom:22px;'; org.textContent = C.SYS_ORG || '○○학교'; last.parentNode.insertBefore(org, last.nextSibling); }
       }
       var fill = function () { Array.prototype.forEach.call(pins, function (p, i) { p.value = String(C.DEMO_PW).charAt(i) || ''; }); };
       btn.addEventListener('click', fill, true);

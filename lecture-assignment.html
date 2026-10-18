@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>소방학교 외래강사 ON(JFSA) · 강의배정</title>
+<title>소방교육 외래강사 ON (AI 강사 추천·평가·환류 시스템) · 강의배정</title>
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
   :root{
@@ -787,6 +787,7 @@
   .pf-vr.has .c{color:#9A3D0A;}
   .pf-vr .tls{display:flex;flex-wrap:wrap;gap:4px 10px;}
   .gnav-brand .on{color:#FFB38A;margin-left:.3em;}
+  .gnav-brand .gb-w{display:flex;flex-direction:column;line-height:1.2;} .gnav-brand .gb-s{font-size:10.5px;font-weight:600;color:rgba(255,255,255,.72);letter-spacing:0;margin-top:1px;}
   .gnav-in{display:flex;align-items:stretch;gap:2px;padding:0 20px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
   .gnav-in::-webkit-scrollbar{display:none;}
   .gnav-brand{display:flex;align-items:center;font-size:13px;font-weight:800;letter-spacing:-0.2px;padding-right:18px;margin-right:6px;border-right:1px solid rgba(255,255,255,0.22);white-space:nowrap;}
@@ -1187,7 +1188,7 @@
 
 <div id="loginScreen">
   <div id="loginCard">
-    <div class="title">○○학교 외래강사 ON(JFSA)</div>
+    <div class="title">소방교육 외래강사 ON</div>
     <div class="sub">담당자 전용 · 비밀번호를 입력해 주세요</div>
     <form id="loginForm">
       <div style="display:flex;gap:10px;justify-content:center;margin-bottom:16px;">
@@ -1203,7 +1204,7 @@
 </div>
 
 <div id="app" style="display:none;">
-<nav class="gnav" aria-label="주 메뉴"><div class="gnav-in"><span class="gnav-brand">소방학교 외래강사 <span class="on">ON</span></span><a class="gnav-i" href="home.html">홈</a><a class="gnav-i on" id="gnavAssign" aria-current="page" href="lecture-assignment.html#v=table">강의배정</a><a class="gnav-i" href="instructor-dashboard.html">강사관리</a><a class="gnav-i" id="gnavRoom" href="lecture-assignment.html#v=room">강의실</a><a class="gnav-i" id="gnavEval" href="lecture-assignment.html#v=eval">평가관리</a><!-- 대회용: 설정(준비 중) 메뉴 숨김 --></div></nav>
+<nav class="gnav" aria-label="주 메뉴"><div class="gnav-in"><span class="gnav-brand"><span class="gb-w"><span>소방교육 외래강사 <span class="on">ON</span></span><small class="gb-s">AI 강사 추천·평가·환류 시스템</small></span></span><a class="gnav-i" href="home.html">홈</a><a class="gnav-i on" id="gnavAssign" aria-current="page" href="lecture-assignment.html#v=table">강의배정</a><a class="gnav-i" href="instructor-dashboard.html">강사관리</a><a class="gnav-i" id="gnavRoom" href="lecture-assignment.html#v=room">강의실</a><a class="gnav-i" id="gnavEval" href="lecture-assignment.html#v=eval">평가관리</a><!-- 대회용: 설정(준비 중) 메뉴 숨김 --></div></nav>
 <div class="wrap">
   <div class="crumb" id="crumb"></div>
   <header>
