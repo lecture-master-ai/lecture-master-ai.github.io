@@ -432,7 +432,7 @@
     </div>
     <div class="filter-row" id="filterOptions">
       <select class="filter" id="filterSpecialty">
-        <option value="">분야 전체</option>
+        <option value="">주 교육 구분 전체</option>
         <option value="직무교육">직무교육</option>
         <option value="직무역량교육">직무역량교육</option>
         <option value="소양교육">소양교육</option>
@@ -485,7 +485,7 @@
   <table id="table" style="display:none;">
     <thead>
       <tr>
-        <th>소속</th><th></th><th>강사명</th><th>연락처</th><th>직위/직책</th><th>강사구분</th><th>분야</th><th>활동지역</th><th>강의회차</th><th>상태</th>
+        <th>소속</th><th></th><th>강사명</th><th>연락처</th><th>직위/직책</th><th>강사구분</th><th>주 교육 구분</th><th>활동지역</th><th>강의회차</th><th>상태</th>
       </tr>
     </thead>
     <tbody id="tbody"></tbody>
@@ -1009,7 +1009,7 @@
         '<div class="fi"><div class="fk">연락처</div><div class="fv" style="white-space:nowrap;">' + (d.연락처 ? '<a href="tel:' + String(d.연락처).replace(/[^0-9+]/g,'') + '" style="color:var(--navy);font-weight:700;">' + esc(d.연락처) + '</a>' : '-') + '</div></div>' +
         '<div class="fi full"><div class="fk">이메일</div><div class="fv">' + (d.이메일 ? '<a href="mailto:' + escapeAttr(d.이메일) + '" style="color:var(--navy);font-weight:700;">' + esc(d.이메일) + '</a>' : '-') + '</div></div>' +
         '<div class="fi"><div class="fk">강사구분</div><div class="fv">' + esc(d.강사구분||'-') + '</div></div>' +
-        '<div class="fi"><div class="fk">분야</div><div class="fv">' + esc(d.전문분야||'-') + '</div></div>' +
+        '<div class="fi"><div class="fk">주 교육 구분</div><div class="fv">' + esc(d.전문분야||'-') + '</div></div>' +
         '<div class="fi"><div class="fk">교과목명</div><div class="fv">' + esc(d.교과목명||'-') + '</div></div>' +
         '<div class="fi"><div class="fk">활동지역</div><div class="fv">' + esc(d.활동지역||'-') + '</div></div>' +
         '<div class="fi"><div class="fk">강의회차</div><div class="fv">' + (d.강의회차 || 0) + '회</div></div>' +

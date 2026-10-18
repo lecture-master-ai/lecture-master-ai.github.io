@@ -3155,7 +3155,7 @@
       var tokens = q.toLowerCase().split(/\s+/).filter(Boolean);
       var scored = [];
       instructors.forEach(function(x){
-        var fields = [['이름', x.name], ['소속', x.org], ['분야', x.field], ['교과목', x.subj], ['지역', x.region]];
+        var fields = [['이름', x.name], ['소속', x.org], ['주 교육 구분', x.field], ['교과목', x.subj], ['지역', x.region]];
         var matched = {}, ok = true, score = 0;
         tokens.forEach(function(tk){
           var hit = false;
@@ -5981,7 +5981,7 @@
       '<div class="top"><div><h2>' + esc(x.name) + ' <span class="tag ' + ps + '" style="vertical-align:middle;">' + esc(x.status || '-') + '</span></h2>' +
       '<div class="sub">' + esc([x.org, x.pos].filter(Boolean).join(' · ')) + '</div></div>' + avatar(x, 'lg') + '</div>' +
       '<div class="fgrid">' +
-      '<div class="fi"><div class="fk">분야</div><div class="fv">' + esc(x.field || '-') + '</div></div>' +
+      '<div class="fi"><div class="fk">주 교육 구분</div><div class="fv">' + esc(x.field || '-') + '</div></div>' +
       '<div class="fi"><div class="fk">강사구분</div><div class="fv">' + esc(x.kind || '-') + '</div></div>' +
       '<div class="fi"><div class="fk">교과목명</div><div class="fv">' + esc(x.subj || '-') + '</div></div>' +
       '<div class="fi"><div class="fk">활동지역</div><div class="fv">' + esc(x.region || '-') + '</div></div>' +
@@ -6703,7 +6703,7 @@
       '<div class="bh"><div class="tr"><h2>강사 찾아보기</h2><button type="button" class="btn" id="bClose">닫기</button></div>' +
       '<div class="bf">' +
       '<input type="text" id="bQ" autocomplete="off" placeholder="이름·소속·분야·교과목·지역으로 검색" value="' + esc(bs.q) + '">' +
-      '<select id="bField" aria-label="전문분야">' + opts(ready ? uniqVals('field') : [], bs.field, '전문분야 전체') + '</select>' +
+      '<select id="bField" aria-label="전문분야">' + opts(ready ? uniqVals('field') : [], bs.field, '주 교육 구분 전체') + '</select>' +
       '<select id="bRegion" aria-label="활동지역">' + opts(ready ? uniqVals('region') : [], bs.region, '활동지역 전체') + '</select>' +
       '<select id="bStatus" aria-label="상태"><option value="active"' + (bs.status === 'active' ? ' selected' : '') + '>활성 강사만</option><option value="all"' + (bs.status === 'all' ? ' selected' : '') + '>모든 상태</option></select>' +
       '</div><div class="bcnt" id="bCnt"></div></div>' +

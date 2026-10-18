@@ -66,15 +66,19 @@ window.CONTEST_CONFIG = {
       if (card) {
         var tt = card.querySelector('.title'), subs = card.querySelectorAll('.sub');
         var pg = (String(document.title).split('·')[1] || '').trim();
-        if (tt) { tt.innerHTML = (C.SYS_ORG || '○○학교') + ' 외래강사 <span style="color:#E8590C;">ON</span><span style="font-size:.7em;font-weight:700;opacity:.75;">(JFSA)</span>'; tt.style.lineHeight = '1.3'; }
-        Array.prototype.forEach.call(subs, function (x, i) { if (i < subs.length - 1) x.parentNode.removeChild(x); });
+        // d3c: 운영 로그인 카드 B안과 같은 모양 — 화면 이름 칸 → 고딕 굵은 시스템 이름(ON만 주황) → 부제 한 줄. '담당자 전용·비밀번호' 안내 줄은 뺌(운영 d334b96과 같음)
+        if (!document.getElementById('lgCss')) { var ls = document.createElement('style'); ls.id = 'lgCss';
+          ls.textContent = '#loginCard .lg-pg{display:inline-block;font-size:12px;font-weight:700;color:#1B3A5F;background:#EEF2F7;border-radius:999px;padding:3px 10px;margin-bottom:12px;}' +
+            '#loginCard .lg-name{font-family:Pretendard,"Malgun Gothic","Apple SD Gothic Neo",sans-serif;font-size:24px;line-height:1.3;font-weight:800;color:#1B3A5F;margin-bottom:6px;word-break:keep-all;}' +
+            '#loginCard .lg-on{color:#E8590C;} #loginCard .lg-s1{font-weight:700;margin-bottom:22px;word-break:keep-all;}' +
+            '#loginCard.lg-dark .lg-name{color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.45);} #loginCard.lg-dark .lg-on{color:#FFB38A;}';   // 사진 배경(강사관리)은 밝은 글자
+          document.head.appendChild(ls); }
+        try { var bg = getComputedStyle(card).backgroundColor, m = /rgba?\(([\d.]+), ([\d.]+), ([\d.]+)(?:, ([\d.]+))?\)/.exec(bg); if (m && (m[4] !== undefined && Number(m[4]) < 0.6)) card.classList.add('lg-dark'); } catch (e) {}
+        if (tt) { tt.className = 'title lg-name'; tt.removeAttribute('style'); tt.innerHTML = (C.SYS_ORG || '○○학교') + ' 외래강사 <span class="lg-on">ON</span><span style="font-size:.7em;font-weight:700;opacity:.75;">(JFSA)</span>';
+          if (pg && !card.querySelector('.lg-pg')) { var chip = document.createElement('div'); chip.className = 'lg-pg'; chip.textContent = pg; tt.parentNode.insertBefore(chip, tt); } }
+        Array.prototype.forEach.call(subs, function (x, i) { if (i > 0) x.parentNode.removeChild(x); });
         var last = card.querySelector('.sub');
-        if (last) {
-          last.textContent = '담당자 로그인 · 심사용 사본은 비밀번호 없이 들어갑니다'; last.style.wordBreak = 'keep-all';
-          var pn = document.createElement('div'); pn.className = 'sub'; pn.style.cssText = 'font-weight:700;margin-bottom:2px;word-break:keep-all;';
-          pn.textContent = '교육운영 관리 시스템' + (pg ? ' · ' + pg : '');
-          last.parentNode.insertBefore(pn, last);
-        }
+        if (last) { last.className = 'sub lg-s1'; last.removeAttribute('style'); last.textContent = '교육운영 관리 시스템'; }
       }
       var fill = function () { Array.prototype.forEach.call(pins, function (p, i) { p.value = String(C.DEMO_PW).charAt(i) || ''; }); };
       btn.addEventListener('click', fill, true);
