@@ -168,7 +168,9 @@
   .form{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;}
   .form label{font-size:12px;color:var(--text-muted);display:block;margin-bottom:3px;}
   .form input,.form select{width:100%;height:36px;border:1px solid var(--border-input);border-radius:6px;padding:0 8px;font-family:inherit;font-size:13px;background:#fff;color:var(--text);}
-  .form .span2{grid-column:span 2;} .form .span3{grid-column:span 3;}
+  .form .span2{grid-column:span 2;} .form .span3{grid-column:span 3;} .form .span4{grid-column:span 4;} .form .span6{grid-column:1/-1;}
+  .form{align-items:start;} .form .flbl{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:6px 8px;min-height:26px;margin-bottom:3px;} .form .flbl label{margin:0;white-space:nowrap;} .form .flbl > span{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;}
+  body.simple #sNoteWrap{grid-column:1/-1;}   /* d3f: 심사용은 계획서 체크가 숨겨져 비고를 한 줄 전체로 */
   .form .hint{font-size:12px;color:var(--text-muted);margin-top:3px;line-height:1.35;}
   .form .hint.warn{color:var(--warn-fg);}
   .fbtn{display:flex;gap:8px;margin-top:12px;align-items:center;flex-wrap:wrap;}
@@ -195,7 +197,7 @@
   .viewer-note{background:var(--warn-bg);color:var(--warn-fg);border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;margin-bottom:12px;}
   @media (max-width:760px){
     .form{grid-template-columns:1fr 1fr;}
-    .form .span2,.form .span3{grid-column:span 2;}
+    .form .span2,.form .span3,.form .span4{grid-column:span 2;} .form .fhalf{grid-column:span 1;}
     #sTableWrap{display:none;}
     #sCards{display:block;}
     .src{border-top:1px solid var(--border);padding:10px 0;}
@@ -250,7 +252,7 @@
   .bc .nm{font-weight:800;font-size:14px;color:var(--text);}
   .bc .sm{font-size:12px;color:var(--text-sub);line-height:1.5;word-break:break-word;}
   .bc .sm.mu{color:var(--text-muted);}
-  .bc .bbt{display:flex;gap:6px;margin-top:8px;width:100%;}
+  .bc .bbt{display:flex;gap:6px;margin-top:auto;padding-top:8px;width:100%;}   /* d3f: 카드 높이가 달라도 버튼은 맨 아래에 맞춤 */
   .bc .bbt button{flex:1;height:30px;border-radius:6px;border:1px solid var(--border-input);background:#fff;font:inherit;font-size:12px;font-weight:700;color:var(--navy);cursor:pointer;}
   .bc .bbt button.pk{background:var(--navy);color:#fff;border-color:var(--navy);}
   .bmore{text-align:center;margin-top:14px;}
@@ -849,6 +851,7 @@
   .pcalbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
   .pcalbar .calpre{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;height:34px;}
   .pcalbar h3{margin:0 8px 0 0;font-size:18px;font-weight:800;color:var(--navy);}
+  .pcalbar .btn.sm{height:34px;} @media (max-width:600px){ .pcalbar .ctools{display:none !important;} }   /* d3f: 버튼·선택 높이 맞춤, 휴대폰은 인쇄 도구 숨김 */
   .pcalbar select,.pcalbar input[type=month]{height:34px;border:1px solid var(--border-input);border-radius:6px;padding:0 8px;font-family:inherit;font-size:13px;background:#fff;}
   .pcalsum{font-size:13px;color:var(--text-muted);margin:0 0 8px;}
   table.calt{width:100%;border-collapse:collapse;table-layout:fixed;}
@@ -1017,6 +1020,9 @@
   #sFormPanel.fmodal{position:fixed;z-index:85;top:50%;left:50%;transform:translate(-50%,-50%);width:min(760px,94vw);max-height:92vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,.3);margin:0;}
   #sFormPanel.fmodal .fclose{display:flex;align-items:center;justify-content:center;position:absolute;top:10px;right:12px;width:30px;height:30px;border:1px solid var(--border-input);border-radius:6px;background:#fff;font-size:14px;cursor:pointer;color:var(--text-sub);}
   .gbox{max-width:960px;margin:0 auto;}
+  @media screen{ .gbox{max-width:none;} }   /* d3f: 화면에서는 카드 폭에 맞춤(제목 줄과 왼쪽 정렬), 인쇄는 기존 960px */
+  .gnavbar .gtools{margin-left:auto;display:inline-flex;flex-wrap:wrap;gap:6px;align-items:center;} .gnavbar .gbr{flex-basis:100%;height:0;} .gnavbar .gfill{margin-left:auto;}
+  @media (max-width:600px){ .gnavbar .gtools{margin-left:0;} .gnavbar .gtools [data-gw="print"], .gnavbar .gtools [data-gw="pdfall"], .gnavbar .gtools .porient{display:none;} .gnavbar #gWeek{order:9;flex:1 1 100%;} .gnavbar .wk{order:10;} .gnavbar .gfill{order:11;margin-left:0;} }   /* 휴대폰: 인쇄 도구 숨김, 주 선택은 한 줄 전체 */
   .gbox.wide{max-width:none;}
   .gscope{display:inline-flex;}
   .gscope button{height:32px;padding:0 12px;border:1px solid var(--border-input);background:#fff;font-family:inherit;font-size:13px;font-weight:700;color:var(--text-sub);cursor:pointer;white-space:nowrap;}
@@ -1307,7 +1313,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-18 배정 d3c</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-18 배정 d3f</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -2967,21 +2973,21 @@
       '<button type="button" class="fclose" id="sClose" aria-label="닫기">' + ic('x') + '</button>' +
       '<h3 id="sFormTitle">교과목 추가</h3>' +
       '<div class="form">' +
-      '<div><label for="sDate">일자</label><input type="date" id="sDate" value="' + esc(defDate) + '"><div class="hint" id="sDow"></div></div>' +
-      '<div><label for="sStart">시작 교시</label><select id="sStart">' + periodOptions('start', p1) + '</select></div>' +
-      '<div><label for="sEnd">끝 교시</label><select id="sEnd">' + periodOptions('end', p1) + '</select></div>' +
-      '<div class="span3" style="margin-top:-4px;"><div class="hint" id="sPerHint"></div></div>' +
-      '<div class="span3"><label for="sSubj">교과목</label><input type="text" id="sSubj" maxlength="100" placeholder="예: 소방기본법"></div>' +
-      '<div><label for="sCat">교과목 구분</label><select id="sCat"><option value="">(선택 안 함)</option>' +
+      '<div class="span2"><label for="sDate">일자</label><input type="date" id="sDate" value="' + esc(defDate) + '"><div class="hint" id="sDow"></div></div>' +
+      '<div class="span2 fhalf"><label for="sStart">시작 교시</label><select id="sStart">' + periodOptions('start', p1) + '</select></div>' +
+      '<div class="span2 fhalf"><label for="sEnd">끝 교시</label><select id="sEnd">' + periodOptions('end', p1) + '</select></div>' +
+      '<div class="span6" style="margin-top:-6px;"><div class="hint" id="sPerHint"></div></div>' +
+      '<div class="span4"><label for="sSubj">교과목</label><input type="text" id="sSubj" maxlength="100" placeholder="예: 소방기본법"></div>' +
+      '<div class="fhalf"><label for="sCat">교과목 구분</label><select id="sCat"><option value="">(선택 안 함)</option>' +
         CATS.map(function(c){ return '<option value="' + c + '"' + (c === lastCat ? ' selected' : '') + '>' + c + '</option>'; }).join('') + '</select></div>' +
-      '<div><label for="sKlass">반</label><select id="sKlass">' +
+      '<div class="fhalf"><label for="sKlass">반</label><select id="sKlass">' +
         KLASSES.map(function(k){ return '<option' + (k === lastKlass ? ' selected' : '') + '>' + k + '</option>'; }).join('') +
         '</select><div class="hint" id="sKlassHint"></div></div>' +
-      '<div class="span2"><div style="display:flex;justify-content:space-between;align-items:flex-end;gap:8px;margin-bottom:3px;"><label for="sRoom" style="margin:0;">강의실</label>' +
+      '<div class="span3"><div class="flbl"><label for="sRoom">강의실</label>' +
         '<button type="button" class="btn" id="sRoomFreeBtn" style="height:26px;padding:0 10px;font-size:12px;" title="위에 입력한 일자·교시에 비어 있는 강의실을 보여 줍니다">빈 강의실 보기</button></div>' +
         '<div id="sRoomFree" class="rfpanel" style="display:none;"></div><select id="sRoom">' + roomOptions(defRoom) + '</select>' +
         '<input type="text" id="sRoomText" maxlength="100" placeholder="강의실 이름 직접 입력" style="display:none;margin-top:6px;"></div>' +
-      '<div class="span2" style="position:relative;"><div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:6px 8px;margin-bottom:3px;"><label for="sInstr" style="margin:0;white-space:nowrap;">강사</label>' +
+      '<div class="span3" style="position:relative;"><div class="flbl"><label for="sInstr">강사</label>' +
         '<span style="display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;"><button type="button" class="btn" id="sOps" style="height:26px;padding:0 10px;font-size:12px;" title="입교안내·성과측정처럼 강사 없이 학교(교육운영팀)가 운영하는 교시">교육운영팀 운영</button><button type="button" class="btn" id="sOps2" style="height:26px;padding:0 10px;font-size:12px;" title="강사 없이 교육훈련팀이 운영하는 교시">교육훈련팀 운영</button>' +
         '<button type="button" class="btn" id="sBrowse" style="height:26px;padding:0 10px;font-size:12px;">강사 찾아보기 (사진·이력)</button></span></div><div id="sChip"></div>' +
         '<div id="sRoleWrap" style="display:none;margin:6px 0;"><span class="hint" style="margin-right:6px;font-weight:700;">역할</span><select id="sRole" style="width:auto;"><option>주강사</option><option>보조강사</option></select> ' +
@@ -2990,7 +2996,7 @@
         '<div class="cxfind-row"><button type="button" class="cxbtn cxbig" id="cxFind" title="교과목·일시에 맞는 강사 후보를 이력·평가 기준으로 정리하고, AI가 비슷한 교과목을 연결해 근거를 보여 줍니다"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>적합한 강사 찾기</button><span class="hint" style="margin:0;">위 교과목·일시를 기준으로 이력·평가를 정리해 후보를 보여 드립니다</span></div>' +
         '</div>' +
       '<div style="grid-column:1/-1;"><div id="aiPanel" class="aipanel" style="display:none;"></div></div>' +
-      '<div class="span2"><label for="sNote" id="sNoteLbl">비고</label><input type="text" id="sNote" maxlength="200" placeholder="선택 입력"></div>' +
+      '<div class="span3" id="sNoteWrap"><label for="sNote" id="sNoteLbl">비고</label><input type="text" id="sNote" maxlength="200" placeholder="선택 입력"></div>' +
       '<div class="span3" id="sNoPlanWrap"><label for="sNoPlan" style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0;"><input type="checkbox" id="sNoPlan" style="width:auto;height:auto;margin:0;">' +
         '<span style="font-weight:700;">강의계획서 제출 불필요</span></label>' +
         '<div class="hint" id="sNoPlanHint">체크하면 이 과정의 같은 이름 교과목 전체가 강의계획서 제출 대상에서 빠지고, 마감·미제출 집계와 강사 안내 메일에도 나오지 않습니다.</div></div>' +
@@ -3690,7 +3696,7 @@
       '<select id="calTypeSel" aria-label="구분"><option value="">구분 전체</option>' + types.map(function(t){ return '<option value="' + esc(t) + '"' + (calType === t ? ' selected' : '') + '>' + esc(t) + '</option>'; }).join('') + '</select>' +
       '<select id="calRoomSel" aria-label="강의실"><option value="">강의실 전체</option>' + Object.keys(roomSet).sort().map(function(r){ return '<option value="' + esc(r) + '"' + (calRoom === r ? ' selected' : '') + '>' + esc(r) + '</option>'; }).join('') + '</select>' +
       '<label class="calpre"><input type="checkbox" id="calPreChk"' + (calPre ? ' checked' : '') + '> 편성 전만 보기</label>' +
-      '<span style="margin-left:auto;display:inline-flex;gap:6px;">' + oriSelect('cal') + '<button type="button" class="btn sm" data-cm="print">인쇄</button></span></div>' +
+      '<span class="ctools" style="margin-left:auto;display:inline-flex;gap:6px;align-items:center;">' + oriSelect('cal') + '<button type="button" class="btn sm" data-cm="print">인쇄</button></span></div>' +
       '<div class="pcalsum">이 달 과정·기수 ' + Object.keys(courseSet).length + '개 · 편성된 교과목 ' + nSubj + '건 · 강사 미지정 ' + nUnas + '건 · 겹침 경고 ' + nErr + '곳</div>' + emptyMonthHint(byDate);
     var thead = '<tr>' + names.slice(0, cols).map(function(n){ return '<th>' + n + '</th>'; }).join('') + '</tr>';
     var body = '', agenda = '';
@@ -5809,13 +5815,15 @@
       '<span><b>예정 강의실</b> ' + esc(p['예정 강의실'] || '-') + '</span>' +
       '<span><b>교과목 시간표</b> ' + (wi + 1) + '주차 · ' + esc(md(mon)) + ' ~ ' + esc(md(addDays(mon, 4))) + '</span></div></div>';
     var scopeBar = '<span class="gscope" role="group" aria-label="격자 범위"><button type="button" data-gs="one" class="' + (all ? '' : 'on') + '">이 과정만</button><button type="button" data-gs="all" class="' + (all ? 'on' : '') + '">같은 주 전체 과정</button></span>';
-    box.innerHTML = '<div class="gbox' + (all ? ' wide' : '') + '">' + pHead + '<div class="gnavbar">' + scopeBar + '<button type="button" class="btn sm" data-gw="prev"' + (wi === 0 ? ' disabled' : '') + '>' + ic('chevL', 'l') + '이전 주</button>' +
+    // d3f: 도구 줄 정리 — 1줄: 범위 전환(왼쪽)·보기 도구(오른쪽) / 2줄: 주 이동과 현재 주·편성 현황
+    var gTools = '<span class="gtools">' + (isViewer() ? '' : '<button type="button" class="btn sm mvm' + (mvOn() ? ' on' : '') + '" data-mvmode="1" title="켜면 칸마다 이동·맞바꾸기 버튼이 나타납니다">⇄ 이동 모드 ' + (mvOn() ? '끄기' : '켜기') + '</button>' + '<button type="button" class="btn sm mvm' + (gpOn() ? ' on' : '') + '" data-gpmode="1" title="켜면 빈 교시 칸마다 비워둠 처리 버튼이 나타납니다. 평소에는 숨겨 둡니다">비워둠 처리 ' + (gpOn() ? '끄기' : '켜기') + '</button>') + oriSelect('grid') + '<button type="button" class="btn sm" data-gw="print">인쇄</button>' + (all ? '' : '<button type="button" class="btn sm" data-gw="pdfall" title="이 과정의 모든 주차를 한 파일(주차당 1페이지)로 인쇄합니다. 인쇄창에서 PDF로 저장하면 파일명이 제N기 과정명으로 채워집니다">과정 전체 PDF</button>') + '</span>';
+    box.innerHTML = '<div class="gbox' + (all ? ' wide' : '') + '">' + pHead + '<div class="gnavbar">' + scopeBar + gTools + '<span class="gbr"></span><button type="button" class="btn sm" data-gw="prev"' + (wi === 0 ? ' disabled' : '') + '>' + ic('chevL', 'l') + '이전 주</button>' +
       '<select id="gWeek" aria-label="주 선택">' + opts + '</select>' +
       '<button type="button" class="btn sm" data-gw="next"' + (wi === weeks.length - 1 ? ' disabled' : '') + '>다음 주' + ic('chevR', 'r') + '</button>' +
       '<button type="button" class="btn sm" data-gw="today">이번 주</button>' +
       '<span class="wk">' + (wi + 1) + '주차 / ' + weeks.length + '주 · ' + esc(md(mon)) + ' ~ ' + esc(md(addDays(mon, 4))) + '</span>' +
       (all ? '' : (function(){ var cf = courseFill(p, gapIndex()); return cf.total ? '<span class="wk gfill">편성 현황 ' + cf.filled + '/' + cf.total + '교시' + (cf.done ? ' (비워둠 ' + cf.done + ')' : '') + '</span>' : ''; })()) +
-      '<span style="margin-left:auto;display:inline-flex;gap:6px;">' + (isViewer() ? '' : '<button type="button" class="btn sm mvm' + (mvOn() ? ' on' : '') + '" data-mvmode="1" title="켜면 칸마다 이동·맞바꾸기 버튼이 나타납니다">⇄ 이동 모드 ' + (mvOn() ? '끄기' : '켜기') + '</button>' + '<button type="button" class="btn sm mvm' + (gpOn() ? ' on' : '') + '" data-gpmode="1" title="켜면 빈 교시 칸마다 비워둠 처리 버튼이 나타납니다. 평소에는 숨겨 둡니다">비워둠 처리 ' + (gpOn() ? '끄기' : '켜기') + '</button>') + oriSelect('grid') + '<button type="button" class="btn sm" data-gw="print">인쇄</button>' + (all ? '' : '<button type="button" class="btn sm" data-gw="pdfall" title="이 과정의 모든 주차를 한 파일(주차당 1페이지)로 인쇄합니다. 인쇄창에서 PDF로 저장하면 파일명이 제N기 과정명으로 채워집니다">과정 전체 PDF</button>') + '</span></div>' + ctab +
+      '</div>' + ctab +
       '<div class="glegend"><span><i style="background:#E3EBF5"></i>편성됨</span><span><i style="background:#fff;border:1.5px dashed #c9a400"></i>강사 미지정</span>' +
       '<span><i style="background:var(--err-bg);border-color:#D8574B"></i>겹침 경고</span><span><i style="background:#FFF2C9;border-color:#D9B100"></i>같은 반 겹침</span><span><i style="background:#F1F1EE"></i>확인됨</span><span><i style="background:repeating-linear-gradient(135deg,#FFF1BF,#FFF1BF 3px,#fff 3px,#fff 6px);border:1px solid #D9B100"></i>빈 교시</span><span><i style="background:repeating-linear-gradient(135deg,#D9DCE0,#D9DCE0 3px,var(--bg-hover) 3px,var(--bg-hover) 6px)"></i>비워둠 처리(편성 아님)</span>' +
       '<span class="docleg"><span class="db ok">서류 완비</span> <span class="db bad">미비 N</span> <span class="db wn">보유 임박·계획서 대기</span> 강사카드·동의서·강의계획서</span></div>' +
