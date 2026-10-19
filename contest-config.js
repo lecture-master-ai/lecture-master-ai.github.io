@@ -5,7 +5,7 @@
      로그인은 비밀번호 없이 [로그인] 버튼 하나로, 강사 승인은 확인창으로 줄입니다. false로 바꾸면 원래 화면으로 돌아갑니다(코드는 지우지 않음). */
 window.CONTEST_CONFIG = {
   WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbzYdVSZsLnSw3JN01aIDuXa1Ubxh6ERWYC-0TEQxu6tRYrcI9-WNYEoKv3Cfk9qyUvJ/exec',
-  VERSION: '대회용 d3o',
+  VERSION: '대회용 d3p',
   ORG_NAME: '○○소방학교',
   SYS_ORG: '○○소방학교',   // d3e: 로그인 카드 아래 운영기관 이름(다른 학교에서 쓸 때 여기만 바꿈)
   SIMPLE: true,
@@ -233,8 +233,10 @@ window.CONTEST_CONFIG = {
     if (!document.getElementById('cxGdCss')) {
       var st = document.createElement('style'); st.id = 'cxGdCss';
       st.textContent = '#cxGd{position:fixed;left:50%;top:78px;transform:translateX(-50%);z-index:100001;pointer-events:none;width:max-content;max-width:calc(100vw - 24px)}' +
-        '.cxg{pointer-events:auto;cursor:pointer;background:#1B3A5F;color:#fff;border-radius:999px;padding:8px 18px;box-shadow:0 6px 18px rgba(16,24,40,.22);font-size:14px;font-weight:700;line-height:1.45;word-break:keep-all;text-align:center;opacity:0;transform:translateY(-6px);transition:opacity .2s ease-out,transform .2s ease-out}' +
-        '.cxg.in{opacity:1;transform:none} .cxg.out{opacity:0} .cxg .ck{color:#7CD4A4;margin-right:6px} .cxg .nx{font-weight:600;color:#DCE4EE;margin-left:8px} .cxg .nx i{font-style:normal;font-weight:800;color:#fff}' +
+        '.cxg{pointer-events:auto;cursor:pointer;display:flex;align-items:flex-start;gap:10px;background:#F2FBF5;color:#14532D;border:1.5px solid #9FD3B4;border-radius:16px;padding:11px 18px 11px 13px;box-shadow:0 12px 26px -12px rgba(20,101,63,.42),0 2px 6px rgba(16,24,40,.06);font-size:14px;line-height:1.45;word-break:keep-all;text-align:left;opacity:0;transform:translateY(-6px);transition:opacity .2s ease-out,transform .2s ease-out}' +
+        '.cxg.in{opacity:1;transform:none} .cxg.out{opacity:0} .cxg .ck{flex:0 0 22px;height:22px;margin-top:0;border-radius:50%;background:#1E8E5A;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:900}' +
+        '.cxg .cxg-d{font-weight:800;color:#14532D} .cxg .nx{display:block;font-size:13.5px;font-weight:500;color:#3F4A3F;margin-top:2px} .cxg .nx i{font-style:normal;font-weight:800;color:#7A4B00;background:#FFF4C2;border:1px dashed #E6CE6B;border-radius:99px;padding:0 8px}' +
+        '.cxg.only-nx{border-color:#E6CE6B;background:#FFFDF0;box-shadow:0 12px 26px -12px rgba(190,150,0,.4)} .cxg.only-nx .nx{margin-top:0;font-size:14px;color:#3B2F00}' +
         '.cxtip{position:fixed;z-index:100002;max-width:min(320px,calc(100vw - 24px));background:linear-gradient(180deg,#FFFDF0,#FFF7CF);color:#3B2F00;border:1.5px dashed #E6CE6B;border-radius:18px;padding:11px 34px 12px 15px;box-shadow:0 12px 26px -10px rgba(190,150,0,.42),0 2px 5px rgba(190,150,0,.12);font-size:14px;line-height:1.5;word-break:keep-all;opacity:0;transform:translateY(4px) scale(.98);transition:opacity .18s ease-out,transform .18s ease-out,box-shadow .18s ease-out;pointer-events:auto}' +
         '.cxtip.in{opacity:1;transform:none} .cxtip.up{transform:translateY(-4px) scale(.98)} .cxtip.up.in{transform:none}' +
         '.cxtip.in:hover{transform:translateY(-2px);box-shadow:0 16px 30px -10px rgba(190,150,0,.5),0 3px 6px rgba(190,150,0,.14)}' +
@@ -244,7 +246,7 @@ window.CONTEST_CONFIG = {
         '@keyframes cxgP{0%{box-shadow:0 0 0 0 rgba(232,118,43,.7)}70%{box-shadow:0 0 0 10px rgba(232,118,43,0)}100%{box-shadow:0 0 0 0 rgba(232,118,43,0)}}' +
         '.cxg-pulse{animation:cxgP 1.4s ease-out 3;outline:2px solid #E8762B !important;outline-offset:2px}' +
         '@media (prefers-reduced-motion:reduce){.cxg-pulse{animation:none}.cxg,.cxtip{transition:none}}' +
-        '@media (max-width:600px){#cxGd{top:64px}.cxg{font-size:13px;padding:7px 14px}}';
+        '@media (max-width:600px){#cxGd{top:74px}.cxg{font-size:13px;padding:9px 14px 9px 11px;border-radius:14px}.cxg .nx{font-size:12.5px}}';
       document.head.appendChild(st);
     }
     var box = document.getElementById('cxGd');
@@ -257,10 +259,12 @@ window.CONTEST_CONFIG = {
     function toast(d, n) {
       if (!d && !n) return;
       var prev = box.querySelector('.cxg');   // 1초 안에 온 알림은 한 줄로 합침(단계 이동 + 완료)
-      if (prev && Date.now() - Number(prev.getAttribute('data-at') || 0) < 1000 && d && !n && !prev.querySelector('.nx')) { prev.insertAdjacentHTML('beforeend', ' · ' + escH(d)); clearTimeout(gToastT); gToastT = setTimeout(function () { prev.classList.remove('in'); setTimeout(function () { if (prev.parentNode) prev.parentNode.removeChild(prev); }, 220); }, 3000); return; }
+      if (prev && Date.now() - Number(prev.getAttribute('data-at') || 0) < 1000 && d && !n && !prev.querySelector('.nx') && prev.querySelector('.cxg-d')) { prev.querySelector('.cxg-d').insertAdjacentHTML('beforeend', ' · ' + escH(d)); clearTimeout(gToastT); gToastT = setTimeout(function () { prev.classList.remove('in'); setTimeout(function () { if (prev.parentNode) prev.parentNode.removeChild(prev); }, 220); }, 3000); return; }
       Array.prototype.forEach.call(box.querySelectorAll('.cxg'), function (c) { c.parentNode.removeChild(c); });
       var el = document.createElement('div'); el.className = 'cxg'; el.setAttribute('data-at', String(Date.now()));
-      el.innerHTML = (d ? '<span class="ck">✓</span>' + escH(d) : '') + (n ? '<span class="nx">' + (d ? '· ' : '') + '다음: ' + n + '</span>' : '');
+      // d3p: 완료(초록 원 ✓ + 굵은 글씨)와 다음 할 일(노랑 칩)을 두 줄로 나눔. 다음 할 일만 있으면 연노랑 카드
+      if (!d) el.className = 'cxg only-nx';
+      el.innerHTML = (d ? '<span class="ck">✓</span>' : '') + '<div>' + (d ? '<div class="cxg-d">' + escH(d) + '</div>' : '') + (n ? '<span class="nx">다음: ' + n + '</span>' : '') + '</div>';
       box.appendChild(el); requestAnimationFrame(function () { el.classList.add('in'); });
       var kill = function () { el.classList.remove('in'); el.classList.add('out'); setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 220); };
       el.addEventListener('click', kill); clearTimeout(gToastT); gToastT = setTimeout(kill, n ? 4200 : 2600);
