@@ -34,7 +34,7 @@ window.CONTEST_CONFIG = {
     var b = document.createElement('div');
     b.id = 'contestBanner';
     b.setAttribute('role', 'note');
-    b.innerHTML = '<span class="cb-a">심사용 사본 · 모의 데이터 · 메일·문자 실제 발송은 제작자 본인만 · </span><a href="lecture-assignment.html#v=table" style="color:#1B3A5F;font-weight:700;">강의배정에서 과정을 골라 1~4단계를 직접 진행해 보세요</a>';
+    b.innerHTML = '<span class="cb-a">심사용 사본 · 모의 데이터 · 메일·문자 실제 발송은 승인된 신규 등록 강사만 · </span><a href="lecture-assignment.html#v=table" style="color:#1B3A5F;font-weight:700;">강의배정에서 과정을 골라 1~4단계를 직접 진행해 보세요</a>';
     var bs = document.createElement('style'); bs.textContent = '@media (max-width:600px){#contestBanner .cb-a{display:none}#contestBanner{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}'; document.head.appendChild(bs);
     b.style.cssText = 'background:#EEF1F5;color:#5F6877;font-size:11.5px;font-weight:600;text-align:center;padding:3px 12px;line-height:1.4;border-bottom:1px solid #E1E6ED;';
     document.body.insertBefore(b, document.body.firstChild);
