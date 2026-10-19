@@ -578,7 +578,8 @@
   .bd-add:focus-visible,.bd-addsm:focus-visible{outline:2px solid var(--navy);outline-offset:2px;}
   .bd-addsm{border:1.5px dashed #9DB0C8;background:transparent;border-radius:10px;height:36px;font:inherit;font-size:13px;font-weight:800;color:var(--navy);cursor:pointer;}
   .bdc{position:relative;}
-  .bdc.moved{box-shadow:0 0 0 2px #E8762B;animation:bdcIn .6s ease-out 1;}
+  .bdc.moved{box-shadow:0 0 0 2px #E8762B;}
+  .bdc.enter{animation:bdcIn .35s cubic-bezier(.2,.8,.2,1) both;}   /* d3o: 보드에 새로 올라오거나 단계가 바뀐 카드는 아래에서 서서히 올라옴(처음 한 번만) */
   .bdc-mv{position:absolute;top:-9px;right:10px;font-size:11px;font-weight:800;color:#fff;background:#E8762B;border-radius:999px;padding:1px 8px;}
   .bd-pull{border-style:dashed;}
   .bdc.paused{background:#F7F9FC;box-shadow:0 0 0 1px #D0D8E4;opacity:.92;} .bdc.paused .bdc-mv{background:#667085;} .bdc.paused .bdc-t{color:#344054;}
@@ -594,8 +595,8 @@
   .bdc.fin{box-shadow:0 0 0 2px #1E8E5A;transition:opacity .4s ease-out,transform .4s ease-out;} .bdc.fin .bdc-mv{background:#1E8E5A;} .bdc-fin{color:#14653F;font-weight:700;} .bdc.bdc-out{opacity:0;transform:translateY(12px);}
   .bp-done{align-self:center;font-size:12px;font-weight:800;color:#14653F;background:#E3F4EA;border-radius:999px;padding:3px 10px;}
   .cx-wait{margin-top:10px;background:#F4F7FB;border:1px dashed #B8C4D4;border-radius:10px;padding:22px 16px;text-align:center;color:#1B3A5F;font-size:15px;} .cx-wait .ai-spin{display:inline-block;vertical-align:-3px;margin-right:6px;} .cx-wait #cxWaitSec{font-weight:800;color:#2F6FB2;margin-left:4px;} .cx-wait .cxw-s{margin-top:6px;font-size:12.5px;color:#475467;}
-  @keyframes bdcIn{0%{transform:translateY(-6px);opacity:.4}100%{transform:none;opacity:1}}
-  @media (prefers-reduced-motion:reduce){.bdc.moved{animation:none;}}
+  @keyframes bdcIn{0%{transform:translateY(12px);opacity:0}100%{transform:none;opacity:1}}
+  @media (prefers-reduced-motion:reduce){.bdc.enter{animation:none;}}
   .bd-done{margin-top:14px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px 16px;text-align:left;}
   .bd-done summary{cursor:pointer;font-size:15px;font-weight:800;color:var(--navy);} .bd-done summary span{font-size:12.5px;font-weight:500;color:var(--text-muted);margin-left:6px;}
   .bd-done ul{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;}
@@ -1327,7 +1328,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-19 배정 d3n</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-19 배정 d3o</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -2217,9 +2218,13 @@
         }
         var mv = stageMoved[key], hot = mv && Date.now() - mv.at < 5 * 60000 && (!mv.shown || mv.visit === boardVisit);   // 처음 보이는 방문 동안만 강조
         if (hot && !mv.shown && !mv.added && !mv.toasted) moves.push(courseLabel(key) + '이(가) ' + st.lane + '단계 \'' + STEPS[st.lane - 1].t + '\'(으)로 이동했습니다.');
+        // d3o: 올라오는 움직임은 처음 나타난 뒤 0.35초 동안만. 그 사이 보드를 다시 그리면 이어서 재생(음수 지연)해 처음부터 반복되지 않게 함
+        if (hot && !mv.shown) mv.enterAt = Date.now();
+        var enterMs = hot && mv.enterAt ? Date.now() - mv.enterAt : 9999, enter = enterMs < 350;
+        var enterSt = enter ? ' style="animation-delay:-' + enterMs + 'ms"' : '';
         if (hot && !mv.shown) { mv.shown = true; mv.visit = boardVisit; }
-        if (r.fin) { h += '<article class="bdc fin moved" data-card-open="' + esc(key) + '"><span class="bdc-mv">완료</span><div><div class="bdc-t">' + esc(key) + '</div><div class="bdc-p">' + esc(ipgyo(r.p)) + '</div></div><div class="bdc-x bdc-fin">' + ic('check', 'l') + '배정·안내 완료 · 곧 \'진행한 과정\'으로 옮겨집니다</div></article>'; return; }
-        h += '<article class="bdc' + (hot ? ' moved' : '') + '" data-card-open="' + esc(key) + '">' + (hot ? '<span class="bdc-mv">' + (mv.resumed ? '이어서' : mv.added ? '방금 올림' : '방금 이동') + '</span>' : '') + '<div><div class="bdc-t">' + esc(key) + '</div><div class="bdc-p">' + esc(ipgyo(r.p)) + (dd ? ' · ' + dd : '') + '</div></div>' +
+        if (r.fin) { h += '<article class="bdc fin moved' + (enter ? ' enter' : '') + '"' + enterSt + ' data-card-open="' + esc(key) + '"><span class="bdc-mv">완료</span><div><div class="bdc-t">' + esc(key) + '</div><div class="bdc-p">' + esc(ipgyo(r.p)) + '</div></div><div class="bdc-x bdc-fin">' + ic('check', 'l') + '배정·안내 완료 · 곧 \'진행한 과정\'으로 옮겨집니다</div></article>'; return; }
+        h += '<article class="bdc' + (hot ? ' moved' : '') + (enter ? ' enter' : '') + '"' + enterSt + ' data-card-open="' + esc(key) + '">' + (hot ? '<span class="bdc-mv">' + (mv.resumed ? '이어서' : mv.added ? '방금 올림' : '방금 이동') + '</span>' : '') + '<div><div class="bdc-t">' + esc(key) + '</div><div class="bdc-p">' + esc(ipgyo(r.p)) + (dd ? ' · ' + dd : '') + '</div></div>' +
           (st.n ? '<div class="bdc-pg"><span>강사 ' + (st.n - st.empty) + ' / ' + st.n + '칸</span><i><b style="width:' + pct + '%"></b></i></div>' : '') +
           '<div class="bdc-x">' + (st.nx.ai ? '<span class="ai-badge">AI 도움</span>' : '') + esc(st.nx.x) + '</div>' + (st.n && gapOf(r.p) ? '<div class="bdc-gap">빈 교시 ' + gapOf(r.p) + '칸 남음</div>' : '') +
           (restartedByOther(key, 'ab') ? '<div class="bdc-warn">다른 평가관이 ' + hmText(restartedByOther(key, 'ab')) + '에 처음부터 다시 시작했습니다</div>' : '') +
@@ -7871,7 +7876,7 @@
     { t: '강사 환류', d: '강사별 결과 메일', tl: [['ai', '의견 요약을 메일에 담기'], ['hum', '보낼 강사 선택']] },
     { t: '완료', d: '다음 강사 배정에 반영', tl: [['ai', 'AI 강사 배정의 근거로 쓰임']] }
   ];
-  var evSeen = {}, evHot = {}, evAdded = {};
+  var evSeen = {}, evHot = {}, evAdded = {}, evEntered = {};
   function evLane(S){ return S.stage >= 5 ? 4 : S.stage === 4 ? 3 : S.stage === 2 ? 2 : 1; }
   function evAiLine(j){
     var sm = (j.요약 || []).slice().sort(function(a, b){ return (Number(b['의견 수']) || 0) - (Number(a['의견 수']) || 0); })[0];
@@ -7929,7 +7934,7 @@
       h += '<div class="bd-lane' + (L.length ? '' : ' empty') + (i ? '' : ' first') + '" id="evl' + (i + 1) + '"><div class="bd-lh"><span>' + (i + 1) + '. ' + s.t + '</span>' + (L.length ? '<em>' + L.length + '과정</em>' : '') + '</div>';
       var canEd = !isViewer(), act = dbs('ev').active;
       if (!L.length) h += i === 0 && canEd ? '<button type="button" class="bd-empty bd-add' + (act ? '' : ' go') + '" data-evadd="1"><b>' + (act ? '+ 다른 과정 올리기' : '+ 과정 올리기') + '</b></button>' : laneEmptyHtml('ev', i + 1, lanes);
-      L.forEach(function(r){ var key = String(r.p['과정+기수']), hot = evHot[key] && Date.now() - evHot[key] < 5000; h += evCardB(r.p, r.j, r.err, hot ? (evAdded[key] ? 'add' : true) : false); if (hot) setTimeout(function(){ delete evAdded[key]; }, 5000); });
+      L.forEach(function(r){ var key = String(r.p['과정+기수']), hot = evHot[key] && Date.now() - evHot[key] < 5000; var cH = evCardB(r.p, r.j, r.err, hot ? (evAdded[key] ? 'add' : true) : false); var eK = key + '|' + evHot[key]; if (hot && !evEntered[eK]) evEntered[eK] = Date.now(); var eMs = hot ? Date.now() - evEntered[eK] : 9999; if (eMs < 350) cH = cH.replace('class="bdc ev-k moved"', 'class="bdc ev-k moved enter" style="animation-delay:-' + eMs + 'ms"'); h += cH; if (hot) setTimeout(function(){ delete evAdded[key]; }, 5000); });
       if (i === 0 && L.length && canEd) h += '<button type="button" class="bd-addsm" data-evadd="1">+ 다른 과정 올리기</button>';
       h += '</div>';
     });
