@@ -275,7 +275,7 @@
 
   <form id="regForm" novalidate>
     <div class="card">
-      <div class="card-title"><span>① 기본 정보</span><button type="button" class="btn-sub" id="cxFill" title="실제 개인정보 대신 모의 정보로 채웁니다">모의 정보로 채우기</button></div>
+      <div class="card-title"><span>① 기본 정보</span></div>
       <div class="row">
         <div class="field">
           <label class="required" for="name">성명</label>
@@ -716,23 +716,7 @@
   }
   ['cxUnav', 'cxUnFrom', 'cxUnTo'].forEach(function(id){ $(id).addEventListener('change', cxUnHint); });
 
-  /* ---------- 모의 정보로 채우기(기본 정보만, 강사카드는 파일로 체험) ---------- */
-  $('cxFill').addEventListener('click', function(){
-    var n = String(Math.floor(1000 + Math.random() * 9000));
-    var sur = '김이박최정강조윤장임'.charAt(Math.floor(Math.random() * 10)), giv = ['서연', '도윤', '하준', '지안', '시우', '예린', '준호', '유나'][Math.floor(Math.random() * 8)];
-    var set = function(id, v){ var el = $(id); if (el) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); } };
-    set('name', sur + giv);
-    set('birth', '19800101');
-    set('phone', '010-0000-' + n);
-    set('email', 'mock' + n + '@example.com');
-    set('org', '○○안전교육원');
-    set('position', '전문강사');
-    set('region', '광주');
-    $('specialty').value = '직무교육';
-    var cb = document.querySelector('#cxUnav input[data-d="금"][data-h="오후"]'); if (cb) cb.checked = true;
-    cxUnHint(); renderFlow();
-    $('cardBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
-  });
+  /* d3t: '모의 정보로 채우기' 버튼 제거(실제 등록이 쌓이고, 승인 시 가짜 번호로 실제 발송될 수 있어서) */
 
   /* ---------- 생년월일·연락처 입력 모양 ---------- */
   function calcAge(birthStr){
