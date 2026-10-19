@@ -5,7 +5,7 @@
      로그인은 비밀번호 없이 [로그인] 버튼 하나로, 강사 승인은 확인창으로 줄입니다. false로 바꾸면 원래 화면으로 돌아갑니다(코드는 지우지 않음). */
 window.CONTEST_CONFIG = {
   WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbzYdVSZsLnSw3JN01aIDuXa1Ubxh6ERWYC-0TEQxu6tRYrcI9-WNYEoKv3Cfk9qyUvJ/exec',
-  VERSION: '대회용 d3l',
+  VERSION: '대회용 d3m',
   ORG_NAME: '○○소방학교',
   SYS_ORG: '○○소방학교',   // d3e: 로그인 카드 아래 운영기관 이름(다른 학교에서 쓸 때 여기만 바꿈)
   SIMPLE: true,
