@@ -5,7 +5,7 @@
      로그인은 비밀번호 없이 [로그인] 버튼 하나로, 강사 승인은 확인창으로 줄입니다. false로 바꾸면 원래 화면으로 돌아갑니다(코드는 지우지 않음). */
 window.CONTEST_CONFIG = {
   WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbzYdVSZsLnSw3JN01aIDuXa1Ubxh6ERWYC-0TEQxu6tRYrcI9-WNYEoKv3Cfk9qyUvJ/exec',
-  VERSION: '대회용 d3k',
+  VERSION: '대회용 d3l',
   ORG_NAME: '○○소방학교',
   SYS_ORG: '○○소방학교',   // d3e: 로그인 카드 아래 운영기관 이름(다른 학교에서 쓸 때 여기만 바꿈)
   SIMPLE: true,
@@ -70,8 +70,8 @@ window.CONTEST_CONFIG = {
         if (!document.getElementById('lgCss')) { var ls = document.createElement('style'); ls.id = 'lgCss';
           ls.textContent = '#loginCard .lg-pg{display:inline-block;font-size:12px;font-weight:700;color:#1B3A5F;background:#EEF2F7;border-radius:999px;padding:3px 10px;margin-bottom:12px;}' +
             '#loginCard .lg-name{font-family:Pretendard,"Malgun Gothic","Apple SD Gothic Neo",sans-serif;font-size:24px;line-height:1.3;font-weight:800;color:#1B3A5F;margin-bottom:6px;word-break:keep-all;}' +
-            '#loginCard .lg-on{color:#E8590C;} #loginCard .lg-s1{font-weight:700;margin-bottom:22px;word-break:keep-all;}' +
-            '#loginCard.lg-dark .lg-name{color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.45);} #loginCard.lg-dark .lg-on{color:#FFB38A;}';   // 사진 배경(강사관리)은 밝은 글자
+            '#loginCard .lg-on{color:#E8590C;} #loginCard .lg-s1{font-weight:700;margin-bottom:22px;word-break:keep-all;color:#E8590C;}' +
+            '#loginCard.lg-dark .lg-name{color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.45);} #loginCard.lg-dark .lg-on,#loginCard.lg-dark .lg-s1{color:#FFB38A;}';   // 사진 배경(강사관리)은 밝은 글자
           document.head.appendChild(ls); }
         try { var bg = getComputedStyle(card).backgroundColor, m = /rgba?\(([\d.]+), ([\d.]+), ([\d.]+)(?:, ([\d.]+))?\)/.exec(bg); if (m && (m[4] !== undefined && Number(m[4]) < 0.6)) card.classList.add('lg-dark'); } catch (e) {}
         if (tt) { tt.className = 'title lg-name'; tt.removeAttribute('style'); tt.innerHTML = '소방교육 외래강사 <span class="lg-on">ON</span>';
