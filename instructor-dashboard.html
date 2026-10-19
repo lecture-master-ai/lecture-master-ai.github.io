@@ -428,9 +428,8 @@
         <option value="휴면">휴면</option>
       </select>
       <select class="filter" id="cxSortSel" aria-label="정렬">
-        <option value="">정렬: 등록 순</option>
+        <option value="">정렬: 신규 등록 순</option>
         <option value="rank">랭크 높은 순</option>
-        <option value="recent">최근 등록 순</option>
         <option value="oldest">오래된 등록 순</option>
         <option value="count">담당 횟수 순</option>
       </select>
@@ -793,13 +792,15 @@
     return '<span class="cx-rl">' + cxStars(r) + ' ' + r.toFixed(1) + ' · 응답 ' + d.평가응답수 + tag + '</span>';
   }
   function cxSortList(list, q){
+    // d3s: 기본 정렬 = 신규 등록 순(등록일 최근 → 같은 날이면 나중에 등록한 줄이 위). 새로 신청한 강사·승인대기가 맨 위에 보임
     var mode = (document.getElementById('cxSortSel') || {}).value || '';
-    if (!mode && !q) return list;
+    var pos = {}; (allData || []).forEach(function(d, i){ pos[d.강사ID] = i; });
+    var newer = function(a, b){ var c = String(b.등록일 || '').localeCompare(String(a.등록일 || '')); return c || ((pos[b.강사ID] || 0) - (pos[a.강사ID] || 0)); };
     var out = list.slice();
     out.sort(function(a, b){
       if (q) { var ha = cxSubjHit(a, q), hb = cxSubjHit(b, q); if (ha !== hb) return hb - ha; }
-      if (mode === 'recent') return String(b.등록일 || '').localeCompare(String(a.등록일 || ''));
-      if (mode === 'oldest') return String(a.등록일 || '').localeCompare(String(b.등록일 || ''));
+      if (!mode) return newer(a, b);
+      if (mode === 'oldest') return -newer(a, b);
       if (mode === 'count') return (Number(b.강의회차) || 0) - (Number(a.강의회차) || 0);
       var ra = cxRankOf(a), rb = cxRankOf(b);
       return (rb === null ? -1 : rb) - (ra === null ? -1 : ra);
@@ -1710,6 +1711,7 @@
   function renderPending(){
     var box = document.getElementById('pendBox'); if (!box) return;
     var list = isViewerRole() ? [] : allData.filter(function(d){ return d.상태 === '승인대기' && !d._stale; });
+    list = list.map(function(d, i){ return { d: d, i: i }; }).sort(function(x, y){ return String(y.d.등록일 || '').localeCompare(String(x.d.등록일 || '')) || (y.i - x.i); }).map(function(x){ return x.d; });   // d3s: 최근 신청이 위
     if (!list.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
     box.style.display = '';
     box.innerHTML = '<div class="pd-h"><b>승인 대기 ' + list.length + '명</b><span>강사가 등록을 신청했습니다. 강사카드를 확인하고 승인하면 강의배정 후보에 바로 포함됩니다.</span></div>' +
