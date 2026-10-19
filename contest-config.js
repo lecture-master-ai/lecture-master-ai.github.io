@@ -5,7 +5,7 @@
      로그인은 비밀번호 없이 [로그인] 버튼 하나로, 강사 승인은 확인창으로 줄입니다. false로 바꾸면 원래 화면으로 돌아갑니다(코드는 지우지 않음). */
 window.CONTEST_CONFIG = {
   WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbzYdVSZsLnSw3JN01aIDuXa1Ubxh6ERWYC-0TEQxu6tRYrcI9-WNYEoKv3Cfk9qyUvJ/exec',
-  VERSION: '대회용 d3m',
+  VERSION: '대회용 d3n',
   ORG_NAME: '○○소방학교',
   SYS_ORG: '○○소방학교',   // d3e: 로그인 카드 아래 운영기관 이름(다른 학교에서 쓸 때 여기만 바꿈)
   SIMPLE: true,
@@ -34,7 +34,7 @@ window.CONTEST_CONFIG = {
     var b = document.createElement('div');
     b.id = 'contestBanner';
     b.setAttribute('role', 'note');
-    b.innerHTML = '<span class="cb-a">심사용 사본 · 모의 데이터 · 메일·문자 실제 발송 없음 · </span><a href="lecture-assignment.html#v=table" style="color:#1B3A5F;font-weight:700;">강의배정에서 과정을 골라 1~4단계를 직접 진행해 보세요</a>';
+    b.innerHTML = '<span class="cb-a">심사용 사본 · 모의 데이터 · 메일·문자 실제 발송은 제작자 본인만 · </span><a href="lecture-assignment.html#v=table" style="color:#1B3A5F;font-weight:700;">강의배정에서 과정을 골라 1~4단계를 직접 진행해 보세요</a>';
     var bs = document.createElement('style'); bs.textContent = '@media (max-width:600px){#contestBanner .cb-a{display:none}#contestBanner{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}'; document.head.appendChild(bs);
     b.style.cssText = 'background:#EEF1F5;color:#5F6877;font-size:11.5px;font-weight:600;text-align:center;padding:3px 12px;line-height:1.4;border-bottom:1px solid #E1E6ED;';
     document.body.insertBefore(b, document.body.firstChild);
