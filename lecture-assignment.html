@@ -3566,7 +3566,7 @@
       return '· ' + esc(n['대상'] || '') + ' 선생님 ' + esc(n['종류'] || '') + ' 안내' + (Number(n['건수']) > 1 ? '(' + n['건수'] + '건 묶음)' : '') +
         ' — 메일 ' + esc(n['메일'] || '-') + ' · 문자 ' + esc(n['문자'] || '-');
     }).join('<br>') + (bad ? '<br><span class="hint">발송되지 않은 항목은 강사 연락처·이메일을 확인하거나 "안내 재발송"을 이용해 주세요.</span>' : '') +
-      '<br><span class="hint">(시연 모드: 실제 발송 없음)</span> <button type="button" class="btn sm" data-cxout="1">보낸 내용 보기</button></div>' + holdHtml;
+      '<br><span class="hint">(시연 모드: 기록만 하고, 승인된 신규 등록 강사에게는 실제 발송)</span> <button type="button" class="btn sm" data-cxout="1">보낸 내용 보기</button></div>' + holdHtml;
   }
   function noticeText(list){
     return (list || []).map(function(n){
@@ -8285,7 +8285,7 @@
 (function(){
   var box = null;
   function close(){ if (box) { box.remove(); box = null; } }
-  function toast(t){ var d = document.createElement('div'); d.textContent = t; d.style.cssText = 'position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:8px;font-size:14px;z-index:100001;'; document.body.appendChild(d); setTimeout(function(){ d.remove(); }, 1800); }
+  function toast(t){ if (window.cxGuide) { window.cxGuide(t, '', ''); return; } var d = document.createElement('div'); d.textContent = t; d.style.cssText = 'position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#F2FBF5;color:#14532D;border:1.5px solid #9FD3B4;padding:10px 16px;border-radius:14px;font-size:14px;font-weight:700;z-index:100001;'; document.body.appendChild(d); setTimeout(function(){ d.remove(); }, 1800); }   // d3r: 알림 팝업과 같은 모양
   function copy(addr){
     function fb(){ try { var t = document.createElement('textarea'); t.value = addr; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); toast('주소를 복사했습니다: ' + addr); } catch (e) { window.prompt('주소를 복사해 주세요', addr); } }
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(addr).then(function(){ toast('주소를 복사했습니다: ' + addr); }, fb); else fb();

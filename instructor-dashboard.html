@@ -772,7 +772,7 @@
     st.textContent = '.cx-rl{display:block;margin-top:4px;font-size:12px;color:#475467;font-weight:600}.cx-stars{font-size:13px;letter-spacing:1px;background:linear-gradient(90deg,#E8A317 var(--p),#D0D5DD var(--p));-webkit-background-clip:text;background-clip:text;color:transparent}' +
       '.cx-rl .w{background:#FEF0C7;color:#93370D;border-radius:999px;padding:1px 7px;font-size:11px}.cx-rl .h{background:#DCFAE6;color:#067647;border-radius:999px;padding:1px 7px;font-size:11px;margin-left:4px}' +
       '.cx-ev{margin:0 0 18px;border:1px solid #CDE7E0;background:#F4FBF9;border-radius:10px;padding:12px 14px}.cx-ev h4{margin:0 0 8px;font-size:13px;color:#0B4A3F}.cx-ev table{width:100%;border-collapse:collapse;font-size:12.5px}.cx-ev td,.cx-ev th{padding:5px 4px;border-bottom:1px solid #E3EFEB;text-align:left}' +
-      '.cx-toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#101828;color:#fff;border-radius:10px;padding:10px 14px;font-size:13px;z-index:3000;display:flex;gap:10px;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,.25)}.cx-toast button{background:#fff;color:#101828;border:none;border-radius:6px;height:28px;padding:0 10px;font-weight:700;cursor:pointer;font-family:inherit}' +
+      '.cx-toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);width:max-content;max-width:calc(100vw - 24px);background:#F2FBF5;color:#14532D;border:1.5px solid #9FD3B4;border-radius:16px;padding:11px 12px 11px 13px;font-size:14px;line-height:1.45;word-break:keep-all;z-index:3000;display:flex;gap:10px;align-items:flex-start;box-shadow:0 12px 26px -12px rgba(20,101,63,.42),0 2px 6px rgba(16,24,40,.06)}.cx-toast .ck{flex:0 0 22px;height:22px;border-radius:50%;background:#1E8E5A;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:900}.cx-toast .t1{font-weight:800}.cx-toast .t2{display:block;font-size:13.5px;font-weight:500;color:#3F4A3F;margin-top:2px}.cx-toast .t2 i{font-style:normal;font-weight:800;color:#7A4B00;background:#FFF4C2;border:1px dashed #E6CE6B;border-radius:99px;padding:0 8px}.cx-toast button{background:#fff;color:#14532D;border:1px solid #9FD3B4;border-radius:8px;height:30px;padding:0 10px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;align-self:center}.cx-toast button.x{border:none;background:transparent;color:#5F7A66;padding:0 4px}@media (max-width:600px){.cx-toast{flex-wrap:wrap;position:fixed;padding-right:34px}.cx-toast>div{flex:1 1 calc(100% - 40px);min-width:0}.cx-toast button:not(.x){margin-left:32px}.cx-toast button.x{position:absolute;top:8px;right:6px}}' +
       '.cx-ov{position:fixed;inset:0;background:rgba(16,24,40,.5);z-index:3100;display:flex;align-items:center;justify-content:center;padding:16px}.cx-md{background:#fff;border-radius:12px;max-width:760px;width:100%;max-height:86vh;overflow:auto;padding:20px;position:relative}.cx-md h3{margin:0 0 10px;font-size:17px}.cx-x{position:absolute;top:10px;right:12px;border:none;background:none;font-size:22px;cursor:pointer}.cx-mail{border:1px solid #EAECF0;border-radius:8px;padding:10px;margin-bottom:10px}.cx-mail pre{white-space:pre-wrap;font-family:inherit;font-size:12.5px;margin:6px 0 0;line-height:1.55}';
     document.head.appendChild(st);
   })();
@@ -814,10 +814,11 @@
     return '<div class="cx-ev"><h4>교육 후 평가(랭크) <span style="font-weight:600;color:#667085;">· 관리자 화면에만 표시, 강사에게는 점수를 알리지 않음</span></h4><div style="font-size:13px;margin-bottom:6px;">' + head + '</div>' +
       (ks.length ? '<table><thead><tr><th>교과목</th><th>평균(5점)</th><th>응답</th></tr></thead><tbody>' + ks.map(function(k){ return '<tr><td>' + esc(k) + '</td><td>' + cxStars(ev[k].avg) + ' ' + Number(ev[k].avg).toFixed(2) + '</td><td>' + ev[k].n + '</td></tr>'; }).join('') + '</tbody></table>' : '') + '</div>';
   }
-  function cxToast(msg){
+  // d3r: 알림 팝업(연한 초록 카드)과 같은 모양. msg는 첫 줄(굵게), sub는 둘째 줄(다음 할 일, <i>강조</i> 가능)
+  function cxToast(msg, sub){
     var old = document.querySelector('.cx-toast'); if (old) old.parentNode.removeChild(old);
-    var t = document.createElement('div'); t.className = 'cx-toast';
-    t.innerHTML = '<span>' + esc(msg) + '</span><button type="button">보낸 내용 보기</button><button type="button" aria-label="닫기" style="background:transparent;color:#fff;">✕</button>';
+    var t = document.createElement('div'); t.className = 'cx-toast'; t.setAttribute('role', 'status');
+    t.innerHTML = '<span class="ck">✓</span><div><span class="t1">' + esc(msg) + '</span>' + (sub ? '<span class="t2">' + sub + '</span>' : '') + '</div><button type="button">보낸 내용 보기</button><button type="button" class="x" aria-label="닫기">✕</button>';
     document.body.appendChild(t);
     var bs = t.querySelectorAll('button');
     bs[0].addEventListener('click', function(){ cxOutbox(); });
@@ -1292,13 +1293,18 @@
     .then(function(res){ return res.json(); })
     .then(function(json){
       if (json.status === 'ok') {
-        var doneMsg = decision === '승인' ? '승인 처리되었습니다. 이 강사는 이제 강의배정 후보에 포함됩니다.' : (decision === '보류' ? '보류 처리되었습니다.' : '반려 처리되었습니다.');
-        if (json.메일 === '발송완료') { doneMsg += '\n안내 메일을 보냈습니다. (시연 모드: 실제 발송 없음)'; setTimeout(function(){ cxToast('안내 메일을 보낸 것으로 처리했습니다(시연 모드: 실제 발송 없음).'); }, 300); }
-        else if (json.메일 === '대기') doneMsg += '\n오늘 메일 한도 때문에 안내 메일은 발송 대기 중입니다. 한도가 남으면 순서대로 자동 발송됩니다.';
-        alert(doneMsg);
+        // d3r: 브라우저 알림창 대신 알림 팝업 하나로. 실제 발송인지 시연 기록인지는 보낸 내용 기록(실제 표시)으로 확인해 문구를 고름
+        var doneMsg = decision === '승인' ? '승인했습니다' : (decision === '보류' ? '보류 처리했습니다' : '반려 처리했습니다');
+        var nextMsg = decision === '승인' ? '이 강사는 이제 <i>강의배정 AI 일괄 배정</i> 후보에 포함됩니다' : '';
         document.getElementById('overlay').style.display = 'none';
         loadData(pw);
-        if (decision === '승인' && window.cxGuide) window.cxGuide('승인했습니다 · 안내 메일 자동 발송', '이 강사는 이제 <i>강의배정 AI 일괄 배정</i> 후보에 포함됩니다', '');
+        if (json.메일 === '발송완료') {
+          fetch(WEBAPP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'demoOutbox', password: sessionStorage.getItem('jsfa_dash_pw') || '' }) })
+            .then(function(r){ return r.json(); }).then(function(j){ var x = (j && j.data || [])[0]; return x && x.실제; }).catch(function(){ return false; })
+            .then(function(real){ cxToast(doneMsg + ' · 안내 메일 ' + (real ? '실제 발송' : '기록(시연 모드)'), nextMsg); });
+        } else if (json.메일 === '대기') {
+          cxToast(doneMsg + ' · 안내 메일은 오늘 한도 때문에 발송 대기', '한도가 남으면 순서대로 자동 발송됩니다');
+        } else if (window.cxGuide) window.cxGuide(doneMsg, nextMsg, '');
       } else {
         if ((json.message||'').indexOf('권한 비밀번호') > -1) sessionStorage.removeItem('jsfa_admin_pw');
         alert('처리 중 오류가 발생했습니다: ' + (json.message || ''));
@@ -1862,7 +1868,7 @@
 (function(){
   var box = null;
   function close(){ if (box) { box.remove(); box = null; } }
-  function toast(t){ var d = document.createElement('div'); d.textContent = t; d.style.cssText = 'position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:8px;font-size:14px;z-index:100001;'; document.body.appendChild(d); setTimeout(function(){ d.remove(); }, 1800); }
+  function toast(t){ if (window.cxGuide) { window.cxGuide(t, '', ''); return; } var d = document.createElement('div'); d.textContent = t; d.style.cssText = 'position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#F2FBF5;color:#14532D;border:1.5px solid #9FD3B4;padding:10px 16px;border-radius:14px;font-size:14px;font-weight:700;z-index:100001;'; document.body.appendChild(d); setTimeout(function(){ d.remove(); }, 1800); }   // d3r: 알림 팝업과 같은 모양
   function copy(addr){
     function fb(){ try { var t = document.createElement('textarea'); t.value = addr; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); toast('주소를 복사했습니다: ' + addr); } catch (e) { window.prompt('주소를 복사해 주세요', addr); } }
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(addr).then(function(){ toast('주소를 복사했습니다: ' + addr); }, fb); else fb();
