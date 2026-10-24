@@ -642,6 +642,7 @@
   .ds-btn:hover{background:#E8EEF6;}
 
   /* d2k 폴리싱: 보드(칸반) — A 반응형 · B 단계 표시줄 의미 · C 상자 2겹·그림자 통일 · D 상태·접근성 */
+  .ab-gap .ab-fill{float:right;margin:-3px 0 4px 10px;} @media (max-width:640px){ .ab-gap .ab-fill{float:none;display:flex;margin:0 0 8px;} }
   .tw-h{font-size:15px;font-weight:800;color:#1B3A5F;margin:2px 0 10px;text-align:left;}
   .tw{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;text-align:left;}
   .tw-c{background:#fff;border:1px solid #D5DCE6;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;}
@@ -1335,7 +1336,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-24 배정 d3u</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-24 배정 d3v</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -5239,7 +5240,8 @@
     }
     if (held) act += '<div class="ab-held"><div><b>' + (empty || gap || cpd ? '' : '배정 완료 · ') + '안내 대기 ' + held + '명</b><span>강사별로 문자·메일 1통씩 자동 발송합니다.</span></div>' +
       '<button type="button" class="btn primary" data-ab="send">강의배정 자동 일괄 발송 (' + held + '명)</button></div>';
-    if (gap && !m) act += '<div class="ab-gap"><b>빈 교시 ' + gap + '칸</b>이 남아 있습니다. 교과목을 더 넣거나, 일부러 비우는 칸은 격자에서 [비워둠 처리]를 해 주세요. 빈 교시를 모두 처리하면 2단계 \'강사 배정\'으로 넘어갑니다.</div>';
+    var canFill = gap && !m && SIMPLE && copyCandidates(p).length > 0;   // d3v: 갈래 2 진행 중에도 갈래 1(지난 기수 + AI 재검토)로
+    if (gap && !m) act += '<div class="ab-gap">' + (canFill ? '<button type="button" class="btn primary sm ab-fill" data-cp="1"><span class="ai-badge">AI 도움</span>지난 기수로 빈 교시 채우기</button>' : '') + '<b>빈 교시 ' + gap + '칸</b>이 남아 있습니다. 교과목을 더 넣거나, 일부러 비우는 칸은 격자에서 [비워둠 처리]를 해 주세요. 빈 교시를 모두 처리하면 2단계 \'강사 배정\'으로 넘어갑니다.</div>';
     if (ab.msg && ab.msgKey === currentKey) act += '<div class="ab-msg">' + ab.msg + '</div>';   // d3j: 다른 과정·처음부터 다시 한 뒤에는 이전 결과 문구를 보이지 않음
     box.innerHTML = h + act;
     box.style.display = '';
@@ -5453,7 +5455,7 @@
       return tr;
     }).join('');
     var head = ab.kind === 'draft' ? '<th class="ab-c"><span class="sr">적용</span></th><th>일시</th><th>교과목</th><th>AI 초안 강사</th><th></th>'
-      : '<th class="ab-c"><span class="sr">AI로 바꾸기</span></th><th>일시</th><th>교과목</th><th>' + (ab.src === 'manual' ? '직접 편성' : ab.src === 'copy' ? '지난 기수 강사' : '현재 강사') + '</th><th>AI 초안</th><th>비교</th>';
+      : '<th class="ab-c"><span class="sr">AI로 바꾸기</span></th><th>일시</th><th>교과목</th><th>' + (ab.src === 'manual' ? '직접 편성' : ab.src === 'copy' ? (ab.copied[currentKey] === 'fill' ? '입력·불러온 강사' : '지난 기수 강사') : '현재 강사') + '</th><th>AI 초안</th><th>비교</th>';
     h += '<div class="ab-tw"><table class="ab-tbl"><thead><tr>' + head + '</tr></thead><tbody>' + rows + '</tbody></table></div>';
     var nChk = Object.keys(ab.chk).filter(function(k){ return ab.chk[k] && ab.sel[k]; }).length;
     var applyTxt = ab.kind === 'draft' ? '선택한 ' + nChk + '칸 적용' : (ab.src === 'copy' ? '선택한 ' + nChk + '칸 교체' : '선택한 ' + nChk + '칸 AI 초안으로 바꾸기');
@@ -6707,8 +6709,15 @@
   function buildCopyRows(){
     var p = planByKey(currentKey), src = planByKey(cp.src);
     if (!p || !src) return [];
+    var mine = cp.fill ? sessionsOf(currentKey) : [], subj = {};
+    mine.forEach(function(x){ subj[String(x['교과목'] || '')] = true; });
+    var over = function(d, a, b, k){ return mine.some(function(x){ var sa = Number(x['시작교시']), sb = Number(x['끝교시']), kx = String(x['반'] || '전체'); return normYmd(x['일자']) === d && !(b < sa || a > sb) && (k === '전체' || kx === '전체' || k === kx); }); };   // d3v: 빈 교시만 채우기
     return sessionsOf(cp.src).map(function(r){
       var m = mapCopyDate(src, p, String(r['일자']));
+      if (cp.fill && m.date && !m.err) {
+        if (over(m.date, Number(r['시작교시']), Number(r['끝교시']), String(r['반'] || '전체'))) m = { date: m.date, err: '이미 편성된 교시' };
+        else if (subj[String(r['교과목'] || '')]) m = { date: m.date, err: '', note: '같은 교과목이 이미 있음(시수 확인)' };
+      }
       var iid = cp.instr ? String(r['강사ID'] || '') : '';
       var iname = cp.instr && !iid ? String(r['강사명'] || '') : '';
       return {
@@ -6743,10 +6752,11 @@
     if (isViewer()) return;
     var p = planByKey(currentKey);
     if (!p || isCancelled(p)) return;
-    if (sessionsOf(currentKey).length) { alert('이 기수에는 이미 편성된 교과목이 있어 복사할 수 없습니다.'); return; }
+    var fill = sessionsOf(currentKey).length > 0;
+    if (fill && !SIMPLE) { alert('이 기수에는 이미 편성된 교과목이 있어 복사할 수 없습니다.'); return; }
     var c = copyCandidates(p);
     if (!c.length) { alert('복사할 이전 기수가 없습니다. 같은 과정명의 다른 기수에 편성된 교과목이 있어야 합니다.'); return; }
-    cp = { src: defaultCopySource(p, c), instr: true, room: 'src', busy: false };
+    cp = { src: defaultCopySource(p, c), instr: true, room: 'src', busy: false, fill: fill };   // d3v: 이미 입력한 칸이 있으면 빈 교시만 채움
     renderCopy();
     $('pOverlay').style.display = 'flex';
   }
@@ -6775,17 +6785,18 @@
         }).join('') + (cf.length > 8 ? '<li>외 ' + (cf.length - 8) + '건</li>' : '') + '</ul></div>';
     } else if (good.length) cfHtml = '<div class="box i">복사했을 때 생기는 겹침 경고는 없습니다.</div>';
     $('pCard').innerHTML =
-      '<div class="top"><h2>지난 기수 편성 불러오기</h2><span class="hint">' + esc(courseLabel(currentKey)) + ' · ' + esc(ipgyo(p)) + '</span><button type="button" class="btn sm" id="pCloseTop" style="margin-left:auto;">닫기</button></div>' +
+      '<div class="top"><h2>' + (cp.fill ? '지난 기수로 빈 교시 채우기' : '지난 기수 편성 불러오기') + '</h2><span class="hint">' + esc(courseLabel(currentKey)) + ' · ' + esc(ipgyo(p)) + '</span><button type="button" class="btn sm" id="pCloseTop" style="margin-left:auto;">닫기</button></div>' +
       '<div class="opt"><div><label class="l" for="pSrc">원본 기수</label><select id="pSrc">' + opts + '</select></div>' +
       '<div><label class="l" for="pRoom">강의실</label><select id="pRoom"><option value="src"' + (cp.room === 'src' ? ' selected' : '') + '>원본 그대로</option><option value="plan"' + (cp.room === 'plan' ? ' selected' : '') + '>새 기수 예정 강의실로 통일</option></select></div>' +
       '<div><label class="ck"><input type="checkbox" id="pInstr"' + (cp.instr ? ' checked' : '') + '> 강사도 복사</label></div></div>' +
+      (cp.fill ? '<div class="box i">지금 입력한 교과목 ' + sessionsOf(currentKey).length + '칸은 그대로 둡니다. 지난 기수 편성 중 <b>이미 편성된 교시와 겹치는 줄은 빼고</b> 빈 교시만 채웁니다.</div>' : '') +
       '<div class="sumline">원본 ' + (src ? esc(range(src['입교 시작일'], src['입교 종료일'])) : '') + ' → 새 기수 ' + esc(ipgyo(p)) + ' · 교육 구간별 평일 n일차 기준으로 날짜를 옮깁니다. ' +
       '<b>복사 ' + good.length + '줄</b>' + (bad ? ' · <span style="color:var(--err-fg);font-weight:700;">제외 ' + bad + '줄(아래 표 확인)</span>' : '') + '</div>' +
       '<div class="pwrap"><table><thead><tr><th>원본 일자</th><th>새 일자</th><th>교시</th><th>교과목</th><th>반</th><th>강사</th><th>강의실</th><th>결과</th></tr></thead><tbody>' + trs + '</tbody></table></div>' +
       cfHtml +
       '<div class="box w">원본 내용을 그대로 가져옵니다. 저장 후 교과목 편성 화면의 "수정"에서 <b>날짜·교시·교과목·반·강의실·강사·비고를 모두 바꿀 수 있고</b>, 필요 없는 줄은 삭제할 수 있습니다. <b>복사 저장 시 강사에게 안내(메일·문자)는 바로 가지 않고 보류됩니다.</b> ' + (cp.instr ? '저장하면 바로 AI가 지난 기수 강사를 설문 평가로 다시 검토해 칸마다 유지·교체를 제안합니다. 확인 후 [강의배정 자동 일괄 발송]으로 강사별 문자·메일 1통씩 보냅니다.' : '강사는 비워 두고 불러옵니다. 저장 후 [AI 강사 일괄 배정]으로 채웁니다.') + (cp.instr ? ' 강사가 달라지는 기수라면 "강사도 복사"를 해제해 비워 둘 수 있습니다.' : ' 강사는 비어 있는 상태("미지정")로 저장됩니다.') + '</div>' +
       '<div class="msg" id="pMsg"></div>' +
-      '<div class="btns"><button type="button" class="btn" id="pClose">닫기</button><button type="button" class="btn primary" id="pSave"' + (good.length ? '' : ' disabled') + '>' + good.length + '줄 복사해 저장</button></div>';
+      '<div class="btns"><button type="button" class="btn" id="pClose">닫기</button><button type="button" class="btn primary" id="pSave"' + (good.length ? '' : ' disabled') + '>' + good.length + (cp.fill ? '줄로 빈 교시 채우기' : '줄 복사해 저장') + '</button></div>';
     $('pClose').addEventListener('click', closeCopy);
     $('pCloseTop').addEventListener('click', closeCopy);
     $('pSave').addEventListener('click', saveCopy);
@@ -6797,16 +6808,16 @@
     if (cp.busy || isViewer()) return;
     var good = buildCopyRows().filter(function(r){ return !r.err; });
     if (!good.length) return;
-    var btn = $('pSave'), label = btn.textContent, srcKey = cp.src, useInstr = cp.instr;
+    var btn = $('pSave'), label = btn.textContent, srcKey = cp.src, useInstr = cp.instr, fillMode = !!cp.fill;
     cp.busy = true; btn.disabled = true; btn.textContent = '복사 중...';
-    api({ action: 'copySessions', password: getPw(), 개설키: currentKey, 원본키: srcKey, rows: good.map(function(r){ return r.body; }) }).then(function(j){
+    api({ action: 'copySessions', password: getPw(), 개설키: currentKey, 원본키: srcKey, 빈칸만: fillMode, rows: good.map(function(r){ return r.body; }) }).then(function(j){
       if (j.status !== 'ok') {
         cp.busy = false; btn.disabled = false; btn.textContent = label;
         $('pMsg').innerHTML = '<div class="note-err">' + esc(j.message || '복사하지 못했습니다') + '</div>';
         return;
       }
       closeCopy();
-      if (useInstr) { ab.copied[currentKey] = true; ab.held[currentKey] = undefined; ab.heldOk[currentKey] = false; }
+      if (useInstr) { ab.copied[currentKey] = fillMode ? 'fill' : true; ab.held[currentKey] = undefined; ab.heldOk[currentKey] = false; }
       (j.data || []).forEach(function(row){ allSessions.push(row); });
       sessionsByKey = buildSessionMap(allSessions);
       refreshConflicts();
