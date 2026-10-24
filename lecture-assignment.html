@@ -642,6 +642,13 @@
   .ds-btn:hover{background:#E8EEF6;}
 
   /* d2k 폴리싱: 보드(칸반) — A 반응형 · B 단계 표시줄 의미 · C 상자 2겹·그림자 통일 · D 상태·접근성 */
+  .tw-h{font-size:15px;font-weight:800;color:#1B3A5F;margin:2px 0 10px;text-align:left;}
+  .tw{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;text-align:left;}
+  .tw-c{background:#fff;border:1px solid #D5DCE6;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;}
+  .tw-c.rec{border:2px solid #2F6FB2;}
+  .tw-n{font-size:12px;font-weight:800;color:#5A6B82;} .tw-n em{font-style:normal;color:#fff;background:#2F6FB2;border-radius:99px;padding:1px 8px;margin-left:4px;}
+  .tw-c > b{font-size:15.5px;color:#1B2433;} .tw-c p{margin:0 0 4px;font-size:13.5px;line-height:1.55;color:#475467;word-break:keep-all;}
+  .tw-c .btn{align-self:flex-start;margin-top:auto;}
   #demoBox, #demoBox *, header .sub, #stToast{word-break:keep-all;overflow-wrap:anywhere;}
   .bd{background:transparent;border:none;border-radius:0;padding:0;}
   .bd-track{gap:16px;margin:4px 0 16px;}
@@ -1328,7 +1335,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-19 배정 d3o</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-24 배정 d3u</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -1831,15 +1838,19 @@
     var ss = sessionsOf(key), n = ss.length, empty = ss.filter(function(r){ return !String(r['강사ID'] || '') && !String(r['강사명'] || ''); }).length;
     var hd = ab.held[key]; if (hd === undefined && n && !empty) { ab.held[key] = { 칸: 0, 강사: 0 }; abHeldFetchDemo(key); }
     var held = (ab.held[key] && ab.held[key].강사) || 0;
-    var lane = !n ? 1 : empty ? 2 : held ? 3 : 4, nx, p = planByKey(key);
+    var p = planByKey(key), gs = null; if (n && p) { try { gapIdxM = null; gs = slotStats(p); } catch (e) {} }   // d3u: 빈 교시가 남으면 1단계(비워둠 처리한 칸은 채운 것으로 셈)
+    var gap = gs ? gs.fut : 0, cpd = !!ab.copied[key];
+    var lane = !n || gap ? 1 : empty ? 2 : cpd ? 2 : held ? 3 : 4, nx;
     // 안내 대기 수를 아직 서버에서 받지 못했으면 3·4단계를 확정하지 않음(이동 알림이 잘못 뜨지 않게)
     var sure = lane < 3 || !!ab.heldOk[key];
-    if (lane === 1) nx = p && copyCandidates(p).length ? { ai: false, h: '지금 할 일', x: '지난 기수 불러오기 또는 직접 편성' } : { ai: false, h: '지금 할 일', x: '교과목을 편성합니다.' };
+    if (lane === 1 && n) nx = { ai: false, h: '지금 할 일', x: '빈 교시 ' + gap + '칸 · 교과목 편성 계속' };
+    else if (lane === 1) nx = p && copyCandidates(p).length ? { ai: false, h: '지금 할 일', x: '지난 기수 불러오기 또는 직접 편성' } : { ai: false, h: '지금 할 일', x: '교과목을 편성합니다.' };
+    else if (lane === 2 && !empty && cpd) nx = { ai: true, h: '지금 할 일', x: '지난 기수 강사 AI 재검토' };
     else if (lane === 2 && empty === n) nx = { ai: true, h: '지금 할 일', x: '빈 칸 ' + empty + '개 · AI 강사 일괄 배정' };
     else if (lane === 2) nx = { ai: true, h: '지금 할 일', x: '빈 칸 ' + empty + '개 · 적합한 강사 찾기' };
     else if (lane === 3) nx = { ai: false, h: '지금 할 일', x: '강사 ' + held + '명에게 일괄 발송' };
     else nx = { ai: false, fin: true, h: '끝', x: '배정·안내 완료' };
-    return { lane: lane, n: n, empty: empty, held: held, nx: nx, sure: sure };
+    return { lane: lane, n: n, empty: empty, held: held, nx: nx, sure: sure, gap: gap, gs: gs };
   }
   function abHeldFetchDemo(key){
     api({ action: 'heldNotices', password: getPw(), 개설키: key }).then(function(j){
@@ -1879,13 +1890,13 @@
       .sort(function(a, b){ return normYmd(a['입교 시작일']).localeCompare(normYmd(b['입교 시작일'])); });
   }
   function boardPick(onBoard){
-    var cnt = function(k){ var ss = sessionsOf(k); return { n: ss.length, empty: ss.filter(function(r){ return !String(r['강사ID'] || '') && !String(r['강사명'] || ''); }).length }; };
-    var up = upcomingForBoard(onBoard), list = up.filter(function(p){ var c = cnt(p['과정+기수']); return !c.n || c.empty; });   // 이미 강사 배정을 마친 과정은 빼고 보여 줌
+    var cnt = function(k){ var s2 = courseStage(k); return { n: s2.n, empty: s2.empty, gap: s2.gap }; };   // d3u: 보드·편성 화면과 같은 기준
+    var up = upcomingForBoard(onBoard), list = up.filter(function(p){ var c = cnt(p['과정+기수']); return !c.n || c.gap || c.empty; });   // 이미 강사 배정을 마친 과정은 빼고 보여 줌
     var nDone = up.length - list.length; list = list.slice(0, 8);
     var row = function(p, i){
-      var k = p['과정+기수'], st = cnt(k), lane = st.n ? 2 : 1, where = lane + '단계 \'' + STEPS[lane - 1].t + '\'';
+      var k = p['과정+기수'], st = cnt(k), lane = st.n && !st.gap ? 2 : 1, where = lane + '단계 \'' + STEPS[lane - 1].t + '\'';
       return '<div class="bp-r' + (i ? '' : ' first') + '"><div><div class="bp-t">' + esc(k) + (i ? '' : ' <span class="bp-near">가장 가까운 과정</span>') + '</div>' +
-        '<div class="bp-p">' + esc(ipgyo(p)) + ' · ' + esc(dDay(p)) + ' · ' + (st.n ? '교과목 ' + st.n + '칸, 강사 빈 칸 ' + st.empty + '개' : '교과목 편성 전') + '</div>' +
+        '<div class="bp-p">' + esc(ipgyo(p)) + ' · ' + esc(dDay(p)) + ' · ' + (st.n ? '교과목 ' + st.n + '칸' + (st.gap ? ', 빈 교시 ' + st.gap + '칸' : '') + ', 강사 빈 칸 ' + st.empty + '개' : '교과목 편성 전') + '</div>' +
         '<div class="bp-w">올리면 ' + where + '에 놓입니다</div></div><button type="button" class="btn' + (i ? '' : ' primary') + '" data-bpadd="' + esc(k) + '">올리기</button></div>';
     };
     var m = cxModal('보드에 과정 올리기', list.length ? '<div class="cx-guide">연간계획에서 앞으로 열릴 과정 중 편성이 남은 과정을 개강일이 가까운 순으로 보여 드립니다(최대 8개).' + (nDone ? ' 강사 배정을 이미 마친 ' + nDone + '개 과정은 뺐습니다.' : '') + '</div><div class="bp-l">' + list.map(row).join('') + '</div><div id="bpMsg"></div>'
@@ -2161,6 +2172,10 @@
       setTimeout(function(){ openCourse(k); setTimeout(function(){ var c = LANE_GO[n]; if (c) nextGuide('', c.t(k), c.sel(k)); }, 1200); }, 300);
     });
   }
+  function bdcPg(st, pct){   // d3u: 1단계(빈 교시 남음)는 편성 교시, 2단계부터는 강사 칸 진행
+    if (st.lane === 1 && st.gs && st.gs.t) { var q = Math.round(st.gs.f / st.gs.t * 100); return '<div class="bdc-pg"><span>편성 ' + st.gs.f + ' / ' + st.gs.t + '교시</span><i><b style="width:' + q + '%"></b></i></div>'; }
+    return '<div class="bdc-pg"><span>강사 ' + (st.n - st.empty) + ' / ' + st.n + '칸</span><i><b style="width:' + pct + '%"></b></i></div>';
+  }
   function renderDemoB(demos, arrived){
     if (arrived || !demoSt) demoStFetch();
     if (arrived) boardVisit++;
@@ -2211,8 +2226,8 @@
         var key = r.p['과정+기수'], st = r.st, dd = dDay(r.p), pct = st.n ? Math.round((st.n - st.empty) / st.n * 100) : 0;
         if (r.paused) {
           h += '<article class="bdc paused" data-card-resume="' + esc(key) + '"><span class="bdc-mv">멈춤</span><div><div class="bdc-t">' + esc(key) + '</div><div class="bdc-p">' + esc(ipgyo(r.p)) + (dd ? ' · ' + dd : '') + '</div></div>' +
-            (st.n ? '<div class="bdc-pg"><span>강사 ' + (st.n - st.empty) + ' / ' + st.n + '칸</span><i><b style="width:' + pct + '%"></b></i></div>' : '') +
-            '<div class="bdc-x">' + esc(st.nx.x) + '</div>' + (st.n && gapOf(r.p) ? '<div class="bdc-gap">빈 교시 ' + gapOf(r.p) + '칸 남음</div>' : '') +
+            (st.n ? bdcPg(st, pct) : '') +
+            '<div class="bdc-x">' + esc(st.nx.x) + '</div>' + (st.n && st.lane !== 1 && gapOf(r.p) ? '<div class="bdc-gap">빈 교시 ' + gapOf(r.p) + '칸 남음</div>' : '') +
             (canEdit ? '<div class="bdc-pb"><button type="button" class="btn" data-bdres="' + esc(key) + '">이어서 하기</button><button type="button" class="bdc-re" data-bsre="' + esc(key) + '">처음부터</button></div>' : '') + '</article>';
           return;
         }
@@ -2225,8 +2240,8 @@
         if (hot && !mv.shown) { mv.shown = true; mv.visit = boardVisit; }
         if (r.fin) { h += '<article class="bdc fin moved' + (enter ? ' enter' : '') + '"' + enterSt + ' data-card-open="' + esc(key) + '"><span class="bdc-mv">완료</span><div><div class="bdc-t">' + esc(key) + '</div><div class="bdc-p">' + esc(ipgyo(r.p)) + '</div></div><div class="bdc-x bdc-fin">' + ic('check', 'l') + '배정·안내 완료 · 곧 \'진행한 과정\'으로 옮겨집니다</div></article>'; return; }
         h += '<article class="bdc' + (hot ? ' moved' : '') + (enter ? ' enter' : '') + '"' + enterSt + ' data-card-open="' + esc(key) + '">' + (hot ? '<span class="bdc-mv">' + (mv.resumed ? '이어서' : mv.added ? '방금 올림' : '방금 이동') + '</span>' : '') + '<div><div class="bdc-t">' + esc(key) + '</div><div class="bdc-p">' + esc(ipgyo(r.p)) + (dd ? ' · ' + dd : '') + '</div></div>' +
-          (st.n ? '<div class="bdc-pg"><span>강사 ' + (st.n - st.empty) + ' / ' + st.n + '칸</span><i><b style="width:' + pct + '%"></b></i></div>' : '') +
-          '<div class="bdc-x">' + (st.nx.ai ? '<span class="ai-badge">AI 도움</span>' : '') + esc(st.nx.x) + '</div>' + (st.n && gapOf(r.p) ? '<div class="bdc-gap">빈 교시 ' + gapOf(r.p) + '칸 남음</div>' : '') +
+          (st.n ? bdcPg(st, pct) : '') +
+          '<div class="bdc-x">' + (st.nx.ai ? '<span class="ai-badge">AI 도움</span>' : '') + esc(st.nx.x) + '</div>' + (st.n && st.lane !== 1 && gapOf(r.p) ? '<div class="bdc-gap">빈 교시 ' + gapOf(r.p) + '칸 남음</div>' : '') +
           (restartedByOther(key, 'ab') ? '<div class="bdc-warn">다른 평가관이 ' + hmText(restartedByOther(key, 'ab')) + '에 처음부터 다시 시작했습니다</div>' : '') +
           (!restartedByOther(key, 'ab') && lastEditText(key) ? '<div class="bdc-ed">' + esc(lastEditText(key)) + '</div>' : '') +
           '<button type="button" class="btn" data-demo-open="' + esc(key) + '">편성 화면 열기</button></article>';
@@ -5112,6 +5127,12 @@
       $('sTableWrap').innerHTML = ''; $('sCards').innerHTML = '';
       $('sEmpty').style.display = 'block';
       var canCopy = !viewer && p && !isCancelled(p) && copyCandidates(p).length > 0;
+      if (SIMPLE && !viewer && p && !isCancelled(p)) {   // d3u: 편성 시작 두 갈래
+        $('sEmpty').innerHTML = '<div class="tw-h">편성을 시작할 방법을 고르세요</div><div class="tw">' +
+          (canCopy ? '<div class="tw-c rec"><div class="tw-n">갈래 1 <em>권장</em></div><b>지난 기수 불러오기 + AI 강사 재검토</b><p>교과목·교시는 지난 기수 그대로 가져오고, 강사는 그동안 쌓인 설문 평가를 반영해 AI가 칸마다 <b>유지·교체</b>를 제안합니다.</p><button type="button" class="btn primary" data-cp="1"><span class="ai-badge">AI 도움</span>지난 기수 편성 불러오기</button></div>' : '') +
+          '<div class="tw-c"><div class="tw-n">갈래 ' + (canCopy ? '2' : '1') + '</div><b>교과목 직접 입력 + 칸별 강사 찾기</b><p>위 [교과목 추가]에 교과목을 넣고, 칸마다 <b>[AI 적합한 강사 찾기]</b>로 추천 강사와 이유를 보고 고릅니다.</p><button type="button" class="btn" data-twin="1">교과목 입력하기</button></div></div>';
+        return;
+      }
       $('sEmpty').innerHTML = (viewer ? '아직 편성된 교과목이 없습니다.' : '아직 편성된 교과목이 없습니다. 위 입력칸에서 첫 교과목을 추가해 보세요.') +
         (canCopy ? '<div style="margin-top:12px;"><button type="button" class="btn primary" data-cp="1">지난 기수 편성 불러오기</button><div class="hint" style="margin-top:6px;">같은 과정의 지난 기수 편성(교과목·교시·강의실·강사)을 새 날짜로 옮겨 한 번에 만듭니다. 강사 안내는 보류되고, 불러온 뒤 AI로 강사를 다시 검토할 수 있습니다.</div></div>' : '');
       return;
@@ -5174,12 +5195,13 @@
       if (j && j.status === 'ok') { ab.held[key] = { 칸: j.칸 || 0, 강사: j.강사 || 0 }; ab.heldOk[key] = true; if (currentKey === key) abRender(); }
     }).catch(function(){});
   }
-  function abFlow(nAll, nEmpty, held, gap){
+  function abFlow(nAll, nEmpty, held, gap, gs, cpd){   // d3u: 빈 교시가 남으면 1단계 진행 중, 2·3단계는 '남음'
+    var rest = gap || nEmpty || cpd;
     var st = [
-      { t: '교과목 편성', s: gap ? nAll + '칸 · 빈 교시 ' + gap + '칸' : '완료 ' + nAll + '칸', c: gap ? 'warn' : 'done' },
-      { t: '강사 배정', s: nEmpty ? (nAll - nEmpty) + ' / ' + nAll + '칸' : '완료', c: nEmpty ? 'now' : 'done' },
-      { t: '완료', s: nEmpty ? '남음' : '배정 확정', c: nEmpty ? 'todo' : 'done' },
-      { t: '일괄 발송', s: held ? '대기 ' + held + '명' : (nEmpty ? '남음' : '완료'), c: held ? 'now' : (nEmpty ? 'todo' : 'done') }
+      { t: '교과목 편성', s: gap ? (gs && gs.t ? gs.f + ' / ' + gs.t + '교시 · 진행 중' : nAll + '칸 · 빈 교시 ' + gap + '칸') : '완료 ' + nAll + '칸', c: gap ? 'now' : 'done' },
+      { t: '강사 배정', s: gap ? (nAll - nEmpty) + ' / ' + nAll + '칸 · 편성 남음' : nEmpty ? (nAll - nEmpty) + ' / ' + nAll + '칸' : cpd ? 'AI 재검토 전' : '완료', c: gap ? 'todo' : (nEmpty || cpd) ? 'now' : 'done' },
+      { t: '완료', s: rest ? '남음' : '배정 확정', c: rest ? 'todo' : 'done' },
+      { t: '일괄 발송', s: held ? '대기 ' + held + '명' : (rest ? '남음' : '완료'), c: held ? (rest ? 'todo' : 'now') : (rest ? 'todo' : 'done') }
     ];
     return '<div class="dflow ab-flow" role="img" aria-label="진행 단계: ' + st.map(function(x){ return x.t + ' ' + x.s; }).join(', ') + '">' +
       st.map(function(x, i){ return (i ? '<span class="dflow-a" aria-hidden="true">›</span>' : '') + '<div class="dflow-s df-' + x.c + '"><b>' + (i + 1) + '. ' + x.t + '</b><span>' + esc(x.s) + '</span></div>'; }).join('') + '</div>';
@@ -5191,12 +5213,13 @@
     if (ab.held[currentKey] === undefined) { ab.held[currentKey] = { 칸: 0, 강사: 0 }; abHeldFetch(currentKey); }
     var all = list.filter(function(r){ return !isOps(r) && !sessEnded(r['일자']); });
     var empty = abEmpty(currentKey).length, held = ab.held[currentKey].강사 || 0;
-    var gap = 0; try { gapIdxM = null; var gs0 = slotStats(p); gap = gs0 ? gs0.fut : 0; } catch (e) {}   // d3j(P1-B): 남은 빈 교시(오늘 이후, 비워둠 처리 안 한 칸)
+    var gap = 0, gs0 = null; try { gapIdxM = null; gs0 = slotStats(p); gap = gs0 ? gs0.fut : 0; } catch (e) {}   // d3j(P1-B): 남은 빈 교시(오늘 이후, 비워둠 처리 안 한 칸)
     var m = ab.manual && ab.manual.key === currentKey ? ab.manual : null;
     if (m && !empty && !m.t1) m.t1 = Date.now();
-    var bdg = (!empty && !held && all.length && ab.heldOk[currentKey] && !m) ? (gap ? '<span class="ab-bdg warn">배정 완료 · 빈 교시 ' + gap + '칸</span>' : '<span class="ab-bdg ok">' + ic('check', 'l') + '배정 완료</span>') : '';   // d3j(P4)
+    var cpd = !!ab.copied[currentKey];
+    var bdg = (!empty && !held && !gap && !cpd && all.length && ab.heldOk[currentKey] && !m) ? '<span class="ab-bdg ok">' + ic('check', 'l') + '배정 완료</span>' : '';   // d3j(P4)
     var h = '<div class="ab-top"><div><b class="ab-t">강사 배정</b>' + bdg + '<span class="ab-s">AI는 강사카드·설문 평가를 읽어 교과목 관련성을 판단하고, 일정·시간 조건은 규칙으로 거릅니다. 적용은 담당자가 확인한 뒤에만 됩니다.</span></div></div>' +
-      abFlow(all.length, empty, held, gap);
+      abFlow(all.length, empty, held, gap, gs0, cpd);
     var act = '';
     if (m) {
       act = '<div class="ab-man' + (m.t1 ? ' done' : '') + '"><span class="ab-dot" aria-hidden="true"></span>' +
@@ -5210,13 +5233,13 @@
         '<button type="button" class="btn" data-ab="manual">직접 편성해 보기</button>' +
         '<span class="ab-note">빈 칸 전체의 초안을 한 번에 만들고, 칸마다 선정 이유를 보여 드립니다.</span></div>';
     } else {
-      var copied = ab.copied[currentKey] && held;
+      var copied = cpd;
       act = '<div class="ab-acts"><button type="button" class="btn primary ab-ai" data-ab="review"><span class="ab-tag">AI</span>' + (copied ? '지난 기수 강사 AI로 다시 검토' : 'AI로 강사 다시 검토') + '</button>' +
-        '<span class="ab-note">' + (copied ? '지난 기수 강사를 그대로 불러왔습니다. 그동안 쌓인 설문 평가를 반영해 유지·교체를 칸마다 제안합니다.' : '지금 배정된 강사를 같은 기준(일정·평가·관련성)으로 다시 점검합니다.') + '</span></div>';
+        '<span class="ab-note">' + (copied ? '지난 기수 강사를 그대로 불러왔습니다. 그동안 쌓인 설문 평가를 반영해 유지·교체를 칸마다 제안합니다.' : gap ? '입력한 ' + all.length + '칸의 강사를 같은 기준(일정·평가·관련성)으로 다시 점검합니다.' : '지금 배정된 강사를 같은 기준(일정·평가·관련성)으로 다시 점검합니다.') + '</span></div>';
     }
-    if (held) act += '<div class="ab-held"><div><b>' + (empty ? '' : '배정 완료 · ') + '안내 대기 ' + held + '명</b><span>강사별로 1통씩 보냅니다.</span></div>' +
+    if (held) act += '<div class="ab-held"><div><b>' + (empty || gap || cpd ? '' : '배정 완료 · ') + '안내 대기 ' + held + '명</b><span>강사별로 문자·메일 1통씩 자동 발송합니다.</span></div>' +
       '<button type="button" class="btn primary" data-ab="send">강의배정 자동 일괄 발송 (' + held + '명)</button></div>';
-    if (gap && !m) act += '<div class="ab-gap"><b>빈 교시 ' + gap + '칸</b>이 남아 있습니다. 교과목을 더 넣거나, 일부러 비우는 칸은 격자에서 [비워둠 처리]를 해 주세요. 위 단계 표시는 입력한 교과목 기준입니다.</div>';
+    if (gap && !m) act += '<div class="ab-gap"><b>빈 교시 ' + gap + '칸</b>이 남아 있습니다. 교과목을 더 넣거나, 일부러 비우는 칸은 격자에서 [비워둠 처리]를 해 주세요. 빈 교시를 모두 처리하면 2단계 \'강사 배정\'으로 넘어갑니다.</div>';
     if (ab.msg && ab.msgKey === currentKey) act += '<div class="ab-msg">' + ab.msg + '</div>';   // d3j: 다른 과정·처음부터 다시 한 뒤에는 이전 결과 문구를 보이지 않음
     box.innerHTML = h + act;
     box.style.display = '';
@@ -5225,10 +5248,14 @@
       var kind = m ? '' : (empty ? 'draft' : 'review');
       sa.style.display = SIMPLE && kind ? '' : 'none';
       sa.setAttribute('data-k', kind);
-      sa.innerHTML = '<span class="ab-tag">AI</span>' + (kind === 'draft' ? 'AI 전 과목 강사 배정 (빈 칸 ' + empty + '개)' : '모든 칸 배정됨 · AI로 다시 검토');
+      sa.innerHTML = '<span class="ab-tag">AI</span>' + (kind === 'draft' ? 'AI 전 과목 강사 배정 (빈 칸 ' + empty + '개)' : cpd ? '지난 기수 강사 AI로 다시 검토' : gap ? 'AI로 다시 검토 · 입력한 ' + all.length + '칸 (빈 교시 ' + gap + '칸 남음)' : '모든 칸 배정됨 · AI로 다시 검토');
     }
     if (SIMPLE) noteStage(currentKey, courseStage(currentKey), true);   // d2d: 다음 단계로 넘어가면 화면 위에 알림
   }
+  document.addEventListener('click', function(ev){   // d3u: 갈래 2 — 교과목 입력칸으로
+    var b = ev.target && ev.target.closest ? ev.target.closest('[data-twin]') : null; if (!b) return;
+    var f = $('sSubj'); if (f) { f.scrollIntoView({ block: 'center', behavior: 'smooth' }); setTimeout(function(){ f.focus(); }, 300); }
+  });
   document.addEventListener('click', function(ev){
     var sa = ev.target && ev.target.closest ? ev.target.closest('#sAiAll') : null; if (!sa) return;
     var k = sa.getAttribute('data-k'), b = $('abBar') && $('abBar').querySelector('[data-ab="' + k + '"]');
@@ -5407,7 +5434,7 @@
           '<div class="ab-vsx" aria-hidden="true">vs</div><div class="ab-vsb ai"><span>AI 초안</span><b>' + abFmt1(ab.ms) + '</b><small>클릭 2회(열기·적용)</small></div></div>' +
           '<div class="ab-line">이번 작업 기준 측정값입니다. 칸 수·강사 수에 따라 달라집니다.</div>';
       }
-      h += '<div class="ab-line"><b>' + cells.length + '칸 중 같은 강사 ' + same + '칸 · 다른 강사 ' + diff + '칸' + (blank ? ' · 빈 칸 ' + blank + '개' : '') + '</b>' + (flagged ? ' · <span class="ab-warn">' + curName + ' 중 조건 확인이 필요한 칸 ' + flagged + '개</span>' : '') + ' · ' + aiLine + '</div>';
+      h += '<div class="ab-line"><b>' + cells.length + '칸 중 ' + (ab.src === 'copy' ? '유지 ' + same + '칸 · 교체 제안 ' + diff + '칸' : '같은 강사 ' + same + '칸 · 다른 강사 ' + diff + '칸') + (blank ? ' · 빈 칸 ' + blank + '개' : '') + '</b>' + (flagged ? ' · <span class="ab-warn">' + curName + ' 중 조건 확인이 필요한 칸 ' + flagged + '개</span>' : '') + ' · ' + aiLine + '</div>';
     }
     h += abRulesHtml(j);
     var rows = cells.map(function(c){
@@ -5430,7 +5457,7 @@
     h += '<div class="ab-tw"><table class="ab-tbl"><thead><tr>' + head + '</tr></thead><tbody>' + rows + '</tbody></table></div>';
     var nChk = Object.keys(ab.chk).filter(function(k){ return ab.chk[k] && ab.sel[k]; }).length;
     var applyTxt = ab.kind === 'draft' ? '선택한 ' + nChk + '칸 적용' : (ab.src === 'copy' ? '선택한 ' + nChk + '칸 교체' : '선택한 ' + nChk + '칸 AI 초안으로 바꾸기');
-    h += '<div class="ab-foot"><div class="ab-fn">적용해도 강사에게 바로 안내되지 않습니다. 화면에서 확인한 뒤 <b>[강의배정 자동 일괄 발송]</b>으로 강사별 1통씩 보냅니다.</div>' +
+    h += '<div class="ab-foot"><div class="ab-fn">적용해도 강사에게 바로 안내되지 않습니다. 화면에서 확인한 뒤 <b>[강의배정 자동 일괄 발송]</b>으로 강사별 문자·메일 1통씩 보냅니다.</div>' +
       '<div class="ab-fb"><button type="button" class="btn" data-ab="close">' + (ab.kind === 'draft' ? '닫기' : '지금 편성 유지') + '</button><button type="button" class="btn primary" data-ab="apply"' + (nChk ? '' : ' disabled') + '>' + applyTxt + '</button></div><div id="abMsg"></div></div>';
     ab.modal.body.innerHTML = h;
   }
@@ -5441,7 +5468,7 @@
     var sw = t.getAttribute('data-abswap');
     if (sw) { var p = sw.split('|'); ab.sel[p[0]] = p[1]; var c = (ab.res.cells || []).filter(function(x){ return x.편성ID === p[0]; })[0]; ab.chk[p[0]] = ab.kind === 'draft' || !(c && c.현재 && c.현재.id === p[1]); abModalRender(); return; }
     var a = t.getAttribute('data-ab');
-    if (a === 'close') { ab.modal.close(); ab.modal = null; return; }
+    if (a === 'close') { var kc = currentKey, wasCp = ab.src === 'copy' && ab.res; ab.modal.close(); ab.modal = null; if (wasCp) { ab.copied[kc] = false; ab.msgKey = kc; ab.msg = ic('check', 'l') + '지난 기수 강사를 AI 재검토 후 그대로 유지했습니다.'; var pc = planByKey(kc); if (pc) { renderHead(pc); renderSessionList(); } } return; }   // d3u: 재검토를 마친 것으로 봄
     if (a === 'rsave') { abRulesSaveRun(t); return; }
     if (a === 'rdef') { var D = (ab.res && ab.res.규칙기본) || {}; Array.prototype.forEach.call(ab.modal.body.querySelectorAll('[data-rk]'), function(el){ var k = el.getAttribute('data-rk'); if (D[k] === undefined) return; if (el.type === 'checkbox') el.checked = !!D[k]; else el.value = D[k]; }); return; }
     if (a === 'apply') abApply(t);
@@ -5466,15 +5493,16 @@
       });
       sessionsByKey = buildSessionMap(allSessions); refreshConflicts();
       var nDone = items.length - Object.keys(skip).length;
-      ab.msgKey = currentKey; ab.msg = ic('check', 'l') + (ab.kind === 'draft' ? 'AI 초안 ' : 'AI 제안 ') + nDone + '칸을 적용했습니다' + (Object.keys(skip).length ? ' (건너뜀 ' + Object.keys(skip).length + '칸: ' + esc(Object.keys(skip).map(function(k){ return skip[k]; }).join(', ')) + ')' : '') + '.';
+      var wasCopy = ab.src === 'copy'; if (wasCopy) ab.copied[key] = false;   // d3u: 지난 기수 강사 재검토 끝
+      ab.msgKey = currentKey; ab.msg = ic('check', 'l') + (wasCopy ? '설문 평가를 반영해 강사 ' + nDone + '칸을 교체했습니다' : (ab.kind === 'draft' ? 'AI 초안 ' : 'AI 제안 ') + nDone + '칸을 적용했습니다') + (Object.keys(skip).length ? ' (건너뜀 ' + Object.keys(skip).length + '칸: ' + esc(Object.keys(skip).map(function(k){ return skip[k]; }).join(', ')) + ')' : '') + '.';
       if (ab.src === 'manual') ab.manual = null;
       if ((j.안내 || []).length) ab.msg += ' 바뀐 이전 강사 ' + j.안내.length + '명에게는 취소 안내를 보냈습니다.';
       ab.modal.close(); ab.modal = null;
       var p = planByKey(key); if (p) { renderHead(p); renderSessionList(); }
       ab.heldOk[key] = false; abHeldFetch(key);
       var bar = $('abBar'); if (bar) bar.scrollIntoView({ block: 'nearest' });
-      var left = abEmpty(key).length;
-      nextGuide((ab.kind === 'draft' ? 'AI 초안 ' : 'AI 제안 ') + nDone + '칸을 적용했습니다', left ? '빈 칸 ' + left + '개를 눌러 <i>적합한 강사 찾기</i>' : '<i>강의배정 자동 일괄 발송</i> · 과목별로 바꾸려면 시간표 칸을 누르세요', left ? '#sGridWrap .gc.none' : '#abBar [data-ab="send"]');
+      var left = abEmpty(key).length, lg = courseStage(key).gap;
+      nextGuide(wasCopy ? '평가를 반영해 강사 ' + nDone + '칸을 교체했습니다' : (ab.kind === 'draft' ? 'AI 초안 ' : 'AI 제안 ') + nDone + '칸을 적용했습니다', left ? '빈 칸 ' + left + '개를 눌러 <i>적합한 강사 찾기</i>' : lg ? '빈 교시 ' + lg + '칸 · 교과목을 더 넣거나 <i>비워둠 처리</i>' : '<i>강의배정 자동 일괄 발송</i> · 과목별로 바꾸려면 시간표 칸을 누르세요', left ? '#sGridWrap .gc.none' : lg ? '' : '#abBar [data-ab="send"]');
     }).catch(function(){ btn.disabled = false; btn.textContent = '다시 적용'; $('abMsg').innerHTML = '<div class="note-err">서버에 연결하지 못했습니다.</div>'; });
   }
   function abSend(btn){
@@ -6629,7 +6657,7 @@
 
   /* --- 이전 기수 교과목 복사 --- */
   var CP_RANGES = [['입교 시작일', '입교 종료일', '입교'], ['실습(외부) 시작일', '실습(외부) 종료일', '실습(외부)']];
-  var cp = { src: '', instr: !SIMPLE, room: 'src', busy: false };   // 심사용: 강사는 비워 두고 2단계 AI 일괄 배정으로
+  var cp = { src: '', instr: true, room: 'src', busy: false };   // d3u: 갈래 1 — 강사도 불러와 AI가 평가 반영 재검토
   var ops = { keys: [], busy: false, abort: false, items: [], off: {} };
   function closeCopy(){ $('pOverlay').style.display = 'none'; cp.busy = false; ops.abort = true; }
   function ymdFmt(d){ return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
@@ -6718,7 +6746,7 @@
     if (sessionsOf(currentKey).length) { alert('이 기수에는 이미 편성된 교과목이 있어 복사할 수 없습니다.'); return; }
     var c = copyCandidates(p);
     if (!c.length) { alert('복사할 이전 기수가 없습니다. 같은 과정명의 다른 기수에 편성된 교과목이 있어야 합니다.'); return; }
-    cp = { src: defaultCopySource(p, c), instr: !SIMPLE, room: 'src', busy: false };
+    cp = { src: defaultCopySource(p, c), instr: true, room: 'src', busy: false };
     renderCopy();
     $('pOverlay').style.display = 'flex';
   }
@@ -6755,7 +6783,7 @@
       '<b>복사 ' + good.length + '줄</b>' + (bad ? ' · <span style="color:var(--err-fg);font-weight:700;">제외 ' + bad + '줄(아래 표 확인)</span>' : '') + '</div>' +
       '<div class="pwrap"><table><thead><tr><th>원본 일자</th><th>새 일자</th><th>교시</th><th>교과목</th><th>반</th><th>강사</th><th>강의실</th><th>결과</th></tr></thead><tbody>' + trs + '</tbody></table></div>' +
       cfHtml +
-      '<div class="box w">원본 내용을 그대로 가져옵니다. 저장 후 교과목 편성 화면의 "수정"에서 <b>날짜·교시·교과목·반·강의실·강사·비고를 모두 바꿀 수 있고</b>, 필요 없는 줄은 삭제할 수 있습니다. <b>복사 저장 시 강사에게 안내(메일·문자)는 바로 가지 않고 보류됩니다.</b> 저장 후 지난 기수 평가를 반영해 강사를 다시 검토하고, [강의배정 자동 일괄 발송]으로 강사별 1통씩 보냅니다.' + (cp.instr ? ' 강사가 달라지는 기수라면 "강사도 복사"를 해제해 비워 둘 수 있습니다.' : ' 강사는 비어 있는 상태("미지정")로 저장됩니다.') + '</div>' +
+      '<div class="box w">원본 내용을 그대로 가져옵니다. 저장 후 교과목 편성 화면의 "수정"에서 <b>날짜·교시·교과목·반·강의실·강사·비고를 모두 바꿀 수 있고</b>, 필요 없는 줄은 삭제할 수 있습니다. <b>복사 저장 시 강사에게 안내(메일·문자)는 바로 가지 않고 보류됩니다.</b> ' + (cp.instr ? '저장하면 바로 AI가 지난 기수 강사를 설문 평가로 다시 검토해 칸마다 유지·교체를 제안합니다. 확인 후 [강의배정 자동 일괄 발송]으로 강사별 문자·메일 1통씩 보냅니다.' : '강사는 비워 두고 불러옵니다. 저장 후 [AI 강사 일괄 배정]으로 채웁니다.') + (cp.instr ? ' 강사가 달라지는 기수라면 "강사도 복사"를 해제해 비워 둘 수 있습니다.' : ' 강사는 비어 있는 상태("미지정")로 저장됩니다.') + '</div>' +
       '<div class="msg" id="pMsg"></div>' +
       '<div class="btns"><button type="button" class="btn" id="pClose">닫기</button><button type="button" class="btn primary" id="pSave"' + (good.length ? '' : ' disabled') + '>' + good.length + '줄 복사해 저장</button></div>';
     $('pClose').addEventListener('click', closeCopy);
@@ -6791,7 +6819,8 @@
         (useInstr ? '강사 안내는 보류했습니다. 아래 [강사 배정]에서 AI로 다시 검토한 뒤 [강의배정 자동 일괄 발송]으로 보냅니다. ' : '')) +
         ((j.warnings || []).length ? ' 확인 필요: ' + j.warnings.join(' / ') + '.' : ''));
       window.scrollTo(0, 0);
-      var nCp = j.개수 || good.length;
+      var nCp = j.개수 || good.length, kAuto = currentKey;
+      if (useInstr && nIns) { setTimeout(function(){ if (currentKey === kAuto && !ab.busy) abOpen('review'); }, 600); return; }   // d3u: 불러오자마자 AI 재검토 결과(유지·교체) 표시
       nextGuide('지난 기수 편성 불러오기를 마쳤습니다 · 교과목 ' + nCp + '개', useInstr ? '<i>지난 기수 강사 AI로 다시 검토</i> — 평가를 반영해 유지·교체를 제안합니다' : '<i>AI 강사 일괄 배정</i> — AI가 빈 칸 ' + nCp + '개에 맞는 강사를 추천합니다', useInstr ? '#abBar [data-ab="review"]' : '#abBar [data-ab="draft"]');
     }).catch(function(){
       cp.busy = false; btn.disabled = false; btn.textContent = label;
