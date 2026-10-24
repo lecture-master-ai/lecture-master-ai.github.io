@@ -642,6 +642,10 @@
   .ds-btn:hover{background:#E8EEF6;}
 
   /* d2k 폴리싱: 보드(칸반) — A 반응형 · B 단계 표시줄 의미 · C 상자 2겹·그림자 통일 · D 상태·접근성 */
+  .nocard{display:inline-block;font-size:10.5px;font-weight:800;color:#7A3E00;background:#FFF4E5;border:1px solid #F5C98B;border-radius:4px;padding:0 4px;margin-left:3px;vertical-align:1px;}
+  .ab-nocard{margin-top:8px;padding:8px 12px;border-radius:8px;background:#FFF8EE;border:1px solid #F3D9B5;font-size:13px;color:#5C3B12;}
+  .ab-keep{display:inline-block;font-size:12px;font-weight:800;color:#1B3A5F;background:#E8EEF6;border-radius:4px;padding:1px 6px;}
+  .ab-jt{display:inline-block;font-size:11px;font-weight:800;color:#1B3A5F;background:#E8EEF6;border-radius:4px;padding:0 5px;margin-left:6px;}
   .ab-gap .ab-fill{float:right;margin:-3px 0 4px 10px;} @media (max-width:640px){ .ab-gap .ab-fill{float:none;display:flex;margin:0 0 8px;} }
   .tw-h{font-size:15px;font-weight:800;color:#1B3A5F;margin:2px 0 10px;text-align:left;}
   .tw{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;text-align:left;}
@@ -1336,7 +1340,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-24 배정 d3v</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-25 배정 d3w</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -3227,7 +3231,7 @@
     } else if (isOpsName(form.iname)) {
       box.innerHTML = '<span class="tag t-ops chip">' + esc(form.iname) + ' 운영 <button type="button" id="sChipX" aria-label="지우기">×</button></span>';
     } else if (form.iname) {
-      box.innerHTML = '<span class="tag t-info chip">' + esc(form.iname) + ' (직접 입력) <button type="button" id="sChipX" aria-label="강사 지우기">×</button></span>';
+      box.innerHTML = '<span class="tag t-info chip">' + esc(form.iname) + ' (강사카드 없음) <button type="button" id="sChipX" aria-label="강사 지우기">×</button></span>';
     } else box.innerHTML = '';
     if (form.iid && instrById[form.iid]) box.innerHTML += ' <button type="button" class="detailBtn" style="height:24px;" data-detail="' + esc(form.iid) + '">상세</button>';
     if (form.iid) {
@@ -4563,7 +4567,7 @@
       return roleTag(r) + (ins ? '<span class="tag t-ok nmk" data-detail="' + esc(r['강사ID']) + '" title="강사 정보 보기">' + esc(ins.name) + '</span> ' + docBadge(ins, r) : '<span class="tag t-ok">' + esc(r['강사명'] || r['강사ID']) + '</span>');
     }
     if (isOps(r)) return opsTag(r);
-    if (r['강사명']) return roleTag(r) + '<span class="tag t-info">' + esc(r['강사명']) + ' (직접 입력)</span>';
+    if (r['강사명']) return roleTag(r) + '<span class="tag t-info">' + esc(r['강사명']) + ' (강사카드 없음)</span>';
     return (viewer || cx) ? '<span class="tag t-none">미지정</span>' : '<button type="button" class="btn sm" data-cquick="' + esc(r['편성ID']) + '">강사 지정</button>';
   }
   /* 날짜(또는 칩)를 누르면 그날의 교과목을 보여 주고, 강사 지정·수정은 해당 교과목 편성 화면으로 이어 줌 */
@@ -5088,7 +5092,7 @@
         : '<span class="tag t-ok">' + esc(r['강사명'] || r['강사ID']) + '</span>');
     }
     if (isOps(r)) return opsTag(r);
-    if (r['강사명']) return roleTag(r) + '<span class="tag t-info">' + esc(r['강사명']) + ' (직접 입력)</span>';
+    if (r['강사명']) return roleTag(r) + '<span class="tag t-info">' + esc(r['강사명']) + ' (강사카드 없음)</span>';
     return (isViewer() || isCancelled(planByKey(currentKey))) ? '<span class="tag t-none">미지정</span>' : '<button type="button" class="btn sm" data-act="assign" data-id="' + esc(r['편성ID']) + '">강사 지정</button>';
   }
   function actCell(r){
@@ -5241,6 +5245,9 @@
     if (held) act += '<div class="ab-held"><div><b>' + (empty || gap || cpd ? '' : '배정 완료 · ') + '안내 대기 ' + held + '명</b><span>강사별로 문자·메일 1통씩 자동 발송합니다.</span></div>' +
       '<button type="button" class="btn primary" data-ab="send">강의배정 자동 일괄 발송 (' + held + '명)</button></div>';
     var canFill = gap && !m && SIMPLE && copyCandidates(p).length > 0;   // d3v: 갈래 2 진행 중에도 갈래 1(지난 기수 + AI 재검토)로
+    var ncN = {}; all.forEach(function(r){ if (!r['강사ID'] && r['강사명'] && String(r['강사 역할'] || '') !== '보조강사') ncN[String(r['강사명'])] = 1; });   // d3w: 강사카드 없는 직접 입력 강사
+    var nc = Object.keys(ncN).length;
+    if (nc && !m) act += '<div class="ab-nocard"><b>강사카드에 없는 강사 ' + nc + '명</b>(직접 입력)은 연락처가 없어 문자·메일 안내가 가지 않습니다 · 직접 연락해 주세요.</div>';
     if (gap && !m) act += '<div class="ab-gap">' + (canFill ? '<button type="button" class="btn primary sm ab-fill" data-cp="1"><span class="ai-badge">AI 도움</span>지난 기수로 빈 교시 채우기</button>' : '') + '<b>빈 교시 ' + gap + '칸</b>이 남아 있습니다. 교과목을 더 넣거나, 일부러 비우는 칸은 격자에서 [비워둠 처리]를 해 주세요. 빈 교시를 모두 처리하면 2단계 \'강사 배정\'으로 넘어갑니다.</div>';
     if (ab.msg && ab.msgKey === currentKey) act += '<div class="ab-msg">' + ab.msg + '</div>';   // d3j: 다른 과정·처음부터 다시 한 뒤에는 이전 결과 문구를 보이지 않음
     box.innerHTML = h + act;
@@ -5308,7 +5315,7 @@
       (j.cells || []).forEach(function(c){
         if (!c.pick) return;
         ab.sel[c.편성ID] = c.pick.id;
-        ab.chk[c.편성ID] = ab.kind === 'draft' ? true : !!(c.현재 ? c.현재.id !== c.pick.id : true);
+        ab.chk[c.편성ID] = ab.kind === 'draft' ? true : !!(c.현재 ? c.현재.id !== c.pick.id && !c.현재.지정 : true);   // d3w: 담당자 지정 칸은 기본 유지
       });
       abModalRender();
       var nPick = (j.cells || []).filter(function(c){ return c.pick; }).length, nNone = (j.cells || []).length - nPick;
@@ -5360,7 +5367,7 @@
   function abCurCell(c){
     var x = c.현재;
     if (!x) return '<span class="ab-none">비어 있음</span>';
-    return '<div class="ab-pk"><b>' + esc(x.name) + '</b>' + abStar(x) + '</div>' +
+    return '<div class="ab-pk"><b>' + esc(x.name) + '</b>' + abStar(x) + (x.지정 ? '<span class="ab-jt">담당자 지정</span>' : '') + '</div>' +
       ((x.flags || []).length ? '<div class="ab-flag">' + x.flags.map(esc).join('<br>') + '</div>' : '') +
       (x.relation === '무관' ? '<div class="ab-flag">교과목 관련 경력 확인 필요</div>' : '');
   }
@@ -5429,15 +5436,17 @@
     } else {
       var same = 0, diff = 0, flagged = 0;
       var blank = 0;
-      cells.forEach(function(c){ if (!c.pick) return; if (!c.현재) { blank++; return; } if (c.pick.id === c.현재.id) same++; else diff++; if ((c.현재.flags || []).length) flagged++; });
+      var keepN = 0;
+      cells.forEach(function(c){ if (!c.pick) return; if (!c.현재) { blank++; return; } if (c.pick.id === c.현재.id) same++; else if (c.현재.지정) keepN++; else diff++; if ((c.현재.flags || []).length) flagged++; });
       var curName = ab.src === 'manual' ? '직접 편성' : ab.src === 'copy' ? '지난 기수 강사' : '현재 강사';
       if (ab.src === 'manual' && ab.manual) {
         h += '<div class="ab-vs"><div class="ab-vsb"><span>직접 편성</span><b>' + abFmt(ab.manual.t1 - ab.manual.t0) + '</b><small>클릭 ' + ab.manual.clicks + '회</small></div>' +
           '<div class="ab-vsx" aria-hidden="true">vs</div><div class="ab-vsb ai"><span>AI 초안</span><b>' + abFmt1(ab.ms) + '</b><small>클릭 2회(열기·적용)</small></div></div>' +
           '<div class="ab-line">이번 작업 기준 측정값입니다. 칸 수·강사 수에 따라 달라집니다.</div>';
       }
-      h += '<div class="ab-line"><b>' + cells.length + '칸 중 ' + (ab.src === 'copy' ? '유지 ' + same + '칸 · 교체 제안 ' + diff + '칸' : '같은 강사 ' + same + '칸 · 다른 강사 ' + diff + '칸') + (blank ? ' · 빈 칸 ' + blank + '개' : '') + '</b>' + (flagged ? ' · <span class="ab-warn">' + curName + ' 중 조건 확인이 필요한 칸 ' + flagged + '개</span>' : '') + ' · ' + aiLine + '</div>';
+      h += '<div class="ab-line"><b>' + cells.length + '칸 중 ' + (ab.src === 'copy' ? '유지 ' + same + '칸 · 교체 제안 ' + diff + '칸' : '같은 강사 ' + same + '칸 · 다른 강사 ' + diff + '칸') + (keepN ? ' · 담당자 지정 ' + keepN + '칸(기본 유지)' : '') + (blank ? ' · 빈 칸 ' + blank + '개' : '') + '</b>' + (flagged ? ' · <span class="ab-warn">' + curName + ' 중 조건 확인이 필요한 칸 ' + flagged + '개</span>' : '') + ' · ' + aiLine + '</div>';
     }
+    if (ab.kind !== 'draft' && j.직접이름) h += '<div class="ab-line">강사카드에 없는 강사를 직접 입력한 <b>' + j.직접이름 + '칸</b>은 담당자 결정으로 두고 검토에서 뺐습니다.</div>';   // d3w
     h += abRulesHtml(j);
     var rows = cells.map(function(c){
       var sid = c.편성ID, open = !!ab.open[sid], canChk = !!ab.sel[sid] && (ab.kind === 'draft' || !c.현재 || ab.sel[sid] !== c.현재.id);
@@ -5448,7 +5457,7 @@
         tr = '<tr' + (open ? ' class="on"' : '') + '>' + ck + '<td class="nw">' + esc(abWhen(c)) + '</td><td>' + esc(c.교과목) + '</td><td>' + abPickCell(c) + '</td><td class="nw">' + whyB + '</td></tr>';
       } else {
         var sameP = c.현재 && ab.sel[sid] === c.현재.id;
-        var res = !c.pick ? '<span class="ab-none">후보 없음</span>' : !c.현재 ? '<span class="ab-diff">빈 칸 채움</span>' : (sameP ? '<span class="ab-same">' + ic('check', 'l') + (ab.src === 'copy' ? '유지' : '같음') + '</span>' : '<span class="ab-diff">' + (ab.src === 'copy' ? '교체 제안' : '다름') + '</span>');
+        var res = !c.pick ? '<span class="ab-none">후보 없음</span>' : !c.현재 ? '<span class="ab-diff">빈 칸 채움</span>' : (sameP ? '<span class="ab-same">' + ic('check', 'l') + (ab.src === 'copy' ? '유지' : '같음') + '</span>' : c.현재.지정 ? '<span class="ab-keep">담당자 지정 · 유지</span>' : '<span class="ab-diff">' + (ab.src === 'copy' ? '교체 제안' : '다름') + '</span>');
         tr = '<tr class="' + (sameP ? 'same' : 'diff') + (open ? ' on' : '') + '">' + ck + '<td class="nw">' + esc(abWhen(c)) + '</td><td>' + esc(c.교과목) + '</td><td>' + abCurCell(c) + '</td><td>' + abPickCell(c) + '</td><td class="nw">' + res + '<br>' + whyB + '</td></tr>';
       }
       if (open) tr += '<tr class="ab-why"><td></td><td colspan="' + (ab.kind === 'draft' ? 4 : 5) + '">' + abWhyHtml(c) + '</td></tr>';
@@ -5827,7 +5836,7 @@
         var o = instrById[x['강사ID']];
         nm = o ? '<span class="nmk' + (dashBack && dashBack.id === String(x['강사ID']) ? ' dbm' : '') + '" data-detail="' + esc(x['강사ID']) + '" title="강사 정보 보기">' + esc(o.name) + '</span>' + docBadge(o, x) : esc(x['강사명'] || x['강사ID']);
       } else if (isOps(x)) nm = opsTag(x);
-      else nm = esc(x['강사명']) + ' <span class="hint">(직접 입력)</span>';
+      else nm = esc(x['강사명']) + ' <span class="nocard">카드 없음</span>';
       var eb = (multi && canEdit) ? '<button type="button" class="eb" data-act="edit" data-id="' + esc(x['편성ID']) + '" title="이 강사 줄 수정">' + ic('pencil') + '</button>' : '';
       return '<div class="i">' + roleTag(x) + nm + eb + '</div>';
     }).join('');
