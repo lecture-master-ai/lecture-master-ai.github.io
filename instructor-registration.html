@@ -25,7 +25,14 @@
     background: var(--bg-light);
     color: var(--text);
   }
-  .wrap { max-width: 720px; margin: 0 auto; padding: 40px 20px 80px 20px; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 40px 20px 80px 20px; position: relative; }
+  /* d2e: 닫기(위·아래) */
+  .reg-x { position:absolute; top:28px; right:20px; display:inline-flex; align-items:center; gap:6px; }
+  .reg-x svg { width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:2.2; stroke-linecap:round; }
+  .reg-acts { display:flex; gap:10px; align-items:stretch; margin-top:12px; }
+  .reg-acts button[type=submit] { margin-top:0; flex:1; }
+  .reg-acts .reg-cl { height:56px; padding:0 20px; border-radius:12px; font-size:15px; }
+  .reg-toast { position:fixed; left:16px; right:16px; bottom:24px; margin:0 auto; width:max-content; max-width:calc(100% - 32px); box-sizing:border-box; background:#1D2939; color:#fff; font-size:14px; font-weight:600; line-height:1.5; padding:12px 18px; border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,.18); z-index:9999; text-align:center; }
 
   header { margin-bottom: 32px; text-align: center; }
   header .eyebrow { font-size: 14px; font-weight: 700; color: var(--navy); margin-bottom: 8px; letter-spacing: 0.5px; }
@@ -166,6 +173,11 @@
     .card, .process-guide { padding: 24px 20px; }
     .row { grid-template-columns: 1fr; gap: 16px; }
     header h1 { font-size: 24px; }
+    .reg-x { top:14px; right:16px; height:34px; padding:0 10px; }
+    header { padding-top: 30px; }
+    .reg-acts { flex-direction: column-reverse; }
+    .reg-acts button[type=submit] { flex: none; }
+    .reg-acts .reg-cl { height:48px; }
   }
 
   /* ===== d1 강사 등록: 단계 흐름·강사카드 창·AI 자동 채우기 ===== */
@@ -265,6 +277,7 @@
 <body>
 <div class="wrap">
 
+  <button type="button" class="btn-sub reg-x" data-regclose title="신청하지 않고 이 화면을 닫습니다"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>닫기</button>
   <header>
     <div class="eyebrow">외래강사 등록신청</div>
     <h1>○○소방학교 외래강사<br>등록을 신청합니다</h1>
@@ -380,7 +393,7 @@
 
     <div class="hp-field" aria-hidden="true"><label for="website">웹사이트 (비워 두세요)</label><input type="text" id="website" tabindex="-1" autocomplete="off"></div>
 
-    <button type="submit" id="submitBtn">확인하고 신청하기</button>
+    <div class="reg-acts"><button type="button" class="btn-sub reg-cl" data-regclose>신청하지 않고 닫기</button><button type="submit" id="submitBtn">확인하고 신청하기</button></div>
     <div id="msg"></div>
   </form>
 
@@ -809,9 +822,29 @@
       });
   }
 
+  /* d2e: 닫기 — 입력한 내용이 있으면 한 번 확인. 새 탭으로 열린 화면은 탭을 닫고, 닫을 수 없으면 이전 화면으로 또는 안내 */
+  function regDirty(){
+    if (cardState && cardState.written) return true;
+    return Array.prototype.some.call(document.querySelectorAll('#regForm input, #regForm textarea, #cardMdl input, #cardMdl textarea'), function(el){
+      if (el.id === 'website' || el.type === 'checkbox' || el.type === 'radio' || el.type === 'button' || el.type === 'hidden') return false;
+      return el.type === 'file' ? !!(el.files && el.files.length) : String(el.value || '').trim() !== '';
+    });
+  }
+  function regToast(t){ var d = document.querySelector('.reg-toast'); if (!d) { d = document.createElement('div'); d.className = 'reg-toast'; d.setAttribute('role', 'status'); document.body.appendChild(d); } d.textContent = t; clearTimeout(regToast.t); regToast.t = setTimeout(function(){ if (d.parentNode) d.parentNode.removeChild(d); }, 6000); }
+  document.addEventListener('click', function(ev){
+    var b = ev.target.closest ? ev.target.closest('[data-regclose]') : null; if (!b) return;
+    if (regDirty() && !confirm('입력한 내용은 저장되지 않습니다.\n신청하지 않고 닫을까요?')) return;
+    try { window.close(); } catch (e) {}
+    setTimeout(function(){
+      if (window.closed) return;
+      if (history.length > 1 && document.referrer) { history.back(); return; }
+      regToast('브라우저 설정으로 이 화면을 자동으로 닫을 수 없습니다. 탭(창)을 직접 닫아 주세요.');
+    }, 300);
+  });
+
   renderCardBox(); renderFlow(); ensureRows(); checkCard();
 </script>
 
-  <div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 18px;font-family:'Pretendard',sans-serif;">화면 버전 2026-10-17 강사등록 d2d</div>
+  <div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 18px;font-family:'Pretendard',sans-serif;">화면 버전 2026-10-25 강사등록 d2e</div>
 </body>
 </html>

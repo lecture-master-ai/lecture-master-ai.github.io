@@ -366,7 +366,6 @@
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
       <button id="reloadListBtn" class="badge" style="border:1px solid var(--border-input);cursor:pointer;font-family:inherit;">새로고침</button>
       <button id="inviteOpenBtn" class="badge" style="border:1px solid var(--navy);cursor:pointer;font-family:inherit;background:var(--navy);color:#fff;">강사 초대</button>
-      <button id="copyPublicLinkBtn" class="badge" style="border:1px solid var(--border-input);cursor:pointer;font-family:inherit;">강사등록 링크</button>
       <a href="instructor-registration.html" target="_blank" rel="noopener" class="badge" style="border:1px solid var(--border-input);cursor:pointer;font-family:inherit;text-decoration:none;color:inherit;" title="강사가 보는 등록 신청 화면을 새 창으로 엽니다">등록 신청 화면 ↗</a>
       <button id="logoutBtn" class="badge" type="button" style="border:1px solid var(--border-input);cursor:pointer;font-family:inherit;">로그아웃</button>
     </div>
@@ -516,7 +515,7 @@
       <div id="schoolMsg" style="margin-top:12px;font-size:13px;display:none;"></div>
     </form>
   </div>
-  <div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:18px 0 0;">화면 버전 2026-10-17 강사관리 d2i</div>
+  <div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:18px 0 0;">화면 버전 2026-10-25 강사관리 d2j</div>
 </div>
 
 <script>
@@ -1333,14 +1332,7 @@
     });
   }
 
-  document.getElementById('copyPublicLinkBtn').addEventListener('click', function(){
-    var link = location.href.replace(/instructor-dashboard\.html.*$/, 'instructor-registration.html');
-    navigator.clipboard.writeText(link).then(function(){
-      alert('강사 등록신청 주소가 복사되었습니다:\n' + link);
-    }).catch(function(){
-      prompt('아래 주소를 직접 복사해 주세요:', link);
-    });
-  });
+  // d3y: [강사등록 링크](주소 복사) 버튼 삭제 — [강사 초대]가 주소를 문자·메일로 보냄
 
   document.getElementById('mobileFilterToggle').addEventListener('click', function(){
     var row = document.getElementById('filterOptions');
