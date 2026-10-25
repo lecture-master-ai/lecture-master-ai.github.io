@@ -1262,6 +1262,13 @@
   .gfillbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 10px;padding:8px 10px;border:1px solid #CFE0F3;border-left:4px solid #2F6FB2;border-radius:8px;background:#F3F8FE;font-size:13px;color:#344054;}
   .gfillbar .btn{height:34px;} .gfillbar b{color:#B54708;}
   @media (max-width:600px){ .gfillbar .btn{width:100%;} }
+  /* d3zh: 과정 고르기 창 — 뼈대(자리 표시)와 물결 등장 */
+  .bp-sk{pointer-events:none;} .bp-sk .sk{display:block;border-radius:6px;background:linear-gradient(90deg,#E9EEF5 25%,#F6F8FB 50%,#E9EEF5 75%);background-size:200% 100%;animation:skSh 1.2s linear infinite;}
+  .bp-sk .sk.w1{width:60%;height:16px;margin-bottom:8px;} .bp-sk .sk.w2{width:38%;height:12px;} .bp-sk .sk.b{width:84px;height:34px;border-radius:8px;flex:none;}
+  .bp-g.sk-g{color:#475467;} @keyframes skSh{to{background-position:-200% 0}}
+  .bp-l.wv > .bp-r{animation:wvIn .7s cubic-bezier(.22,1,.36,1) both;animation-delay:calc(var(--i,0) * 80ms);}
+  @keyframes wvIn{0%{opacity:0;transform:translateY(18px)}55%{opacity:1;transform:translateY(-4px)}100%{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){ .bp-sk .sk,.bp-l.wv > .bp-r{animation:none;} }
   /* d3zg: 버튼 처리 중·완료 표시 */
   .mi-busy,.mi-ok{display:inline-flex;align-items:center;justify-content:center;gap:8px;}
   .mi-sp{width:15px;height:15px;border:2.2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:miSpin .7s linear infinite;flex:none;}
@@ -1407,7 +1414,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-25 배정 d3zg</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-25 배정 d3zh</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -2117,9 +2124,20 @@
       cb();
     }).catch(function(){ cb(); });
   }
-  function poolPick(kind){
+  function poolPick(kind, trig){
     kind = kind || 'ab';
+    if (trig) btnBusy(trig, '불러오는 중…');   // d3zh: 누르는 즉시 회전 표시
+    var skel = '<div class="bp-l">' + [0, 1, 2, 3].map(function(){ return '<div class="bp-r bp-sk"><div><i class="sk w1"></i><i class="sk w2"></i></div><i class="sk b"></i></div>'; }).join('') + '</div>';
+    var m = cxModal('시연할 과정 고르기', '<div class="bp-g sk-g">과정 목록을 불러오는 중입니다…</div>' + skel);   // d3zh: 창과 뼈대를 먼저 보여 줌
+    m.body.addEventListener('click', function(ev){
+      var g = ev.target.closest ? ev.target.closest('[data-bpgo]') : null;
+      if (g) { m.close(); demoResume(g.getAttribute('data-bpgo'), kind); return; }
+      var b = ev.target.closest ? ev.target.closest('[data-bpstart]') : null; if (!b) return;
+      demoStart(b.getAttribute('data-bpstart'), b, function(){ m.close(); }, function(t){ var x = $('bpMsg'); if (x) x.innerHTML = '<div class="note-err">' + esc(t) + '</div>'; }, kind);
+    });
     poolFetch(kind, function(){
+      if (trig) btnReset(trig);
+      if (!m.el.parentNode) return;   // 불러오는 사이 창을 닫았으면 그만
       var o = dbs(kind), info = dpInfo[kind] || { act: {}, now: Date.now(), at: Date.now() }, now = info.now + (Date.now() - info.at);
       var recent = function(k){ return busyByOther(k); };
       var inHist = function(k){ return inHistKind(k, kind); };
@@ -2138,15 +2156,10 @@
             : inHist(k) ? '<button type="button" class="btn primary" data-bpgo="' + esc(k) + '">이어서 하기</button><button type="button" class="btn" data-bpstart="' + esc(k) + '">처음부터</button>'
             : '<button type="button" class="btn' + (rc ? '' : ' primary') + '" data-bpstart="' + esc(k) + '">' + (mine ? '처음부터 다시' : '올리기') + '</button>') + '</div></div>';
       };
-      var m = cxModal('시연할 과정 고르기', '<div class="bp-g"><b>' + DKIND[kind].guide + '</b> 진행 중 다른 과정을 골라도 자동 저장되고, 보드 아래 \'진행한 과정\'에서 이어서 할 수 있습니다.' +
+      m.body.innerHTML = ('<div class="bp-g"><b>' + DKIND[kind].guide + '</b> 진행 중 다른 과정을 골라도 자동 저장되고, 보드 아래 \'진행한 과정\'에서 이어서 할 수 있습니다.' +
         (o.active ? ' 지금 보드의 <b>' + esc(courseLabel(o.active)) + '</b>은(는) \'진행한 과정\'으로 옮겨집니다.' : '') + '</div>' +
-        (rows.length ? '<div class="bp-l">' + rows.map(row).join('') + '</div>' : '<div class="cx-guide">시연용 과정을 찾지 못했습니다.</div>') + '<div id="bpMsg"></div>');
-      m.body.addEventListener('click', function(ev){
-        var g = ev.target.closest ? ev.target.closest('[data-bpgo]') : null;
-        if (g) { m.close(); demoResume(g.getAttribute('data-bpgo'), kind); return; }
-        var b = ev.target.closest ? ev.target.closest('[data-bpstart]') : null; if (!b) return;
-        demoStart(b.getAttribute('data-bpstart'), b, function(){ m.close(); }, function(t){ var x = $('bpMsg'); if (x) x.innerHTML = '<div class="note-err">' + esc(t) + '</div>'; }, kind);
-      });
+        (rows.length ? '<div class="bp-l wv">' + rows.map(row).join('') + '</div>' : '<div class="cx-guide">시연용 과정을 찾지 못했습니다.</div>') + '<div id="bpMsg"></div>');
+      Array.prototype.forEach.call(m.body.querySelectorAll('.bp-l.wv > .bp-r'), function(r, i){ r.style.setProperty('--i', i); });   // d3zh: 과정 줄이 물결처럼 차례로 올라옴
     });
   }
   function courseTeachersN(k){ var seen = {}; sessionsOf(k).forEach(function(r){ var t = String(r['강사ID'] || r['강사명'] || ''); if (t) seen[String(r['교과목']) + '|' + t] = 1; }); return Object.keys(seen).length; }
@@ -2200,9 +2213,9 @@
   }
   function demoStart(k, btn, done, fail, kind){
     kind = kind || 'ab';
-    var lb = btn ? btn.textContent : '';
-    if (btn) { btn.disabled = true; btn.textContent = '처음 상태로 되돌리는 중…'; }
-    var back = function(t){ if (btn) { btn.disabled = false; btn.textContent = lb; } if (fail) fail(t); else alert(t); };
+    var t0 = Date.now();
+    if (btn) btnBusy(btn, '올리는 중…');   // d3zh: 회전 → 체크
+    var back = function(t){ if (btn) btnReset(btn); if (fail) fail(t); else alert(t); };
     var q = { action: 'demoCourseStart', password: getPw(), 개설키: k }; if (DKIND[kind].server) q.종류 = DKIND[kind].server;
     api(q).then(function(j){
       if (!j || j.status !== 'ok') { back((j && j.message) || '과정을 올리지 못했습니다'); return; }
@@ -2221,7 +2234,7 @@
       if (o.ready) delete o.ready[k];
       if (kind === 'ab') { o.prevOf = o.prevOf || {}; o.prevOf[k] = prev; }   // d3ze: 올리기 취소 시 되돌릴 과정
       o.hist = o.hist.filter(function(x){ return x.k !== k; }); o.active = k; o.startAt = Number(j.시각) || Date.now(); o.starts = o.starts || {}; o.starts[k] = Number(j.번호) || 0; bsSave(kind); dpRefresh(kind, function(){ if (kind === 'ab') renderDemo(); });
-      if (done) done();
+      if (done) { if (btn && btn.isConnected) { var wt = Math.max(0, 500 - (Date.now() - t0)); setTimeout(function(){ btnOk(btn, '올렸습니다'); }, wt); setTimeout(done, wt + 650); } else done(); }
       if (kind === 'ab') renderDemo(); else if (!currentKey && planMode === 'eval') renderEval();
       var Lp = prev ? laneOf(prev, kind) : 0;
       nextGuide(courseLabel(k) + '을(를) 1단계에 올렸습니다' + (prev ? ' · ' + courseLabel(prev) + '은(는) ' + (Lp ? Lp + '단계까지 ' : '') + '저장' : ''),
@@ -2425,7 +2438,7 @@
     var t = ev.target.closest ? ev.target.closest('button') : null; if (!t) return;
     var k = t.getAttribute('data-demo-open'); if (k) { openCourse(k); return; }
     var go = t.getAttribute('data-bdgo'); if (go) { var ln = $(/^\d+$/.test(go) ? 'bdl' + go : go); if (ln) { ln.scrollIntoView({ behavior: window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); if (t.classList.contains('bd-go')) { ln.classList.add('bd-flash'); setTimeout(function(){ ln.classList.remove('bd-flash'); }, 1600); } } return; }
-    if (t.getAttribute('data-bdadd')) { poolPick(); return; }
+    if (t.getAttribute('data-bdadd')) { poolPick('ab', t); return; }
     var lp = t.getAttribute('data-bdlane'); if (lp) { lanePull(Number(lp)); return; }
     var rs0 = t.getAttribute('data-bdres'); if (rs0) { resumeOpen(rs0); return; }
     var re = t.getAttribute('data-bsre'); if (re) { demoStart(re, t); return; }
