@@ -1262,6 +1262,10 @@
   .gfillbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 10px;padding:8px 10px;border:1px solid #CFE0F3;border-left:4px solid #2F6FB2;border-radius:8px;background:#F3F8FE;font-size:13px;color:#344054;}
   .gfillbar .btn{height:34px;} .gfillbar b{color:#B54708;}
   @media (max-width:600px){ .gfillbar .btn{width:100%;} }
+  /* d3zf: 보드 첫 등장 순차 애니메이션 */
+  .bd-lane > .stg{animation:stgIn .65s cubic-bezier(.16,1,.3,1) both;}
+  @keyframes stgIn{0%{opacity:0;transform:translateY(18px)}100%{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){ .bd-lane > .stg{animation:none;} }
 </style>
 <script src="contest-config.js"></script>
 <script src="cx-wait.js"></script>
@@ -1393,7 +1397,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-25 배정 d3ze</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-25 배정 d3zf</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -2361,6 +2365,15 @@
     if (moves.length) setTimeout(function(){ moves.forEach(function(t){ stageToast(t, 0); }); }, 50);
     return h + demoFoot();
   }
+  /* d3zf: 보드가 처음 나타날 때 칸·카드가 왼쪽 칸부터 0.12초 간격으로 차례로 떠오름. 그 사이 다시 그려도 이어서 재생(처음부터 반복 안 함) */
+  var stgAt = 0;
+  function bdStagger(box, arrived){
+    if (arrived) stgAt = Date.now();
+    var el = Array.prototype.slice.call(box.querySelectorAll('.bd-lane > :not(.bd-lh):not(.enter)')), STEP = 120, DUR = 650;
+    if (!stgAt || Date.now() - stgAt >= el.length * STEP + DUR) return;
+    var past = Date.now() - stgAt;
+    el.forEach(function(n, i){ n.classList.add('stg'); n.style.animationDelay = (i * STEP - past) + 'ms'; });
+  }
   function renderDemo(){
     var box = $('demoBox'); if (!box) return;
     var on = SIMPLE && !currentKey && planMode === 'table';
@@ -2373,7 +2386,7 @@
     var order = ['ai', 'copy', 'cell'];
     var demos = plans.filter(function(p){ return DEMO_KEYS[p['과정+기수']] && !isCancelled(p); });
     demos.sort(function(a, b){ return order.indexOf(DEMO_KEYS[a['과정+기수']]) - order.indexOf(DEMO_KEYS[b['과정+기수']]); });
-    if (UIV) { box.innerHTML = UIV === 'a' ? renderDemoA(demos) : renderDemoB(demos, arrived); $('hTitle').textContent = '강의배정'; $('hSub').textContent = '과정을 골라 올리면 1단계부터 4단계까지 차례로 진행합니다.'; return; }
+    if (UIV) { box.innerHTML = UIV === 'a' ? renderDemoA(demos) : renderDemoB(demos, arrived); if (UIV !== 'a') bdStagger(box, arrived); $('hTitle').textContent = '강의배정'; $('hSub').textContent = '과정을 골라 올리면 1단계부터 4단계까지 차례로 진행합니다.'; return; }
     var h = '<div class="demo-h"><b>편성이 필요한 과정</b><span>다가오는 과정 중 강사 배정이 남은 과정입니다.</span></div>' +
       '<div class="ai-hint"><span class="ai-badge">AI 도움</span><b>AI 도움을 받을 수 있는 곳</b><span>강사 일괄 배정 · 지난 기수 강사 재검토 · 적합한 강사 찾기 · 강사카드 채우기 · 설문 의견 정리</span><span style="color:#667085">— AI는 근거를 제시하고, 적용은 담당자가 결정합니다.</span></div><div class="demo-grid">';
     demos.forEach(function(p){
