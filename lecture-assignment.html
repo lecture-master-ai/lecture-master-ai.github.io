@@ -425,6 +425,21 @@
   .ab-tip{font-size:12.5px;color:var(--text-muted);margin-top:6px;}
   .ab-held{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between;margin-top:10px;background:#FFF8E6;border:1px solid #F3D88C;border-radius:10px;padding:10px 12px;}
   .ab-held b{display:block;font-size:14px;color:#7A5B00;} .ab-held span{font-size:12.5px;color:#5F6877;}
+  /* d3zb: 편성 화면 단계 띠(고정) */
+  .stepbar{position:sticky;top:0;z-index:40;margin:-4px -2px 14px;padding:8px 2px;background:#E3E8EF;}
+  .sb-in{display:flex;align-items:center;gap:6px;}
+  .sb-s{flex:1;min-width:0;display:flex;align-items:center;gap:8px;height:42px;padding:0 12px;border-radius:10px;background:#fff;border:1px solid #D5DCE6;color:#667085;font-size:13px;white-space:nowrap;overflow:hidden;transition:background-color .2s ease-out,border-color .2s ease-out,color .2s ease-out;}
+  .sb-s i{flex:0 0 22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-style:normal;font-size:12px;font-weight:800;background:#EEF1F5;color:#667085;}
+  .sb-s b{font-size:13.5px;font-weight:800;} .sb-s b em{font-style:normal;} .sb-sh{display:none;} .sb-s span{font-size:12.5px;overflow:hidden;text-overflow:ellipsis;}
+  .sb-done{background:#1B3A5F;border-color:#1B3A5F;color:#fff;} .sb-done i{background:rgba(255,255,255,.18);color:#fff;} .sb-done span{color:#C9D6E5;}
+  .sb-now{background:#FFF4EC;border-color:#E8762B;box-shadow:inset 0 0 0 1px #E8762B;color:#9A3D0A;} .sb-now i{background:#E8762B;color:#fff;}
+  .sb-a{color:#98A2B3;font-weight:800;flex:0 0 auto;}
+  @keyframes sbArr{0%{box-shadow:inset 0 0 0 1px #E8762B,0 0 0 0 rgba(232,118,43,.55)}100%{box-shadow:inset 0 0 0 1px #E8762B,0 0 0 12px rgba(232,118,43,0)}}
+  .sb-arrive{animation:sbArr .9s ease-out 2;}
+  @media (prefers-reduced-motion:reduce){ .sb-arrive{animation:none;} .sb-s{transition:none;} }
+  @media (max-width:760px){ .sb-s{height:38px;padding:0 8px;gap:5px;} .sb-s b{font-size:11.5px;white-space:normal;line-height:1.2;word-break:keep-all;} .sb-l{display:none;} .sb-sh{display:inline;} .sb-s span{display:none;} .sb-now span{display:none;} .sb-a{display:none;} .sb-in{gap:4px;} }
+  body.simple #sAiAll{display:none !important;}   /* 같은 기능이 '지금 할 일' 칸에 있음 */
+  @media print{ .stepbar{display:none !important;} }
   /* d3z: 3단계 맨 아래 [4단계로 넘기기] · 4단계 보드 카드 발송 버튼 */
   .navbar.dbnav.hofon{flex-direction:column;align-items:center;} .hof{width:100%;max-width:760px;margin:0 auto 6px;box-sizing:border-box;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;background:#fff;border:1px solid #D5DCE6;border-left:4px solid #E8762B;border-radius:12px;padding:14px 16px;text-align:left;}
   .hof b{display:block;font-size:15px;color:#1B2433;} .hof span{font-size:13px;color:#475467;}
@@ -1344,6 +1359,7 @@
     <div id="sBlock" class="note-err" style="display:none;margin-bottom:12px;"></div>
     <div id="dashBack" style="display:none;"></div>
     <div class="panel" id="sHead"></div>
+    <div id="stepBar" class="stepbar" style="display:none;" role="navigation" aria-label="편성 진행 단계"></div>
     <div class="panel" id="abBar" style="display:none;"></div>
     <div class="panel" id="sFormPanel"></div>
     <div class="panel" id="sListPanel">
@@ -1364,7 +1380,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-25 배정 d3z</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-25 배정 d3zb</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -1896,6 +1912,7 @@
     var prev = stageSeen[key]; stageSeen[key] = st.lane;
     if (prev === undefined || st.lane <= prev) return;
     stageMoved[key] = { at: Date.now(), from: prev, to: st.lane, shown: false, toasted: !!toast };
+    if (toast && SIMPLE && currentKey === key && laneGuide(key, st)) return;
     if (toast) stageToast(SIMPLE ? st.lane + '단계 \'' + STEPS[st.lane - 1].t + '\'로 넘어갔습니다' : courseLabel(key) + '이(가) ' + st.lane + '단계 \'' + STEPS[st.lane - 1].t + '\'(으)로 이동했습니다.', st.lane);
   }
   /* d2y: 다음 할 일 안내 — 완료 한 줄 + "다음: 버튼 — 이유"를 잠깐 띄우고, 해야 할 버튼을 한 번 강조한 뒤 사라짐(심사용 화면) */
@@ -5255,6 +5272,39 @@
       if (j && j.status === 'ok') { ab.held[key] = { 칸: j.칸 || 0, 강사: j.강사 || 0 }; ab.heldOk[key] = true; if (currentKey === key) abRender(); }
     }).catch(function(){});
   }
+  /* d3zb: 편성 화면 맨 위 단계 띠 — 스크롤해도 위에 고정, 단계가 바뀌면 현재 칸이 옮겨 가며 한 번 강조 */
+  var stepPrev = {};
+  function renderStepBar(){
+    var el = $('stepBar'); if (!el) return;
+    var p = currentKey ? planByKey(currentKey) : null;
+    if (!SIMPLE || !currentKey || !p || isCancelled(p)) { el.style.display = 'none'; el.innerHTML = ''; return; }
+    var st = courseStage(currentKey), L = st.lane, cpd = !!ab.copied[currentKey], sure = st.sure;
+    var sub = [
+      L > 1 ? '완료 ' + st.n + '칸' : st.n ? (st.gs && st.gs.t ? st.gs.f + ' / ' + st.gs.t + '교시' : '빈 교시 ' + st.gap + '칸') : '시작 전',
+      L > 2 ? '완료' : L === 2 ? (st.empty ? (st.n - st.empty) + ' / ' + st.n + '칸' : cpd ? 'AI 재검토 전' : '진행 중') : '남음',
+      !sure && L >= 3 ? '확인 중' : L > 3 ? '완료' : L === 3 ? '넘기기 전' : '남음',
+      !sure && L >= 3 ? '확인 중' : L === 4 ? (st.fin ? (st.nx.x || '발송 완료') : '발송 대기 ' + st.held + '명') : '남음'
+    ];
+    var cur = L === 4 && st.fin ? 5 : L;
+    var moved = stepPrev[currentKey] !== undefined && stepPrev[currentKey] < cur; stepPrev[currentKey] = cur;
+    el.innerHTML = '<div class="sb-in">' + STEPS.map(function(x, i){
+      var n = i + 1, c = n < cur ? 'done' : n === cur ? 'now' : 'todo';
+      return (i ? '<span class="sb-a" aria-hidden="true">›</span>' : '') + '<div class="sb-s sb-' + c + (c === 'now' && moved ? ' sb-arrive' : '') + '"' + (c === 'now' ? ' aria-current="step"' : '') + '><i>' + (c === 'done' ? '✓' : n) + '</i><b><em class="sb-l">' + x.t + '</em><em class="sb-sh">' + ['편성', '강사 배정', '배정 완료', '확인·발송'][i] + '</em></b><span>' + esc(sub[i]) + '</span></div>';
+    }).join('') + '</div>';
+    el.style.display = '';
+  }
+  function laneGuide(key, st){   // d3zb: 단계가 바뀌면 다음에 누를 버튼을 말풍선으로
+    var L = st.lane;
+    if (L === 2) {
+      if (ab.copied[key]) return false;   // 지난 기수 불러오기 흐름은 자체 안내가 있음
+      if (st.empty && st.empty === st.n) nextGuide('1단계 교과목 편성을 마쳤습니다', '<i>AI 강사 일괄 배정</i> — 빈 칸 ' + st.empty + '개를 한 번에 채웁니다', '#abBar [data-ab="draft"]');
+      else if (st.empty) nextGuide('1단계 교과목 편성을 마쳤습니다', '빈 칸 ' + st.empty + '개를 눌러 <i>적합한 강사 찾기</i>', '#sGridWrap .gc.none');
+      else nextGuide('1단계 교과목 편성을 마쳤습니다', '', '');
+      return true;
+    }
+    if (L === 3) { nextGuide('2단계 강사 배정을 마쳤습니다', '화면 아래 <i>4단계로 넘기기</i>', '[data-handoff]'); return true; }
+    return false;
+  }
   function abFlow(nAll, nEmpty, held, gap, gs, cpd, ncard){   // d3u: 빈 교시가 남으면 1단계 진행 중, 2·3단계는 '남음'
     var rest = gap || nEmpty || cpd;
     var st = [
@@ -5269,6 +5319,7 @@
   function abRender(){
     var box = $('abBar'); if (!box) return;
     var p = planByKey(currentKey), list = p ? sessionsOf(currentKey) : [];
+    renderStepBar();   // d3zb: 페이지 위 단계 띠(교과목 0개일 때도)
     if (!currentKey || isViewer() || !p || isCancelled(p) || !list.length || cxEnded(p)) { box.style.display = 'none'; if ($('sAiAll')) $('sAiAll').style.display = 'none'; return; }
     if (ab.held[currentKey] === undefined) { ab.held[currentKey] = { 칸: 0, 강사: 0 }; abHeldFetch(currentKey); }
     var all = list.filter(function(r){ return !isOps(r) && !sessEnded(r['일자']); });
@@ -5279,8 +5330,8 @@
     var cpd = !!ab.copied[currentKey];
     var ncard = all.some(function(r){ return String(r['강사ID'] || '').trim(); });
     var bdg = (!empty && !held && !gap && !cpd && all.length && ab.heldOk[currentKey] && !m) ? '<span class="ab-bdg ok">' + ic('check', 'l') + (ncard ? '발송 완료' : '배정 완료') + '</span>' : '';   // d3j(P4) · d3x
-    var h = '<div class="ab-top"><div><b class="ab-t">강사 배정</b>' + bdg + '<span class="ab-s">AI는 강사카드·설문 평가를 읽어 교과목 관련성을 판단하고, 일정·시간 조건은 규칙으로 거릅니다. 적용은 담당자가 확인한 뒤에만 됩니다.</span></div></div>' +
-      abFlow(all.length, empty, held, gap, gs0, cpd, ncard);
+    var h = '<div class="ab-top"><div><b class="ab-t">지금 할 일</b>' + bdg + '<span class="ab-s">AI는 강사카드·설문 평가를 읽어 교과목 관련성을 판단하고, 일정·시간 조건은 규칙으로 거릅니다. 적용은 담당자가 확인한 뒤에만 됩니다.</span></div></div>' +
+      '';   // d3zb: 단계 띠는 페이지 위 #stepBar 한 곳에만
     var act = '';
     if (m) {
       act = '<div class="ab-man' + (m.t1 ? ' done' : '') + '"><span class="ab-dot" aria-hidden="true"></span>' +
