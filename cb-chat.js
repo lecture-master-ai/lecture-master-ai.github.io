@@ -228,6 +228,7 @@
     if (NEXT_Q.test(t) && !/할\s*일|해야/.test(t)) { stageNext(''); return; }
     var bt = btnFind(t), what = /뭐|무엇|뜻|기능|역할|용도|누르면|무슨\s*버튼/.test(t) || t.replace(/[\s?？]/g, '').length <= 12;
     if (bt && what) { btnAnswer(bt, ''); return; }   // d4c: "○○가 뭐예요?"는 버튼 설명
+    var R0e = ruleParse(t); if (R0e.intent === 'explain' && R0e.term && !/려면|어떻게|방법/.test(t)) { act(R0e, t, ''); return; }   // "○○가 뭐예요?"는 용어 설명
     var hk = howTopic(t); if (hk) { howTo(hk, ''); return; }   // d4b: "~하려면?"은 절차 안내
     if (bt) { btnAnswer(bt, ''); return; }
     var R0 = ruleParse(t); if (R0.intent === 'help_start' || R0.intent === 'help_next' || (R0.intent === 'explain' && R0.term)) { act(R0, t, ''); return; }   // 사용법·할 일·용어 질문은 화면 정보로 바로 답함   // d4b: "~하려면?" 같은 방법 질문·도우미가 대신 못 하는 일은 절차 안내
@@ -256,12 +257,13 @@
       b.parentNode.querySelectorAll('.cb-chip').forEach(function(x){ x.disabled = true; });
       me(c.t);
       if (c.fn) { c.fn(); return; }
-      act(Object.assign({ intent: 'other', weekday: '', date: '', start: null, end: null, hours: null, allday: false, half: '', subject: '', pick: null, term: '' }, c.a), c.t, '');
+      act(Object.assign({ intent: 'other', weekday: '', date: '', start: null, end: null, hours: null, allday: false, half: '', subject: '', pick: null, term: '', _chip: true }, c.a), c.t, '');
       return;
     }
     var pk = b.getAttribute('data-cbpick');
     if (pk != null && S.cands && !S.busy) { me((Number(pk) + 1) + '번'); pickCand(Number(pk)); return; }
     if (b.getAttribute('data-cbgo')) { confirmSave(b); return; }
+    if (b.getAttribute('data-cbrec')) { b.closest('.cb-conf').classList.add('done'); me('강사 추천받기'); S.slot.noInstr = false; S.slot.iid = ''; S.cands = null; advance('', true); return; }
     if (b.getAttribute('data-cbed')) { b.closest('.cb-conf').classList.add('done'); clearHl(); say('어느 것을 고칠까요?', [{ t: '일시', fn: function(){ S.slot.d = ''; S.slot.s = S.slot.e = null; S.slot.row = null; advance(); } }, { t: '교과목', fn: function(){ S.slot.subj = ''; S.slot.row = null; S.wait = 'subject'; say('교과목 이름을 알려 주세요.'); } }, { t: '강사', fn: function(){ S.slot.iid = ''; S.slot.noInstr = false; S.cands = null; advance(); } }, { t: '처음부터', a: { intent: 'cancel' } }]); }
   }
 
@@ -294,7 +296,11 @@
     // 값 반영
     var nm = S.cands && S.cands.length ? S.cands.map(function(x, i){ return { i: i, n: x.name }; }).filter(function(x){ return raw && raw.indexOf(x.n) > -1; })[0] : null;
     if (I.subject && !(S.wait === 'pick' && (I.pick || nm))) { if (I.subject !== sl.subj) { sl.subj = I.subject; sl.row = null; if (sl.iid && S.cands) { sl.iid = ''; } S.cands = null; } }
+    // d4d: '교과목만'은 그 말을 했을 때만. AI가 강사 언급이 없다는 이유로 subject_only로 분류해도 강사 추천부터
+    var onlyWord = /강사\s*(없이|빼고|는\s*나중|미정|미지정)|교과목만|과목만/.test(String(raw || ''));
+    if (I.intent === 'subject_only' && !onlyWord && !(I._chip)) I.intent = 'assign';
     if (I.intent === 'subject_only') { sl.noInstr = true; sl.iid = ''; }
+    else if ((I.intent === 'assign' || I.intent === 'recommend') && sl.noInstr && !onlyWord) sl.noInstr = false;   // 이전의 '교과목만'이 새 요청에 이어지지 않게
     var tchg = applyTime(I, src); if (tchg === false) return;
     if ((I.intent === 'pick' || S.wait === 'pick' || I.pick) && S.cands && (I.pick || nm)) {
       var idx = nm ? nm.i : I.pick - 1;
@@ -431,7 +437,7 @@
       '<tr><td>강사</td><td>' + (sl.iid ? esc(sl.iname) : '<span style="color:#667085;">미지정(나중에 배정)</span>') + '</td></tr>' +
       '<tr><td>강의실</td><td>' + esc(room || '미정') + '</td></tr>' +
       '<tr><td>검사</td><td>' + chk.join(' · ') + '</td></tr></table>' +
-      '<div class="acts"><button type="button" class="ed" data-cbed="1">고치기</button><button type="button" class="go" data-cbgo="1">배정</button></div></div>';
+      '<div class="acts"><button type="button" class="ed" data-cbed="1">고치기</button>' + (sl.iid || sl.row ? '' : '<button type="button" class="ed" data-cbrec="1">강사 추천받기</button>') + '<button type="button" class="go" data-cbgo="1">' + (sl.iid ? '배정' : '교과목만 저장') + '</button></div></div>';
     var d = document.createElement('div'); d.innerHTML = h; var cf = d.firstChild; body.appendChild(cf);
     if (src) { var s2 = document.createElement('div'); s2.className = 'cb-src'; s2.style.alignSelf = 'flex-start'; s2.textContent = src; body.appendChild(s2); }
     var nt = document.createElement('div'); nt.className = 'cb-src'; nt.style.alignSelf = 'center'; nt.textContent = sl.iid ? '강사 안내는 4단계에서 한꺼번에 보냅니다' : '강사는 2단계에서 배정합니다';

@@ -515,7 +515,7 @@
       <div id="schoolMsg" style="margin-top:12px;font-size:13px;display:none;"></div>
     </form>
   </div>
-  <div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:18px 0 0;">화면 버전 2026-10-25 강사관리 d2l</div>
+  <div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:18px 0 0;">화면 버전 2026-10-25 강사관리 d2m</div>
 </div>
 
 <script>
@@ -1565,7 +1565,7 @@
      저장하는 항목: 강사ID·성명·소속·직위·강사구분·전문분야·활동지역·상태·등록경로·등록일·사진·강의 건수 등 목록 표시용만.
      저장하지 않는 항목: 연락처·이메일·생년월일·약력·자격증학위·교과목명·동의서/강사카드 파일 ID·재동의 메모 등.
      탭을 닫거나 로그아웃·인증 실패·강사 정보 변경(승인·휴면·삭제·재동의·초대) 시 삭제, 15분 지난 것은 사용하지 않음 */
-  var KEY_LIST = 'jsfa_list_v1', LIST_MAX_AGE = 15 * 60 * 1000;
+  var KEY_LIST = 'jsfa_list_v1', LIST_MAX_AGE = 12 * 3600 * 1000;
   var LIST_CACHE_FIELDS = ['강사ID', '성명', '소속', '직위', '강사구분', '전문분야', '활동지역', '상태', '등록경로', '등록일', '재동의확인일', '사진링크',
     '강의회차', '강의확정건수', '확정미제출건수', '확정제출건수', '강의확정', '확정미제출', '편성건수', '이력있음'];
   function pwFp(pw){ var h = 5381, t = String(pw || ''); for (var i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0; return String(h); }
