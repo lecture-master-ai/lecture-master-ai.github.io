@@ -160,7 +160,7 @@
     if (c.viewer) g += '<br>조회 전용 계정이라 배정은 할 수 없고, 사용법과 다음 단계 안내만 드립니다.';
     else if (c.ended) g += '<br>교육이 끝난 과정이라 편성은 바꿀 수 없습니다. 사용법 안내만 드립니다.';
     else g += '<br>예: <b>"금요일 1~3교시 청렴교육 강사 추천해줘"</b>';
-    say(g, [{ t: '처음인데 어떻게 해요?', a: { intent: 'help_start' } }, { t: '다음 단계 뭐예요?', a: { intent: 'help_next' } }, { t: '교과목 넣기', a: { intent: 'assign' } }, { t: '강사 추천받기', a: { intent: 'recommend' } }]);
+    say(g, [{ t: '처음인데 어떻게 해요?', a: { intent: 'help_start' } }, { t: '앞으로 할 일', a: { intent: 'help_next' } }, { t: '교과목 넣기', a: { intent: 'assign' } }, { t: '강사 추천받기', a: { intent: 'recommend' } }]);
   }
   function note(t){ if (!root || !S.open) return; add('note', esc(t)); renderCtx(); }
   function ctxChanged(key){
@@ -191,8 +191,8 @@
     if (/오전/.test(t)) o.half = '오전'; else if (/오후/.test(t)) o.half = '오후';
     var pk = /(^|\s)(\d)\s*번/.exec(t) || /^\s*(\d)\s*$/.exec(t); if (pk) o.pick = +(pk[2] || pk[1]);
     o.term = TERMS.filter(function(x){ return t.replace(/\s/g, '').indexOf(x.replace(/\s/g, '')) > -1; })[0] || '';
-    if (/처음|어떻게\s*(해|써|사용|하)|사용법|뭘\s*해야/.test(t)) o.intent = 'help_start';
-    else if (/다음\s*(단계|할\s*일|에\s*뭐)|이제\s*뭐|뭐\s*하면/.test(t)) o.intent = 'help_next';
+    if (/처음|어떻게\s*(써|사용)|사용법/.test(t) && !/다음|앞으로|해야/.test(t)) o.intent = 'help_start';
+    else if (/다음\s*(단계|할\s*일|에\s*뭐)|이제\s*뭐|뭐\s*하면|앞으로|해야\s*(할|하는|될)\s*(일|것)|뭘\s*해야|무엇을\s*해야/.test(t)) o.intent = 'help_next';
     else if (o.term && /뭐|무엇|뜻|뭔|설명|란\??$|이란/.test(t)) o.intent = 'explain';
     else if (/^(취소|그만|처음부터|다시)/.test(t.trim())) o.intent = 'cancel';
     else if (/강사\s*없이|교과목만|강사는\s*나중/.test(t)) o.intent = 'subject_only';
@@ -223,6 +223,8 @@
     me(t);
     var c = ctx(); if (!c) return;
     if (quick(t)) { act(ruleParse(t), t, ''); return; }
+    var hk = howTopic(t); if (hk) { howTo(hk, ''); return; }
+    var R0 = ruleParse(t); if (R0.intent === 'help_start' || R0.intent === 'help_next' || (R0.intent === 'explain' && R0.term)) { act(R0, t, ''); return; }   // 사용법·할 일·용어 질문은 화면 정보로 바로 답함   // d4b: "~하려면?" 같은 방법 질문·도우미가 대신 못 하는 일은 절차 안내
     setBusy(true);
     var timer, done = false;
     var fin = function(I, src){ if (done) return; done = true; clearTimeout(timer); setBusy(false); act(I, t, src); };
@@ -258,8 +260,11 @@
   }
 
   /* ---------- 대화 진행 ---------- */
+  function badSubj(x){ return !x || x.length > 24 || /[?？]|려면|어떻게|방법|나머지|전체|하나요|되나요|돼요|할까|해야|뭐예요|무엇/.test(x); }
   function act(I, raw, src){
     var c = ctx(); if (!c) return;
+    if (I.subject && badSubj(I.subject)) I.subject = '';   // d4b
+    if (I.intent === 'other' && S.wait !== 'subject') I.subject = '';   // 교과목을 묻는 중이 아니면 알 수 없는 문장을 교과목으로 쓰지 않음
     if (!S.slot) S.slot = blank();
     var sl = S.slot;
     switch (I.intent) {
@@ -268,7 +273,7 @@
       case 'explain': return explain(I.term, raw, src);
       case 'cancel': S.slot = blank(); S.cands = null; S.wait = ''; clearHl(); return say('처음부터 다시 하겠습니다. 무엇을 도와 드릴까요?', [{ t: '교과목 넣기', a: { intent: 'assign' } }, { t: '강사 추천받기', a: { intent: 'recommend' } }], src);
     }
-    if (c.viewer) return say('조회 전용 계정은 배정할 수 없습니다. 사용법이나 다음 단계는 안내해 드릴 수 있습니다.', [{ t: '다음 단계 뭐예요?', a: { intent: 'help_next' } }], src);
+    if (c.viewer) return say('조회 전용 계정은 배정할 수 없습니다. 사용법이나 다음 단계는 안내해 드릴 수 있습니다.', [{ t: '앞으로 할 일', a: { intent: 'help_next' } }], src);
     if (c.ended || c.cancelled) return say((c.ended ? '교육이 끝난 과정' : '취소된 기수') + '이라 편성을 바꿀 수 없습니다.', null, src);
     if (I.intent === 'confirm' && S.wait === 'confirm') { var gb = body.querySelector('.cb-conf:not(.done) [data-cbgo]'); if (gb) return confirmSave(gb); }
     if (/^(아니|아니요|취소)/.test(String(raw || '').trim()) && S.wait === 'confirm') { var cf = body.querySelector('.cb-conf:not(.done)'); if (cf) cf.classList.add('done'); clearHl(); S.wait = ''; return say('배정하지 않았습니다. 고칠 것을 말씀해 주세요.', null, src); }
@@ -290,7 +295,7 @@
       if (S.cands[idx]) { sl.iid = S.cands[idx].id; sl.iname = S.cands[idx].name; sl.noInstr = false; }
     }
     if (I.intent === 'recommend') { sl.iid = ''; sl.noInstr = false; return advance(src, true); }
-    if (I.intent === 'other' && !I.subject && tchg !== true && !sl.iid) return say('잘 이해하지 못했습니다. 예를 들어 이렇게 말씀해 주세요.<br>· "금요일 1~3교시 청렴교육 강사 추천해줘"<br>· "화요일 하루 전체 현장지휘 실습 넣어줘"<br>· "비워둠 처리가 뭐예요?"', [{ t: '처음인데 어떻게 해요?', a: { intent: 'help_start' } }, { t: '다음 단계 뭐예요?', a: { intent: 'help_next' } }], src);
+    if (I.intent === 'other' && !I.subject && tchg !== true && !sl.iid) return say('말씀을 정확히 알아듣지 못했습니다.<br>' + situation() + '<br>이렇게 말씀해 보세요.<br>· 교과목 넣기: "금요일 1~3교시 청렴교육 강사 추천해줘"<br>· 방법 묻기: "남은 빈 교시를 지난 기수로 채우려면?"<br>· 할 일 묻기: "앞으로 뭘 해야 해요?"', [{ t: '앞으로 할 일', a: { intent: 'help_next' } }, { t: '처음인데 어떻게 해요?', a: { intent: 'help_start' } }], src);
     advance(src, false);
   }
   // 시간 반영: true=바뀜, null=변화 없음, false=되물음(멈춤)
@@ -452,7 +457,7 @@
         var ch = [];
         if (nx) ch.push({ t: '다음 빈 시간 ' + dl(nx.d) + ' ' + pl(nx.s, nx.e) + ' 채우기', a: { intent: 'time', date: nx.d, start: nx.s, end: nx.e } });
         if (st.lane === 3) ch.push({ t: '[4단계로 넘기기] 위치 보기', fn: function(){ A.guide('[data-handoff]', '<i>4단계로 넘기기</i> — 보드 4단계에서 최종 확인하고 발송합니다'); say('화면 맨 아래 버튼을 강조했습니다.'); } });
-        ch.push({ t: '다음 단계 뭐예요?', a: { intent: 'help_next' } });
+        ch.push({ t: '앞으로 할 일', a: { intent: 'help_next' } });
         S.slot = blank(); S.cands = null; S.wait = '';
         say('배정했습니다: <b>' + esc(dl(o.d) + ' ' + pl(o.s, o.e) + ' ' + o.subj) + '</b> · ' + esc(who) + '<br>' + esc(next) + warns, ch);
         if (nx) S.slot = blank();
@@ -460,35 +465,109 @@
     }).catch(function(){ S.busy = false; sendB.disabled = S.off; if (window.btnReset) window.btnReset(btn); cf.querySelector('.ed').disabled = false; add('err', '서버에 연결하지 못했습니다. 잠시 후 [배정]을 다시 눌러 주세요.'); });
   }
 
+  /* ---------- d4b: 방법 질문("~하려면?")·할 일 안내 ---------- */
+  var HOWQ = /(려면|어떻게|방법|하나요|하나\?|되나요|돼요\?|되요\?|할\s*수\s*있|어디서|어디에|어디\s*있|뭘\s*눌러|무엇을\s*눌러|\?\s*$)/;
+  var DOQ = /(채워|해\s*줘|해줘|해\s*주세요|돌려|불러와|보내\s*줘|넘겨\s*줘)/;
+  function guideChip(t, sel, txt){ return { t: t, fn: function(){ A.guide(sel, txt); say('화면의 버튼을 강조했습니다.'); } }; }
+  function howTopic(t){
+    var c = ctx(), st = c.stage, how = HOWQ.test(t), doit = DOQ.test(t);
+    var T = [
+      { k: 'copy', re: /지난\s*기수|지난기수|이전\s*기수|전\s*기수|작년\s*편성/, ok: how || doit },
+      { k: 'batch', re: /일괄|한\s*번에\s*강사|강사.*(한꺼번에|전부|모두|다\s*채)/, ok: how || doit },
+      { k: 'blank', re: /비워둠|비워\s*두|비우/, ok: how || doit },
+      { k: 'move', re: /옮기|옮겨|이동\s*모드|맞바꾸|자리\s*바꾸/, ok: how || doit },
+      { k: 'delete', re: /삭제|지우/, ok: how || doit },
+      { k: 'handoff', re: /4\s*단계로|넘기|넘겨/, ok: how || doit },
+      { k: 'send', re: /발송|안내\s*(를\s*)?보내|문자|메일/, ok: how || doit },
+      { k: 'reset', re: /초기화|처음부터\s*다시/, ok: how || doit },
+      { k: 'instr', re: /강사.*(바꾸|바꿔|교체|변경)/, ok: how },
+      { k: 'room', re: /강의실/, ok: how },
+      { k: 'add', re: /교과목.*(넣|추가|입력)|과목.*(넣|추가)/, ok: how }
+    ];
+    for (var i = 0; i < T.length; i++) if (T[i].re.test(t) && T[i].ok) return T[i].k;
+    return '';
+  }
+  function situation(){
+    var c = ctx(), st = c.stage, a = [];
+    a.push('교과목 ' + st.n + '칸');
+    if (st.lane === 1) a.push('빈 교시 ' + st.gap + '칸');
+    if (st.n) a.push('강사 미지정 ' + st.empty + '칸');
+    if (st.held) a.push('안내 대기 강사 ' + st.held + '명');
+    return '지금 상황: <b>' + st.lane + '단계 ' + esc(c.steps[st.lane - 1].t) + '</b> · ' + esc(a.join(' · '));
+  }
+  function howTo(k, src){
+    var c = ctx(), st = c.stage, h = '', ch = [], li = function(arr){ return '<ol>' + arr.map(function(x){ return '<li>' + x + '</li>'; }).join('') + '</ol>'; };
+    if (k === 'copy') {
+      if (!c.canCopy) h = '이 과정은 불러올 <b>지난 기수 편성이 없습니다.</b> 교과목은 시간표 빈 칸을 누르거나 저에게 말씀해 넣어 주세요. 예: "월요일 1~3교시 소방전술"';
+      else if (!st.n) { h = '<b>지난 기수 편성 불러오기</b> 방법입니다.' + li(['시간표 위 \'편성을 시작할 방법\'에서 <b>[지난 기수 편성 불러오기]</b>를 누릅니다', '창에서 가져올 교과목·교시를 확인하고 저장합니다(날짜는 이번 기수에 맞춰 바뀝니다)', '이어서 <b>AI 강사 재검토</b> 창이 열리면 강사 유지·교체 제안을 보고 [적용]합니다']) + '그다음: 빈 교시가 없으면 2단계, 강사까지 채워지면 3단계로 넘어갑니다.'; ch.push(guideChip('버튼 위치 보기', '#sEmpty [data-cp]', '<i>지난 기수 편성 불러오기</i>')); }
+      else if (!st.gap) h = '빈 교시가 없어 지난 기수로 채울 칸이 없습니다. 지금은 ' + (st.empty ? '강사 미지정 ' + st.empty + '칸에 강사를 배정할 차례입니다.' : '다음 단계로 넘어갈 차례입니다.');
+      else { h = '남은 <b>빈 교시 ' + st.gap + '칸</b>을 지난 기수로 채우는 방법입니다. 이미 넣은 교과목은 그대로 둡니다.' + li(['시간표 바로 위 파란 줄의 <b>[지난 기수로 빈 교시 채우기]</b>를 누릅니다', '창에서 채울 줄을 확인합니다(이미 편성된 교시와 겹치는 줄은 \'제외\'로 표시)', '<b>[n줄로 빈 교시 채우기]</b>를 누르면 저장되고, <b>AI 강사 재검토</b> 창에서 강사 유지·교체를 확인해 [적용]합니다']) + '이 작업은 확인 창이 필요해 제가 대신 누르지 않습니다.'; ch.push(guideChip('버튼 위치 보기', '.gfillbar [data-cp]', '<i>지난 기수로 빈 교시 채우기</i> — 남은 빈 교시만 채웁니다')); }
+    } else if (k === 'batch') {
+      if (!st.n) h = '아직 교과목이 없어 강사를 배정할 칸이 없습니다. 먼저 교과목을 넣어 주세요.';
+      else if (!st.empty) h = '강사가 비어 있는 칸이 없습니다. ' + (st.lane === 3 ? '화면 맨 아래 [4단계로 넘기기]를 누를 차례입니다.' : '');
+      else { h = '강사 미지정 <b>' + st.empty + '칸</b>을 한 번에 채우는 방법입니다.' + li(['위쪽 \'지금 할 일\'의 <b>[AI 강사 일괄 배정]</b>을 누릅니다', 'AI 초안 창에서 칸별 후보와 근거를 확인하고, 바꾸지 않을 칸은 체크를 풉니다', '<b>[선택한 n칸 적용]</b>을 누르면 저장됩니다(강사 안내는 4단계에서 한꺼번에)']) + '한 칸씩 하려면 저에게 "화요일 2교시 강사 추천해줘"처럼 말씀해 주세요.'; ch.push(guideChip('버튼 위치 보기', '#abBar [data-ab="draft"]', '<i>AI 강사 일괄 배정</i>')); }
+    } else if (k === 'blank') {
+      h = '일부러 비우는 교시를 <b>비워둠 처리</b>하는 방법입니다.' + li(['시간표 위 <b>[비워둠 처리 켜기]</b>를 누릅니다', '빈 교시 칸마다 나타나는 [비워둠] 버튼을 누르고 사유를 고릅니다', '모두 처리하면 빈 교시로 세지 않아 1단계를 마칠 수 있습니다']);
+      ch.push(guideChip('버튼 위치 보기', '#sGridWrap [data-gpmode]', '<i>비워둠 처리 켜기</i>'));
+    } else if (k === 'move') {
+      h = '교과목을 다른 칸으로 <b>옮기는</b> 방법입니다.' + li(['시간표 위 <b>[이동 모드 켜기]</b>를 누릅니다', '옮길 교과목 칸의 [이동]을 누릅니다', '옮겨 갈 빈 칸을 누르면 저장됩니다(교과목끼리 맞바꾸기도 가능)']);
+      ch.push(guideChip('버튼 위치 보기', '#sGridWrap [data-mvmode]', '<i>이동 모드 켜기</i>'));
+    } else if (k === 'delete') {
+      h = '교과목을 <b>삭제</b>하는 방법입니다.' + li(['시간표에서 지울 교과목 칸을 누릅니다', '열린 <b>교과목 수정</b> 창 아래 [삭제]를 누르고 확인합니다']) + '이미 끝난 강의는 실적으로 보관되어 삭제할 수 없습니다.';
+    } else if (k === 'handoff') {
+      h = st.lane === 3 ? '지금 <b>3단계 배정 완료</b>이므로 넘길 수 있습니다.' + li(['화면 맨 아래 <b>[4단계로 넘기기]</b>를 누릅니다', '보드로 바뀌고 이 과정이 4단계 칸에 놓입니다', '4단계 카드의 [최종 확인하고 발송]에서 강사별 안내를 보냅니다']) : '[4단계로 넘기기]는 <b>3단계(배정 완료)</b>에서 나타납니다. 지금은 ' + st.lane + '단계라 ' + (st.lane === 1 ? '빈 교시 ' + st.gap + '칸을 먼저 채워야 합니다.' : st.lane === 2 ? '강사 미지정 ' + st.empty + '칸을 먼저 채워야 합니다.' : '이미 4단계입니다.');
+      if (st.lane === 3) ch.push(guideChip('버튼 위치 보기', '[data-handoff]', '<i>4단계로 넘기기</i>'));
+    } else if (k === 'send') {
+      h = '강사 안내(문자·메일) 발송 방법입니다.' + li(['3단계에서 화면 맨 아래 <b>[4단계로 넘기기]</b>를 누릅니다', '보드 4단계 카드의 <b>[최종 확인하고 발송]</b>을 누릅니다', '확인 창에서 강사별 교과목·일시를 보고 [발송]합니다(강사 1명에게 1통씩)']) + (st.lane < 3 ? '지금은 ' + st.lane + '단계라 아직 발송할 수 없습니다.' : '');
+    } else if (k === 'reset') {
+      h = '과정을 <b>처음부터 다시</b> 하는 방법입니다.' + li(['편성 화면 맨 아래 [닫기 · 보드로]를 누릅니다', '1단계 카드면 <b>[이 과정 초기화]</b>, 다른 단계면 <b>[처음부터]</b>를 누르고 확인합니다']) + '초기화하면 이 과정의 교과목·강사가 모두 지워집니다.';
+    } else if (k === 'instr') {
+      h = '이미 정한 <b>강사를 바꾸는</b> 방법입니다.' + li(['시간표에서 그 교과목 칸을 누릅니다', '교과목 수정 창의 강사 검색칸에서 다른 강사를 고르거나 <b>[적합한 강사 찾기]</b>로 후보를 봅니다', '[수정 저장]을 누릅니다']) + '강사가 비어 있는 칸이면 저에게 "화요일 2교시 강사 추천해줘"라고 말씀하셔도 됩니다.';
+    } else if (k === 'room') {
+      h = '<b>강의실</b>을 바꾸는 방법입니다.' + li(['시간표에서 교과목 칸을 누릅니다', '수정 창의 강의실 목록에서 고릅니다. 비어 있는 곳은 <b>[빈 강의실 보기]</b>로 확인합니다', '[수정 저장]을 누릅니다']) + '저를 통해 넣는 교과목은 과정의 예정 강의실(' + esc(c.room || '미정') + ')로 들어갑니다.';
+    } else if (k === 'add') {
+      h = '교과목을 넣는 방법은 세 가지입니다.' + li(['저에게 말씀하기 — 예: "금요일 1~3교시 청렴교육 강사 추천해줘"', '시간표의 빈 칸을 누르기 — 입력 창이 열립니다', '시간표 아래 <b>[교과목 추가]</b>를 펼쳐 직접 입력하기']);
+      ch.push({ t: '말로 교과목 넣기', a: { intent: 'assign' } });
+    }
+    say(situation() + '<br>' + h, ch, src);
+  }
+
   /* ---------- 도움말 ---------- */
   function helpStart(src){
     var c = ctx(), st = c.stage;
     var h = '배정은 4단계로 진행합니다.<ol>' + c.steps.map(function(s, i){ return '<li><b>' + esc(s.t) + '</b> — ' + esc(s.d) + (st.lane === i + 1 ? ' <span class="cb-here">← 지금 여기</span>' : '') + '</li>'; }).join('') + '</ol>' +
       '시간표의 빈 칸을 눌러 직접 넣어도 되고, 저에게 <b>"월요일 2교시부터 2시간 청렴교육"</b>처럼 말씀하셔도 됩니다. 저장은 늘 확인 카드의 [배정]을 눌러야 합니다.';
-    say(h, [{ t: '다음 단계 뭐예요?', a: { intent: 'help_next' } }, { t: '교과목 넣기', a: { intent: 'assign' } }, { t: '용어 설명 보기', fn: termList }], src);
+    say(h, [{ t: '앞으로 할 일', a: { intent: 'help_next' } }, { t: '교과목 넣기', a: { intent: 'assign' } }, { t: '용어 설명 보기', fn: termList }], src);
   }
   function helpNext(src){
-    var c = ctx(), st = c.stage, h = '', ch = [];
-    if (!st.sure && st.lane >= 3) { h = '단계 정보를 불러오는 중입니다. 잠시 후 다시 물어봐 주세요.'; }
-    else if (st.lane === 1 && !st.n) {
-      h = '지금은 <b>1단계 교과목 편성</b>이고, 아직 교과목이 없습니다. 시작 방법은 두 가지입니다.<ol>' + (c.canCopy ? '<li>[지난 기수 편성 불러오기] — 지난 기수 교과목을 그대로 가져옵니다</li>' : '') + '<li>저에게 말씀하기 — 예: "월요일 1~3교시 소방전술"</li></ol>';
-      if (c.canCopy) ch.push({ t: '지난 기수 버튼 보기', fn: function(){ A.guide('#sEmpty [data-cp], #sGridWrap [data-cp]', '<i>지난 기수 편성 불러오기</i> — 교과목·교시를 그대로 가져옵니다'); say('버튼을 강조했습니다.'); } });
+    var c = ctx(), st = c.stage, h = '', ch = [], li = function(arr){ return '<ol>' + arr.map(function(x){ return '<li>' + x + '</li>'; }).join('') + '</ol>'; };
+    if (!st.sure && st.lane >= 3) return say('단계 정보를 불러오는 중입니다. 잠시 후 다시 물어봐 주세요.', [{ t: '앞으로 할 일', a: { intent: 'help_next' } }], src);
+    if (st.lane === 1 && !st.n) {
+      h = '아직 교과목이 없습니다. <b>먼저 교과목을 시간표에 넣는 것</b>이 할 일입니다. 방법을 하나 고르세요.' +
+        li((c.canCopy ? ['<b>지난 기수 편성 불러오기</b>(권장) — 지난 기수 교과목·교시를 그대로 가져오고, 강사는 AI가 평가를 반영해 유지·교체를 제안합니다'] : []).concat(['<b>저에게 말씀하기</b> — 예: "월요일 1~3교시 소방전술 강사 추천해줘"', '<b>시간표 빈 칸 누르기</b> — 입력 창에서 직접 넣습니다'])) +
+        '그다음: 빈 교시를 모두 채우면(또는 비워둠 처리) 2단계 강사 배정으로 넘어갑니다.';
+      if (c.canCopy) ch.push(guideChip('지난 기수 버튼 보기', '#sEmpty [data-cp]', '<i>지난 기수 편성 불러오기</i> — 교과목·교시를 그대로 가져옵니다'));
       ch.push({ t: '말로 교과목 넣기', a: { intent: 'assign' } });
     } else if (st.lane === 1) {
-      h = '지금은 <b>1단계 교과목 편성</b>입니다. 빈 교시가 <b>' + st.gap + '칸</b> 남았습니다. 교과목을 더 넣거나, 일부러 비우는 칸은 [비워둠 처리]하면 2단계로 넘어갑니다.';
-      ch.push({ t: '빈 시간 보기', fn: function(){ S.slot = blank(); S.slot.subj = ''; askTimeOnly(); } });
-      if (c.canCopy) ch.push({ t: '지난 기수로 채우기 버튼 보기', fn: function(){ A.guide('.gfillbar [data-cp]', '<i>지난 기수로 빈 교시 채우기</i> — 남은 빈 교시만 채웁니다'); say('시간표 위 버튼을 강조했습니다.'); } });
-      ch.push({ t: '비워둠 처리가 뭐예요?', a: { intent: 'explain', term: '비워둠 처리' } });
+      h = '할 일은 <b>남은 빈 교시 ' + st.gap + '칸을 처리</b>하는 것입니다. 칸마다 아래 중 하나로 처리하면 됩니다.' +
+        li((c.canCopy ? ['<b>지난 기수로 한꺼번에 채우기</b> — 시간표 위 파란 줄 버튼. 이미 넣은 칸은 그대로 둡니다'] : []).concat(['<b>저에게 말로 넣기</b> — 예: "수요일 하루 전체 현장지휘 실습"', '<b>일부러 비울 칸은 비워둠 처리</b> — 시간표 위 [비워둠 처리 켜기]'])) +
+        '그다음: 빈 교시가 0칸이 되면 2단계 강사 배정으로 넘어갑니다' + (st.empty ? '(지금 강사 미지정 ' + st.empty + '칸도 그때 채웁니다)' : '') + '.';
+      ch.push({ t: '빈 시간 보기', fn: function(){ S.slot = blank(); askTimeOnly(); } });
+      if (c.canCopy) ch.push(guideChip('지난 기수로 채우기 버튼 보기', '.gfillbar [data-cp]', '<i>지난 기수로 빈 교시 채우기</i> — 남은 빈 교시만 채웁니다'));
     } else if (st.lane === 2) {
-      h = '지금은 <b>2단계 강사 배정</b>입니다. 강사가 비어 있는 칸이 <b>' + st.empty + '칸</b>입니다. [AI 강사 일괄 배정]으로 한 번에 채우거나, 저에게 "화요일 2교시 강사 추천해줘"처럼 칸을 말씀해 주세요.';
-      ch.push({ t: 'AI 일괄 배정 버튼 보기', fn: function(){ A.guide('#abBar [data-ab="draft"]', '<i>AI 강사 일괄 배정</i> — 빈 칸을 한 번에 채웁니다'); say('버튼을 강조했습니다.'); } });
+      h = '교과목 편성은 끝났습니다. 할 일은 <b>강사가 비어 있는 ' + st.empty + '칸에 강사를 정하는 것</b>입니다.' +
+        li(['<b>AI 강사 일괄 배정</b>(빠름) — 위쪽 \'지금 할 일\' 버튼. 칸별 후보와 근거를 보고 [적용]합니다', '<b>저에게 칸 말하기</b> — 예: "화요일 2교시 강사 추천해줘"', '<b>칸 직접 누르기</b> — 수정 창에서 [적합한 강사 찾기]']) +
+        '그다음: 모든 칸에 강사가 정해지면 3단계 배정 완료가 됩니다. 강사 안내는 4단계에서 한꺼번에 보내므로 지금은 발송되지 않습니다.';
+      ch.push(guideChip('AI 일괄 배정 버튼 보기', '#abBar [data-ab="draft"]', '<i>AI 강사 일괄 배정</i> — 빈 칸을 한 번에 채웁니다'));
     } else if (st.lane === 3) {
-      h = '지금은 <b>3단계 배정 완료</b>입니다. 화면 맨 아래 <b>[4단계로 넘기기]</b>를 누르면 보드 4단계에서 최종 확인하고 강사별로 안내를 보냅니다.';
-      ch.push({ t: '버튼 위치 보기', fn: function(){ A.guide('[data-handoff]', '<i>4단계로 넘기기</i>'); say('버튼을 강조했습니다.'); } });
+      h = '교과목과 강사를 모두 정했습니다. 할 일은 <b>[4단계로 넘기기]</b> 하나입니다.' +
+        li(['화면 맨 아래 <b>[4단계로 넘기기]</b>를 누릅니다', '보드 4단계 카드의 <b>[최종 확인하고 발송]</b>에서 강사별 교과목·일시를 한 번 더 확인합니다', '[발송]을 누르면 강사 ' + (st.held || 'n') + '명에게 문자·메일이 1통씩 갑니다']) +
+        '고칠 곳이 있으면 넘기기 전에 시간표에서 고치면 됩니다.';
+      ch.push(guideChip('버튼 위치 보기', '[data-handoff]', '<i>4단계로 넘기기</i>'));
     } else {
-      h = st.held ? '지금은 <b>4단계 최종 확인·발송</b>입니다. 보드의 4단계 카드에서 <b>[최종 확인하고 발송]</b>을 누르면 강사 ' + st.held + '명에게 안내를 보냅니다.' : '이 과정은 4단계까지 마쳤습니다. 보드 아래 \'진행한 과정\'에서 보낸 내용을 볼 수 있습니다.';
+      h = st.held ? '마지막 단계입니다. 할 일은 <b>보드 4단계 카드의 [최종 확인하고 발송]</b>입니다. 확인 창에서 강사 ' + st.held + '명의 교과목·일시를 보고 [발송]하면 이 과정이 끝납니다.' : '이 과정은 4단계까지 마쳤습니다. 보드 아래 \'진행한 과정\'에서 [보낸 내용 보기]로 문자·메일을 확인할 수 있습니다. 다른 과정은 보드에서 [+ 다른 과정 올리기]로 시작합니다.';
     }
-    say(h, ch, src);
+    say(situation() + '<br>' + h, ch, src);
   }
   function askTimeOnly(){
     var fr = A.free().slice(0, 6);
