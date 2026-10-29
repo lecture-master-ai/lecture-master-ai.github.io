@@ -1262,6 +1262,13 @@
   .gfillbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 10px;padding:8px 10px;border:1px solid #CFE0F3;border-left:4px solid #2F6FB2;border-radius:8px;background:#F3F8FE;font-size:13px;color:#344054;}
   .gfillbar .btn{height:34px;} .gfillbar b{color:#B54708;}
   @media (max-width:600px){ .gfillbar .btn{width:100%;} }
+  /* d4a: AI 배정 도우미 버튼(창 화면은 cb-chat.js) */
+  .cb-fab{position:fixed;right:24px;bottom:24px;z-index:1500;display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 18px 0 14px;border:none;border-radius:24px;background:#1B3A5F;color:#fff;font:inherit;font-size:14px;font-weight:800;box-shadow:0 6px 18px rgba(16,24,40,.25);cursor:pointer;transition:transform .15s ease-out,box-shadow .15s ease-out}
+  .cb-fab .ai-badge{background:#fff;color:#2F6FB2;}
+  .cb-fab:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(16,24,40,.3)} .cb-fab:active{transform:scale(.97)} .cb-fab:focus-visible{outline:3px solid #2F6FB2;outline-offset:3px}
+  body.cb-fab-on #editView{padding-bottom:72px;} body.cb-open .cb-fab{display:none !important;}
+  @media (max-width:600px){ .cb-fab{right:14px;bottom:14px;height:46px;} }
+  @media print{ .cb-fab{display:none !important;} }
   /* d3zh: 과정 고르기 창 — 뼈대(자리 표시)와 물결 등장 */
   .bp-sk{pointer-events:none;} .bp-sk .sk{display:block;border-radius:6px;background:linear-gradient(90deg,#E9EEF5 25%,#F6F8FB 50%,#E9EEF5 75%);background-size:200% 100%;animation:skSh 1.2s linear infinite;}
   .bp-sk .sk.w1{width:60%;height:16px;margin-bottom:8px;} .bp-sk .sk.w2{width:38%;height:12px;} .bp-sk .sk.b{width:84px;height:34px;border-radius:8px;flex:none;}
@@ -1414,7 +1421,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-25 배정 d3zh</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-29 배정 d4a</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -1946,6 +1953,7 @@
     var prev = stageSeen[key]; stageSeen[key] = st.lane;
     if (prev === undefined || st.lane <= prev) return;
     stageMoved[key] = { at: Date.now(), from: prev, to: st.lane, shown: false, toasted: !!toast };
+    if (toast && SIMPLE && currentKey === key && document.body.classList.contains('cb-open') && window.__cbChat) { window.__cbChat.note(st.lane + '단계 \'' + STEPS[st.lane - 1].t + '\'로 넘어갔습니다'); return; }   // d4a: 도우미가 열려 있으면 대화창 안에 알림
     if (toast && SIMPLE && currentKey === key && laneGuide(key, st)) return;
     if (toast) stageToast(SIMPLE ? st.lane + '단계 \'' + STEPS[st.lane - 1].t + '\'로 넘어갔습니다' : courseLabel(key) + '이(가) ' + st.lane + '단계 \'' + STEPS[st.lane - 1].t + '\'(으)로 이동했습니다.', st.lane);
   }
@@ -3012,6 +3020,7 @@
   function renderBackBar(){
     var nb = $('navBar'); if (!nb) return;
     if (SIMPLE) {   // 심사용: 이동 줄 대신, 강사관리에서 왔을 때만 시간표 아래 가운데 돌아가기 버튼
+      try { cbFab(); } catch (e) {}   // d4a: 배정 도우미 버튼
       if (currentKey) {   // d3g: 과정 화면 맨 아래 가운데 [닫기 · 보드로] (강사관리에서 왔으면 강사 상세로 돌아가기도 함께)
         nb.className = 'navbar dbnav'; nb.style.display = '';
         var hs = courseStage(currentKey), hof = hs.lane === 3 && hs.sure && !isViewer();   // d3z: 3단계면 맨 아래에 [4단계로 넘기기]
@@ -7672,6 +7681,166 @@
       });
     });
   }
+
+  /* ===== d4a: AI 배정 도우미(챗봇) 연결 =====
+     도우미 화면은 cb-chat.js(처음 열 때만 불러옴). 도우미는 아래 window.__cbApi로만 읽고 저장함.
+     저장은 기존 saveSession에 챗봇 표시(챗봇:1)를 붙여 서버가 겹침을 다시 검사하게 함. AI는 해석·근거만, 확정은 담당자 */
+  var CB_VER = 'd4a';
+  function cbInstrReady(){
+    ensureInstructors();
+    return new Promise(function(res){ var t0 = Date.now(); (function w(){ if ((instructors !== null && !instrLoading) || Date.now() - t0 > 15000) res(); else setTimeout(w, 150); })(); });
+  }
+  function cbOcc(key, d){
+    var o = {};
+    sessionsOf(key).forEach(function(r){
+      if (normYmd(r['일자']) !== d) return;
+      var a = Number(r['시작교시']), b = Number(r['끝교시']); if (!isFinite(a) || !isFinite(b)) return;
+      for (var n = a; n <= b; n++) o[n] = String(r['교과목'] || '');
+    });
+    return o;
+  }
+  function cbInstrCheck(id, d, s, e, key){
+    var over = [], tot = 0;
+    allSessions.forEach(function(r){
+      if (String(r['강사ID']) !== String(id) || normYmd(r['일자']) !== d) return;
+      var p = planByKey(r['개설키']); if (p && isCancelled(p)) return;
+      var a = Number(r['시작교시']), b = Number(r['끝교시']); if (!isFinite(a) || !isFinite(b)) return;
+      if (a <= e && s <= b) over.push(courseLabel(r['개설키']) + ' ' + (a === b ? a : a + '~' + b) + '교시'); else tot += b - a + 1;
+    });
+    var x = instrById[id], un = x ? cxUnavail(x, d, s, e) : '';
+    var why = [];
+    if (over.length) why.push('같은 시각 다른 배정(' + over[0] + ')');
+    if (un) why.push('강의 불가 일정(' + un + ')');
+    if (tot + (e - s + 1) > 8) why.push('하루 8교시 초과(이미 ' + tot + '교시)');
+    return { why: why, dayTotal: tot };
+  }
+  function cbCands(subj, slot){
+    return cbInstrReady().then(function(){
+      var pool = [];
+      (instructors || []).forEach(function(x){
+        if (!cxActive(x)) return;
+        var hh = cxHist(x.id, subj), bag = String(x.subj || '') + ' ' + String(x.bio || ''), tk = String(subj).split(/[\s·,()]+/).filter(function(w){ return w.length >= 2; });
+        var rel = hh * 10 + (cxNorm(x.subj).indexOf(cxNorm(subj)) > -1 ? 10 : 0) + tk.filter(function(w){ return bag.indexOf(w) > -1 || bag.indexOf(w.slice(0, 2)) > -1; }).length;
+        pool.push({ id: x.id, 교과목명: x.subj, 약력: x.bio, 분야: x.field, 같은교과목횟수: hh, 랭크: cxRank(x) === null ? '' : cxRank(x), 응답수: x.evN, _r: rel });
+      });
+      pool.sort(function(a, b){ return b._r - a._r; });
+      pool.forEach(function(x){ delete x._r; });
+      var t0 = Date.now();
+      return api({ action: 'aiRecommend', password: getPw(), 교과목: subj, 후보: pool.slice(0, 40) }).catch(function(){ return null; }).then(function(j){
+        var ok = !!(j && j.status === 'ok' && j.ai), ai = {};
+        if (ok) (j.items || []).forEach(function(it){ ai[it.id] = it; });
+        var main = [], fresh = [], ex = [];
+        (instructors || []).forEach(function(x){
+          if (!cxActive(x)) return;
+          var h = cxHist(x.id, subj), listed = cxNorm(x.subj).indexOf(cxNorm(subj)) > -1, a = ai[x.id];
+          var relv = h > 0 || listed || (a && a.relation === '같음'), near = a && a.relation === '비슷함';
+          if (!relv && !near) return;
+          var it = { id: x.id, name: x.name, org: x.org, rank: cxRank(x), evN: x.evN, h: h, listed: listed, rel: a ? a.relation : '', reason: a && a.reason ? a.reason : (h ? '이 교과목을 ' + h + '회 맡았습니다.' : listed ? '담당 가능 교과목에 등록되어 있습니다.' : ''), why: [] };
+          if (slot) it.why = cbInstrCheck(x.id, slot.d, slot.s, slot.e).why;
+          if (it.why.length) ex.push(it); else (it.rank === null ? fresh : main).push(it);
+        });
+        var cmp = function(a, b){
+          var ra = a.rank === null ? -1 : a.rank - (a.h || a.listed ? 0 : 0.3), rb = b.rank === null ? -1 : b.rank - (b.h || b.listed ? 0 : 0.3);
+          if (ra !== rb) return rb - ra; if (a.h !== b.h) return b.h - a.h; return a.name.localeCompare(b.name, 'ko');
+        };
+        main.sort(cmp); fresh.sort(cmp);
+        return { ai: ok, model: ok ? (j.모델 || '') : '', slotNo: ok ? (j.모델번호 || '') : '', ms: Date.now() - t0, main: main, fresh: fresh, ex: ex, note: ok ? '' : ((j && j.이유) || 'AI 응답이 없어 담당 이력·평가 기준으로 찾았습니다') };
+      });
+    });
+  }
+  function cbFree(key){   // 오늘 이후 빈 교시를 날짜별 연속 구간으로(비워둠 처리한 칸 제외)
+    var p = planByKey(key); if (!p) return [];
+    var cls = gapClassNums(), today = ymd(new Date()), out = [];
+    gapDayList(p).forEach(function(d){
+      if (d < today || sessEnded(d)) return;
+      var occ = cbOcc(key, d), run = null;
+      cls.forEach(function(n){
+        var free = !occ[n] && !gapChk[key + '|' + d + '|' + n];
+        if (free) { if (run && n === run.e + 1) run.e = n; else { if (run) out.push(run); run = { d: d, s: n, e: n }; } }
+        else if (run) { out.push(run); run = null; }
+      });
+      if (run) out.push(run);
+    });
+    out.forEach(function(r){ r.full = r.s === cls[0] && r.e === cls[cls.length - 1]; });
+    return out;
+  }
+  function cbHighlight(d, s, e){
+    document.querySelectorAll('.cb-hl').forEach(function(x){ x.classList.remove('cb-hl'); });
+    if (!d) return 0;
+    if (viewMode !== 'grid') setView('grid');
+    if (gridScope !== 'one') { gridScope = 'one'; try { sessionStorage.setItem('jsfa_la_gscope', 'one'); } catch (e2) {} }
+    gridWeek = mondayOf(d); gridWantDate = d; renderSessionList();   // 그 주·그 요일(모바일)로 맞춰 다시 그림
+    var n = 0, first = null;
+    for (var q = s; q <= e; q++) { var td = document.querySelector('#sGridWrap td[data-new="' + d + '|' + q + '"]'); if (td) { td.classList.add('cb-hl'); n++; if (!first) first = td; } }
+    if (first && first.scrollIntoView) first.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    return n;
+  }
+  function cbSave(o){
+    var key = currentKey, p = planByKey(key);
+    var body = { action: 'saveSession', password: getPw(), 개설키: key, 반: '전체', 일자: o.d, 시작교시: o.s, 끝교시: o.e, 교과목: o.subj, '교과목 구분': '',
+      강사ID: o.iid || '', 강사명: '', '강사 역할': o.iid ? '주강사' : '', 강의실: o.room != null ? o.room : String((p && p['예정 강의실']) || ''), 비고: '', 챗봇: 1 };
+    if (o.row) {   // 강사 없는 기존 교과목에 강사만 배정(그 줄의 나머지 값은 그대로)
+      var r0 = allSessions.filter(function(r){ return String(r['편성ID']) === o.row.id; })[0];
+      if (r0) { body.편성ID = o.row.id; body.반 = String(r0['반'] || '전체'); body.일자 = normYmd(r0['일자']); body.시작교시 = Number(r0['시작교시']); body.끝교시 = Number(r0['끝교시']);
+        body.교과목 = String(r0['교과목'] || ''); body['교과목 구분'] = String(r0['교과목 구분'] || ''); body.강의실 = String(r0['강의실'] || ''); body.비고 = String(r0['비고'] || ''); }
+    }
+    return api(body).then(function(res){
+      if (res && res.status === 'ok' && res.data) {
+        upsertSession(res.data);
+        try { refreshConflicts(); } catch (e) {}
+        if (currentKey === key) { renderHead(planByKey(key)); renderSessionList(); }
+      }
+      return res;
+    });
+  }
+  window.__cbApi = {
+    ver: CB_VER,
+    ctx: function(){
+      var key = currentKey, p = key ? planByKey(key) : null; if (!p) return null;
+      var cls = gapClassNums(), lu = lunchAfter(cls), st = courseStage(key);
+      return { key: key, label: courseLabel(key), room: String(p['예정 강의실'] || ''), ended: cxEnded(p), cancelled: isCancelled(p), viewer: isViewer(),
+        days: gapDayList(p).map(function(d){ var q = parseYmd(d); return { d: d, w: DOW[q.dow], md: md(d) }; }),
+        cls: cls, am: lu ? cls.filter(function(n){ return n <= lu.after; }) : cls, pm: lu ? cls.filter(function(n){ return n > lu.after; }) : [],
+        periods: cls.map(function(n){ var pi = periodInfo(n); return { n: n, start: pi ? pi.start : '', end: pi ? pi.end : '' }; }),
+        stage: { lane: st.lane, sure: st.sure, n: st.n, empty: st.empty, gap: st.gap, held: st.held, fin: st.fin, next: st.nx ? st.nx.x : '' },
+        steps: STEPS.map(function(s){ return { t: s.t, d: s.d }; }), canCopy: !!copyCandidates(p).length, today: ymd(new Date()) };
+    },
+    occ: function(d){ return cbOcc(currentKey, d); },
+    rows: function(d){ return sessionsOf(currentKey).filter(function(r){ return normYmd(r['일자']) === d; }).map(function(r){ return { id: String(r['편성ID']), subj: String(r['교과목'] || ''), s: Number(r['시작교시']), e: Number(r['끝교시']), iid: String(r['강사ID'] || ''), iname: String(r['강사명'] || ''), room: String(r['강의실'] || '') }; }); },
+    free: function(){ return cbFree(currentKey); },
+    cands: cbCands,
+    check: function(id, d, s, e){ return cbInstrCheck(id, d, s, e, currentKey); },
+    instr: function(id){ var x = instrById[id]; return x ? { id: x.id, name: x.name, org: x.org, rank: cxRank(x), evN: x.evN } : null; },
+    findInstr: function(name){ name = String(name || '').replace(/\s+/g, ''); if (name.length < 2) return []; return (instructors || []).filter(function(x){ return cxActive(x) && x.name.replace(/\s+/g, '').indexOf(name) > -1; }).map(function(x){ return { id: x.id, name: x.name, org: x.org, rank: cxRank(x), evN: x.evN }; }); },
+    instrReady: cbInstrReady,
+    reload: function(){ return loadAll(getPw(), true); },
+    highlight: cbHighlight,
+    save: cbSave,
+    parse: function(text, c){ return api({ action: 'chatParse', password: getPw(), 문장: text, 맥락: c }); },
+    guide: function(sel, txt){ if (window.cxGuide) window.cxGuide('', txt || '', sel || ''); },
+    md: md, periodLabel: function(s, e){ return s === e ? s + '교시' : s + '~' + e + '교시'; }
+  };
+  window.btnBusy = btnBusy; window.btnOk = btnOk; window.btnReset = btnReset;   // 도우미 버튼에서도 같은 처리 중·완료 표시
+  function cbOpen(){
+    if (window.__cbChat) { window.__cbChat.open(); return; }
+    var b = $('cbFab'); if (b) btnBusy(b, '여는 중…');
+    var sc = document.createElement('script'); sc.src = 'cb-chat.js?v=' + CB_VER;
+    sc.onload = function(){ if (b) btnReset(b); if (window.__cbChat) window.__cbChat.open(); };
+    sc.onerror = function(){ if (b) btnReset(b); alert('배정 도우미를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.'); sc.remove(); };
+    document.head.appendChild(sc);
+  }
+  function cbFab(){
+    var on = SIMPLE && !!currentKey && !!planByKey(currentKey);
+    var b = $('cbFab');
+    if (!b && on) {
+      b = document.createElement('button'); b.type = 'button'; b.id = 'cbFab'; b.className = 'cb-fab'; b.setAttribute('aria-label', 'AI 배정 도우미 열기');
+      b.innerHTML = '<span class="ai-badge">AI</span>배정 도우미'; b.addEventListener('click', cbOpen); document.body.appendChild(b);
+    }
+    document.body.classList.toggle('cb-fab-on', on);
+    if (b) b.style.display = on ? '' : 'none';
+    if (window.__cbChat) window.__cbChat.ctxChanged(on ? currentKey : '');
+  }
+  window.addEventListener('hashchange', function(){ setTimeout(cbFab, 60); });
 
   // ----- 설문 결과 올리기(교육이 끝난 과정) -----
   function cxEnded(p){
