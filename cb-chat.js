@@ -37,6 +37,8 @@
   var S = { key: '', open: false, busy: false, off: false, wait: '', cands: null, slot: null, hl: null, dates: null, greeted: '' };
   var root, body, inp, sendB, ctxEl, mo;
   function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  var CB_TEL = '000-000-0000';   // d4e: 시연용 임의 번호(실제 번호 아님)
+  function contactLine(){ var c = ctx(); return '<div class="cb-tel">제가 답하지 못한 내용은 담당자에게 문의해 주세요: <b>○○소방학교 ' + esc((c && c.owner) || '교육운영팀') + ' ' + CB_TEL + '</b> <span>(시연용 번호)</span></div>'; }
   function blank(){ return { subj: '', d: '', s: null, e: null, hours: null, iid: '', iname: '', noInstr: false, row: null, wd: '' }; }
   function ctx(){ return A.ctx(); }
   function dl(d){ return A.md(d); }   // 예: 12/4(금)
@@ -62,6 +64,7 @@
       '.cb-m.note{align-self:center;background:#ECFDF3;color:#05603A;border:1px solid #ABEFC6;font-size:12.5px;font-weight:700;padding:5px 10px;border-radius:999px}' +
       '.cb-m.err{align-self:flex-start;background:#FEF3F2;color:#912018;border:1px solid #FECDCA}' +
       '.cb-src{display:block;margin-top:6px;font-size:11px;color:#98A2B3}' +
+      '.cb-tel{margin-top:8px;padding:7px 9px;border-radius:8px;background:#F2F4F7;font-size:12.5px;color:#344054;line-height:1.5}.cb-tel b{color:#1B3A5F}.cb-tel span{color:#98A2B3;font-size:11px}' +
       '.cb-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}' +
       '.cb-chip{border:1px solid #B9CCE4;background:#F3F8FE;color:#1B3A5F;border-radius:999px;padding:5px 11px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;transition:background-color .15s ease-out}' +
       '.cb-chip:hover{background:#E3EEFA}.cb-chip:disabled{opacity:.5;cursor:default}' +
@@ -307,7 +310,7 @@
       if (S.cands[idx]) { sl.iid = S.cands[idx].id; sl.iname = S.cands[idx].name; sl.noInstr = false; }
     }
     if (I.intent === 'recommend') { sl.iid = ''; sl.noInstr = false; return advance(src, true); }
-    if (I.intent === 'other' && !I.subject && tchg !== true && !sl.iid) return say('말씀을 정확히 알아듣지 못했거나, 이 화면의 일과 관련 없는 질문입니다. 저는 교과목 편성·강사 배정만 돕습니다.<br>' + situation() + '<br>이렇게 말씀해 보세요.<br>· 교과목 넣기: "금요일 1~3교시 청렴교육 강사 추천해줘"<br>· 방법·버튼: "남은 빈 교시를 지난 기수로 채우려면?", "이동 모드가 뭐예요?"<br>· 단계·할 일: "지금 몇 단계예요?", "앞으로 뭘 해야 해요?"', [{ t: '앞으로 할 일', a: { intent: 'help_next' } }, { t: '지금 몇 단계예요?', fn: function(){ stageNow(); } }, { t: '버튼 설명 보기', fn: btnList }], src);
+    if (I.intent === 'other' && !I.subject && tchg !== true && !sl.iid) return say('말씀을 정확히 알아듣지 못했거나, 이 화면의 일과 관련 없는 질문입니다. 저는 교과목 편성·강사 배정만 돕습니다.<br>' + situation() + '<br>이렇게 말씀해 보세요.<br>· 교과목 넣기: "금요일 1~3교시 청렴교육 강사 추천해줘"<br>· 방법·버튼: "남은 빈 교시를 지난 기수로 채우려면?", "이동 모드가 뭐예요?"<br>· 단계·할 일: "지금 몇 단계예요?", "앞으로 뭘 해야 해요?"' + contactLine(), [{ t: '앞으로 할 일', a: { intent: 'help_next' } }, { t: '지금 몇 단계예요?', fn: function(){ stageNow(); } }, { t: '버튼 설명 보기', fn: btnList }], src);
     advance(src, false);
   }
   // 시간 반영: true=바뀜, null=변화 없음, false=되물음(멈춤)
@@ -626,13 +629,13 @@
     if (PRIV.test(t)) return say('강사의 연락처·주소 같은 개인정보는 도우미가 보여 드리지 않습니다. 필요하면 <b>강사관리</b> 화면의 강사 상세에서 권한에 따라 확인해 주세요. 배정 안내 문자·메일은 4단계 발송 때 시스템이 보냅니다.', [{ t: '앞으로 할 일', a: { intent: 'help_next' } }]), true;
     if (/^(안녕|안녕하세요)/.test(t.trim())) return say('안녕하세요. 저는 <b>' + esc(c.label) + '</b>의 교과목 편성과 강사 배정을 돕습니다. 무엇을 도와 드릴까요?', [{ t: '앞으로 할 일', a: { intent: 'help_next' } }, { t: '교과목 넣기', a: { intent: 'assign' } }, { t: '지금 몇 단계예요?', fn: function(){ stageNow(); } }]), true;
     if (/^(고마워|고맙습니다|감사합니다|감사해요|땡큐)/.test(t.trim())) return say('네. 더 필요한 일이 있으면 말씀해 주세요.', [{ t: '앞으로 할 일', a: { intent: 'help_next' } }]), true;
-    if (/누구야|너는\s*누구|이름이\s*뭐|뭘\s*할\s*수\s*있/.test(t)) return say('저는 이 화면의 <b>AI 배정 도우미</b>입니다. 할 수 있는 일: 교과목 넣기, 강사 추천·배정, 지금 단계와 앞으로 할 일 안내, 버튼·용어 설명. 저장은 늘 담당자가 확인 카드의 [배정]을 눌러야 합니다.', [{ t: '앞으로 할 일', a: { intent: 'help_next' } }, { t: '용어 설명 보기', fn: termList }]), true;
+    if (/누구야|너는\s*누구|이름이\s*뭐|뭘\s*할\s*수\s*있/.test(t)) return say('저는 이 화면의 <b>AI 배정 도우미</b>입니다. 할 수 있는 일: 교과목 넣기, 강사 추천·배정, 지금 단계와 앞으로 할 일 안내, 버튼·용어 설명. 저장은 늘 담당자가 확인 카드의 [배정]을 눌러야 합니다.' + contactLine(), [{ t: '앞으로 할 일', a: { intent: 'help_next' } }, { t: '용어 설명 보기', fn: termList }]), true;
     if (/다른\s*과정|딴\s*과정|다른\s*기수/.test(t)) return say('도우미는 지금 열린 <b>' + esc(c.label) + '</b>만 다룹니다. 다른 과정은 [닫기 · 보드로]를 눌러 보드에서 그 과정을 올리거나 열어 주세요.', [guideChip('닫기 버튼 보기', '[data-bdback]', '<i>닫기 · 보드로</i>')]), true;
     if (OUTQ.test(t)) return outOfScope(), true;
     return false;
   }
   function outOfScope(src){
-    say('그 질문은 이 화면의 일과 관련이 없어 답하지 않습니다. 저는 <b>' + esc(ctx().label) + '</b>의 교과목 편성·강사 배정만 돕습니다.<br>' + situation() + '<br>예: "앞으로 뭘 해야 해요?", "지금 몇 단계예요?", "이동 모드가 뭐예요?", "금요일 1~3교시 청렴교육 강사 추천해줘"',
+    say('그 질문은 이 화면의 일과 관련이 없어 답하지 않습니다. 저는 <b>' + esc(ctx().label) + '</b>의 교과목 편성·강사 배정만 돕습니다.<br>' + situation() + '<br>예: "앞으로 뭘 해야 해요?", "지금 몇 단계예요?", "이동 모드가 뭐예요?", "금요일 1~3교시 청렴교육 강사 추천해줘"' + contactLine(),
       [{ t: '앞으로 할 일', a: { intent: 'help_next' } }, { t: '지금 몇 단계예요?', fn: function(){ stageNow(); } }, { t: '버튼 설명 보기', fn: btnList }], src);
   }
   function btnList(){ say('궁금한 버튼을 누르세요.', BTN.map(function(b){ return { t: b[0], fn: function(){ btnAnswer(b); } }; })); }
@@ -683,7 +686,7 @@
   function explain(term, raw, src){
     var bb = BTN.filter(function(b){ return b[0] === term; })[0]; if (bb) return btnAnswer(bb, src);   // d4c
     var g = GL.filter(function(x){ return x[0] === term; })[0];
-    if (!g) return say('그 용어는 제가 가진 설명에 없습니다. 아래 용어 중에서 골라 보시겠어요?', TERMS.slice(4, 12).map(function(t){ return { t: t, a: { intent: 'explain', term: t } }; }), src);
+    if (!g) return say('그 용어는 제가 가진 설명에 없습니다. 아래 용어 중에서 골라 보시겠어요?' + contactLine(), TERMS.slice(4, 12).map(function(t){ return { t: t, a: { intent: 'explain', term: t } }; }), src);
     var rel = GL.indexOf(g), more = [GL[(rel + 1) % GL.length][0], GL[(rel + 2) % GL.length][0]];
     say('<b>' + esc(g[0]) + '</b> — ' + esc(g[1]), more.map(function(t){ return { t: t + '?', a: { intent: 'explain', term: t } }; }), src);
   }
