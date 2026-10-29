@@ -1436,7 +1436,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-29 배정 d4b</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-29 배정 d4c</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -7718,7 +7718,7 @@
   /* ===== d4a: AI 배정 도우미(챗봇) 연결 =====
      도우미 화면은 cb-chat.js(처음 열 때만 불러옴). 도우미는 아래 window.__cbApi로만 읽고 저장함.
      저장은 기존 saveSession에 챗봇 표시(챗봇:1)를 붙여 서버가 겹침을 다시 검사하게 함. AI는 해석·근거만, 확정은 담당자 */
-  var CB_VER = 'd4b';
+  var CB_VER = 'd4c';
   function cbInstrReady(){
     ensureInstructors();
     return new Promise(function(res){ var t0 = Date.now(); (function w(){ if ((instructors !== null && !instrLoading) || Date.now() - t0 > 15000) res(); else setTimeout(w, 150); })(); });
@@ -7835,7 +7835,7 @@
         days: gapDayList(p).map(function(d){ var q = parseYmd(d); return { d: d, w: DOW[q.dow], md: md(d) }; }),
         cls: cls, am: lu ? cls.filter(function(n){ return n <= lu.after; }) : cls, pm: lu ? cls.filter(function(n){ return n > lu.after; }) : [],
         periods: cls.map(function(n){ var pi = periodInfo(n); return { n: n, start: pi ? pi.start : '', end: pi ? pi.end : '' }; }),
-        stage: { lane: st.lane, sure: st.sure, n: st.n, empty: st.empty, gap: st.gap, held: st.held, fin: st.fin, next: st.nx ? st.nx.x : '' },
+        stage: { lane: st.lane, sure: st.sure, n: st.n, empty: st.empty, gap: st.gap, held: st.held, fin: st.fin, next: st.nx ? st.nx.x : '', copied: !!ab.copied[key] },
         steps: STEPS.map(function(s){ return { t: s.t, d: s.d }; }), canCopy: !!copyCandidates(p).length, today: ymd(new Date()) };
     },
     occ: function(d){ return cbOcc(currentKey, d); },

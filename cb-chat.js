@@ -223,13 +223,19 @@
     me(t);
     var c = ctx(); if (!c) return;
     if (quick(t)) { act(ruleParse(t), t, ''); return; }
-    var hk = howTopic(t); if (hk) { howTo(hk, ''); return; }
+    if (offTopic(t)) return;   // d4c: 개인정보·인사·다른 과정·주제 밖 질문
+    if (STAGE_Q.test(t)) { stageNow(''); return; }
+    if (NEXT_Q.test(t) && !/할\s*일|해야/.test(t)) { stageNext(''); return; }
+    var bt = btnFind(t), what = /뭐|무엇|뜻|기능|역할|용도|누르면|무슨\s*버튼/.test(t) || t.replace(/[\s?？]/g, '').length <= 12;
+    if (bt && what) { btnAnswer(bt, ''); return; }   // d4c: "○○가 뭐예요?"는 버튼 설명
+    var hk = howTopic(t); if (hk) { howTo(hk, ''); return; }   // d4b: "~하려면?"은 절차 안내
+    if (bt) { btnAnswer(bt, ''); return; }
     var R0 = ruleParse(t); if (R0.intent === 'help_start' || R0.intent === 'help_next' || (R0.intent === 'explain' && R0.term)) { act(R0, t, ''); return; }   // 사용법·할 일·용어 질문은 화면 정보로 바로 답함   // d4b: "~하려면?" 같은 방법 질문·도우미가 대신 못 하는 일은 절차 안내
     setBusy(true);
     var timer, done = false;
     var fin = function(I, src){ if (done) return; done = true; clearTimeout(timer); setBusy(false); act(I, t, src); };
     timer = setTimeout(function(){ fin(ruleParse(t), '규칙 해석(AI 응답 지연)'); }, 20000);
-    A.parse(t, { 날짜: c.days.map(function(x){ return { d: x.d, w: x.w }; }), 교시: c.cls, 오전: c.am, 오후: c.pm, 용어: TERMS, 후보수: S.cands ? Math.min(S.cands.length, 5) : 0, 대기: S.wait }).then(function(j){
+    A.parse(t, { 날짜: c.days.map(function(x){ return { d: x.d, w: x.w }; }), 교시: c.cls, 오전: c.am, 오후: c.pm, 용어: TERMS.concat(BTN_NAMES), 후보수: S.cands ? Math.min(S.cands.length, 5) : 0, 대기: S.wait }).then(function(j){
       if (j && j.꺼짐) { S.off = true; done = true; clearTimeout(timer); setBusy(false); say('도우미가 꺼져 있습니다(관리자 설정). 화면의 버튼으로 편성해 주세요.'); sendB.disabled = true; return; }
       if (j && j.status === 'ok' && j.ai && j.해석) fin(fixAi(j.해석, t), 'AI 해석 · ' + (j.모델 || '') + (j.모델번호 ? '(' + j.모델번호 + '번)' : ''));
       else fin(ruleParse(t), '규칙 해석' + (j && j.이유 ? '(' + j.이유 + ')' : ''));
@@ -295,7 +301,7 @@
       if (S.cands[idx]) { sl.iid = S.cands[idx].id; sl.iname = S.cands[idx].name; sl.noInstr = false; }
     }
     if (I.intent === 'recommend') { sl.iid = ''; sl.noInstr = false; return advance(src, true); }
-    if (I.intent === 'other' && !I.subject && tchg !== true && !sl.iid) return say('말씀을 정확히 알아듣지 못했습니다.<br>' + situation() + '<br>이렇게 말씀해 보세요.<br>· 교과목 넣기: "금요일 1~3교시 청렴교육 강사 추천해줘"<br>· 방법 묻기: "남은 빈 교시를 지난 기수로 채우려면?"<br>· 할 일 묻기: "앞으로 뭘 해야 해요?"', [{ t: '앞으로 할 일', a: { intent: 'help_next' } }, { t: '처음인데 어떻게 해요?', a: { intent: 'help_start' } }], src);
+    if (I.intent === 'other' && !I.subject && tchg !== true && !sl.iid) return say('말씀을 정확히 알아듣지 못했거나, 이 화면의 일과 관련 없는 질문입니다. 저는 교과목 편성·강사 배정만 돕습니다.<br>' + situation() + '<br>이렇게 말씀해 보세요.<br>· 교과목 넣기: "금요일 1~3교시 청렴교육 강사 추천해줘"<br>· 방법·버튼: "남은 빈 교시를 지난 기수로 채우려면?", "이동 모드가 뭐예요?"<br>· 단계·할 일: "지금 몇 단계예요?", "앞으로 뭘 해야 해요?"', [{ t: '앞으로 할 일', a: { intent: 'help_next' } }, { t: '지금 몇 단계예요?', fn: function(){ stageNow(); } }, { t: '버튼 설명 보기', fn: btnList }], src);
     advance(src, false);
   }
   // 시간 반영: true=바뀜, null=변화 없음, false=되물음(멈춤)
@@ -532,12 +538,105 @@
     say(situation() + '<br>' + h, ch, src);
   }
 
+  /* ---------- d4c: 버튼 설명집(화면 코드 기준) · 단계 질문 · 주제 밖 질문 ---------- */
+  var BTN = [
+    ['AI 강사 일괄 배정', /일괄\s*배정/, '강사가 비어 있는 칸 전체에 AI가 후보를 골라 초안을 만듭니다. 칸마다 선정 이유가 붙고, 바꾸지 않을 칸은 체크를 풀어 [선택한 칸 적용]을 눌러야 저장됩니다. 강사 미지정 칸이 있을 때 위쪽 \'지금 할 일\'에 나타납니다.', '#abBar [data-ab="draft"]'],
+    ['직접 편성해 보기', /직접\s*편성해\s*보기|직접\s*편성\s*해보기/, '시간표 빈 칸에 강사를 직접 지정해 보는 체험 기능입니다. 걸린 시간과 클릭 수를 재고, 끝나면 같은 칸의 AI 초안과 나란히 비교합니다.', '[data-ab="manual"]'],
+    ['AI로 강사 다시 검토', /다시\s*검토|재검토/, '이미 들어간 강사를 일정·평가·교과목 관련성 기준으로 다시 점검해 칸마다 유지·교체를 제안합니다. 지난 기수 강사를 불러왔다면 이 검토를 거쳐야 3단계로 넘어갑니다. 담당자가 칸에서 직접 고른 강사는 기본으로 유지합니다.', '#abBar [data-ab="review"]'],
+    ['지난 기수 편성 불러오기', /지난\s*기수\s*편성\s*불러|편성\s*불러오기/, '같은 과정 지난 기수의 교과목·교시를 이번 기수 날짜에 맞춰 가져옵니다. 이어서 AI 강사 재검토 창이 열립니다. 교과목이 하나도 없을 때 \'편성을 시작할 방법\'에 있습니다.', '#sEmpty [data-cp]'],
+    ['지난 기수로 빈 교시 채우기', /빈\s*교시\s*채우기|지난\s*기수로\s*채우/, '편성 도중 남은 빈 교시만 지난 기수 편성으로 채웁니다. 이미 넣은 교과목은 그대로 둡니다. 시간표 바로 위 파란 줄에 있습니다.', '.gfillbar [data-cp]'],
+    ['이 과정만 / 같은 주 전체 과정', /이\s*과정만|같은\s*주\s*전체/, '[이 과정만]은 지금 과정의 시간표만, [같은 주 전체 과정]은 같은 주에 진행되는 다른 과정까지 한 시간표에 보여 줍니다. 강의실·강사 겹침을 볼 때 씁니다.', '[data-gs="all"]'],
+    ['이동 모드 켜기', /이동\s*모드/, '켜면 시간표 칸마다 [이동] 버튼이 나타나 교과목을 다른 칸으로 옮기거나 맞바꿀 수 있습니다. 다 옮기면 [이동 모드 끄기]를 누릅니다.', '[data-mvmode]'],
+    ['비워둠 처리 켜기', /비워둠\s*처리\s*켜|비워둠\s*버튼/, '켜면 빈 교시 칸마다 [비워둠] 버튼이 나타납니다. 일부러 비우는 교시를 표시하면 빈 교시로 세지 않습니다.', '[data-gpmode]'],
+    ['인쇄 / A4 세로·가로', /인쇄|A4|용지/, '지금 보이는 주의 시간표를 A4 한 장으로 인쇄합니다. 옆의 목록에서 세로·가로를 고릅니다.', '[data-gw="print"]'],
+    ['과정 전체 PDF', /전체\s*PDF|PDF/i, '과정 기간의 모든 주 시간표를 한 번에 인쇄합니다. 인쇄 창에서 \'PDF로 저장\'을 고르면 파일로 받을 수 있습니다.', '[data-gw="pdfall"]'],
+    ['이전 주 / 다음 주 / 이번 주', /이전\s*주|다음\s*주|이번\s*주/, '시간표를 한 주씩 넘겨 봅니다. [이번 주]는 오늘이 있는 주로 돌아갑니다. 옆 목록에서 주차를 바로 고를 수도 있습니다.', '[data-gw="next"]'],
+    ['목록 / 격자', /목록|격자/, '교과목을 날짜별 표(목록) 또는 요일×교시 시간표(격자)로 바꿔 봅니다. 기본은 격자입니다.', '#vGrid'],
+    ['일정 변경', /일정\s*변경/, '이 기수의 입교 기간·예정 강의실 등을 바꾸고 사유를 남깁니다. 변경 내용은 변경이력에 기록됩니다.', '[data-ck="dates"]'],
+    ['기수 취소', /기수\s*취소/, '이 기수를 취소 처리합니다. 연간계획 합계와 겹침 확인에서 빠지고 \'취소됨\'으로 표시되며 교과목을 추가할 수 없습니다. 나중에 취소 해제할 수 있습니다.', '[data-ck="cancel"]'],
+    ['교과목 변경 이력', /변경\s*이력/, '이 과정에서 교과목을 추가·수정·삭제한 기록입니다. 눌러 펼치면 누가 언제 무엇을 바꿨는지 봅니다.', '.chgh summary'],
+    ['빈 강의실 보기', /빈\s*강의실/, '[교과목 추가] 입력칸의 일자·교시에 비어 있는 강의실을 보여 줍니다.', '#sRoomFreeBtn'],
+    ['강사 찾아보기(사진·이력)', /강사\s*찾아보기|사진/, '강사 목록을 사진·소속·이력과 함께 큰 창에서 보고 골라 입력칸에 넣습니다.', '#sBrowse'],
+    ['적합한 강사 찾기', /적합한\s*강사/, '입력한 교과목·일시에 맞는 강사 후보를 담당 이력·평가로 정리하고, AI가 이름이 다른 비슷한 교과목도 연결해 근거를 붙입니다. 일정이 겹치거나 불가 일정인 강사는 뺍니다.', '#cxFind'],
+    ['저장 / 입력 지우기', /입력\s*지우기|저장\s*버튼/, '[저장]은 입력한 교과목을 시간표에 넣습니다. [입력 지우기]는 입력칸을 비웁니다. 수정 중이면 [수정 저장]·[수정 취소]로 바뀝니다.', '#sSave'],
+    ['교과목 추가(펼치기)', /교과목\s*추가|펼치기|접기/, '시간표 아래 입력칸입니다. 평소엔 접혀 있고 [펼치기]를 누르거나 시간표 빈 칸을 누르면 열립니다.', '#sFormAcc'],
+    ['닫기 · 보드로', /닫기|보드로/, '편성 화면을 닫고 보드로 돌아갑니다. 버튼의 \'n단계\'는 이 과정이 놓일 단계 칸이고, 그 칸을 강조해 보여 줍니다. 끝난 과정은 \'닫기\'만 보이고 들어온 목록으로 돌아갑니다.', '[data-bdback]'],
+    ['4단계로 넘기기', /4\s*단계로\s*넘기기|넘기기\s*버튼/, '3단계(배정 완료)에서 화면 맨 아래에 나타납니다. 누르면 보드로 바뀌고 4단계 칸에서 최종 확인·발송을 합니다.', '[data-handoff]'],
+    ['최종 확인하고 발송', /최종\s*확인/, '보드 4단계 카드에 있습니다. 강사별로 교과목·일시를 묶어 다시 보여 주고, [발송]을 누르면 강사 1명에게 문자·메일이 1통씩 갑니다(시연 모드에서는 기록).', ''],
+    ['+ 과정 올리기', /과정\s*올리기|올리기\s*버튼/, '보드 1단계 칸의 버튼입니다. 시연할 과정을 골라 1단계에 올립니다. 진행 중이던 과정은 \'진행한 과정\'에 저장됩니다.', ''],
+    ['올리기 취소', /올리기\s*취소/, '교과목이 아직 없는 1단계 카드에 있습니다. 보드에서 내리고, 그 전에 올라 있던 과정이 있으면 다시 올립니다.', ''],
+    ['이 과정 초기화', /초기화/, '1단계 카드에 있습니다. 이 과정의 교과목·강사를 모두 지우고 보드에서 내려 과정 목록으로 돌려보냅니다. 되돌릴 수 없습니다.', ''],
+    ['이어서 하기 / 처음부터', /이어서\s*하기|처음부터\s*버튼/, '멈춤 카드의 버튼입니다. [이어서 하기]는 멈춘 단계부터 다시 열고, [처음부터]는 그 과정을 처음 상태로 되돌려 다시 올립니다.', ''],
+    ['보낸 내용 보기', /보낸\s*내용/, '시연 모드에서 보낸(것처럼 처리한) 문자·메일 내용을 보여 줍니다. 실제로 보낸 건은 \'실제 발송\'으로 표시됩니다.', ''],
+    ['선정 이유', /선정\s*이유/, 'AI 초안·재검토 창에서 칸마다 AI가 그 강사를 고른 근거(교과목 관련성·평가·일정)를 펼쳐 봅니다.', ''],
+    ['상세(이력·평가)', /상세|이력.*평가/, '강사 후보 카드의 버튼입니다. 그 강사의 강의 이력과 교과목별 평가를 봅니다.', ''],
+    ['새로고침', /새로\s*고침/, '서버에서 최신 편성을 다시 불러옵니다. 다른 사람이 같은 과정을 고쳤을 때 씁니다.', ''],
+    ['단계 막대(1~4)', /단계\s*막대|맨\s*위.*단계|위에\s*있는\s*단계|1\s*~\s*4\s*단계/, '화면 위쪽에 붙어 있는 1~4단계 표시입니다. 주황색이 지금 단계, 남색 체크가 마친 단계이고, 칸 아래 작은 글씨로 진행 수(예: 3/35교시)를 보여 줍니다. 눌러서 이동하는 버튼은 아닙니다.', '#stepBar']
+  ];
+  var BTN_NAMES = BTN.map(function(b){ return b[0]; });
+  var ASKQ = /뭐|무엇|무슨|어떤|기능|역할|용도|누르면|눌러|하는\s*거|하는\s*건|뭔가요|뭐예요|이에요|란|이란|설명|\?/;
+  function btnFind(t){
+    var tt = t.replace(/\s+/g, ' ');
+    if (!ASKQ.test(tt) && tt.length > 16) return null;
+    for (var i = 0; i < BTN.length; i++) if (BTN[i][1].test(tt)) return BTN[i];
+    return null;
+  }
+  function btnAnswer(b, src){
+    var ch = b[3] ? [guideChip('화면에서 위치 보기', b[3], '<i>' + esc(b[0]) + '</i>')] : [];
+    ch.push({ t: '앞으로 할 일', a: { intent: 'help_next' } });
+    say('<b>[' + esc(b[0]) + ']</b> — ' + esc(b[2]), ch, src);
+  }
+  var STAGE_Q = /지금\s*(몇|무슨|어느|어떤)\s*단계|현재\s*단계|현\s*단계|몇\s*단계|어디까지|진행\s*(상황|상태|현황)|지금\s*상황/;
+  var NEXT_Q = /다음\s*단계(는|가|로|이)?\s*(뭐|무엇|어떻게|언제|가려면|넘어가려면|넘어가)|다음\s*단계로|언제\s*넘어가|넘어가려면|넘어가는\s*조건/;
+  function stageInfo(){
+    var c = ctx(), st = c.stage;
+    var cond = ['빈 교시가 0칸(일부러 비울 칸은 비워둠 처리)', '모든 교과목에 강사 지정' + (st.copied ? ' + 지난 기수 강사는 [AI로 강사 다시 검토] 완료' : ''), '[4단계로 넘기기] 누르기', '[최종 확인하고 발송]'];
+    var now = [st.n ? '빈 교시 ' + st.gap + '칸 남음' : '교과목 없음', '강사 미지정 ' + st.empty + '칸' + (st.copied && !st.empty ? ' · AI 재검토 전' : ''), '넘기기 전', st.held ? '발송 대기 ' + st.held + '명' : '발송 완료'];
+    return { c: c, st: st, cond: cond, now: now };
+  }
+  function stageNow(src){
+    var I = stageInfo(), c = I.c, st = I.st;
+    if (!st.sure && st.lane >= 3) return say('단계 정보를 불러오는 중입니다. 잠시 후 다시 물어봐 주세요.', null, src);
+    var rows = c.steps.map(function(s, i){
+      var n = i + 1, mark = n < st.lane || (st.fin && n === 4) ? '✓' : n === st.lane ? '▶' : '○';
+      var tail = n < st.lane || (st.fin && n === 4) ? '마침' : n === st.lane ? '<b>지금</b> · ' + esc(I.now[i]) : '남음';
+      return '<li style="list-style:none;margin-left:-18px;">' + mark + ' <b>' + n + '. ' + esc(s.t) + '</b> — ' + tail + '</li>';
+    }).join('');
+    var nx = st.fin ? '이 과정은 모두 마쳤습니다.' : st.lane < 4 ? '다음 ' + (st.lane + 1) + '단계 \'' + esc(c.steps[st.lane].t) + '\'(으)로 넘어가는 조건: <b>' + esc(I.cond[st.lane - 1]) + '</b>' : '남은 일: <b>' + esc(I.cond[3]) + '</b>';
+    say('<b>' + esc(c.label) + '</b>은(는) 지금 <b>' + st.lane + '단계 ' + esc(c.steps[st.lane - 1].t) + '</b>입니다.<ol>' + rows + '</ol>' + nx, [{ t: '앞으로 할 일', a: { intent: 'help_next' } }, guideChip('단계 막대 보기', '#stepBar', '지금 단계 표시')], src);
+  }
+  function stageNext(src){
+    var I = stageInfo(), c = I.c, st = I.st;
+    if (!st.sure && st.lane >= 3) return say('단계 정보를 불러오는 중입니다. 잠시 후 다시 물어봐 주세요.', null, src);
+    if (st.fin) return say('이 과정은 4단계까지 모두 마쳤습니다. 다른 과정은 보드에서 [+ 다른 과정 올리기]로 시작합니다.', null, src);
+    if (st.lane === 4) return say('지금이 마지막 <b>4단계 최종 확인·발송</b>입니다. 보드 4단계 카드의 [최종 확인하고 발송]을 누르면 이 과정이 끝납니다.', null, src);
+    var n = st.lane + 1, left = st.lane === 1 ? (st.n ? '빈 교시 ' + st.gap + '칸이 남았습니다' : '아직 교과목이 없습니다') : st.lane === 2 ? (st.empty ? '강사 미지정 ' + st.empty + '칸이 남았습니다' : st.copied ? '지난 기수 강사의 AI 재검토가 남았습니다' : '곧 넘어갑니다') : '버튼만 누르면 됩니다';
+    say('다음은 <b>' + n + '단계 \'' + esc(c.steps[n - 1].t) + '\'</b>입니다. ' + esc(c.steps[n - 1].d) + '.<br>넘어가는 조건: <b>' + esc(I.cond[st.lane - 1]) + '</b><br>지금은 ' + esc(left) + '. 조건을 채우면 자동으로 넘어가고, 화면 위 단계 막대가 바뀌며 알림이 뜹니다' + (st.lane === 3 ? '(3→4단계는 버튼을 눌러야 넘어갑니다)' : '') + '.', [{ t: '앞으로 할 일', a: { intent: 'help_next' } }], src);
+  }
+  var PRIV = /연락처|전화\s*번호|휴대폰|핸드폰|메일\s*주소|집\s*주소|주민|생년월일|계좌|나이가|몇\s*살|(이메일|메일|번호|주소).{0,4}(알려|뭐야|뭐예요|가르쳐)/;
+  var OUTQ = /날씨|점심\s*(메뉴|뭐|먹)|맛집|주식|뉴스|노래|영화|게임|농담|운세|로또/;
+  function offTopic(t){
+    var c = ctx();
+    if (PRIV.test(t)) return say('강사의 연락처·주소 같은 개인정보는 도우미가 보여 드리지 않습니다. 필요하면 <b>강사관리</b> 화면의 강사 상세에서 권한에 따라 확인해 주세요. 배정 안내 문자·메일은 4단계 발송 때 시스템이 보냅니다.', [{ t: '앞으로 할 일', a: { intent: 'help_next' } }]), true;
+    if (/^(안녕|안녕하세요)/.test(t.trim())) return say('안녕하세요. 저는 <b>' + esc(c.label) + '</b>의 교과목 편성과 강사 배정을 돕습니다. 무엇을 도와 드릴까요?', [{ t: '앞으로 할 일', a: { intent: 'help_next' } }, { t: '교과목 넣기', a: { intent: 'assign' } }, { t: '지금 몇 단계예요?', fn: function(){ stageNow(); } }]), true;
+    if (/^(고마워|고맙습니다|감사합니다|감사해요|땡큐)/.test(t.trim())) return say('네. 더 필요한 일이 있으면 말씀해 주세요.', [{ t: '앞으로 할 일', a: { intent: 'help_next' } }]), true;
+    if (/누구야|너는\s*누구|이름이\s*뭐|뭘\s*할\s*수\s*있/.test(t)) return say('저는 이 화면의 <b>AI 배정 도우미</b>입니다. 할 수 있는 일: 교과목 넣기, 강사 추천·배정, 지금 단계와 앞으로 할 일 안내, 버튼·용어 설명. 저장은 늘 담당자가 확인 카드의 [배정]을 눌러야 합니다.', [{ t: '앞으로 할 일', a: { intent: 'help_next' } }, { t: '용어 설명 보기', fn: termList }]), true;
+    if (/다른\s*과정|딴\s*과정|다른\s*기수/.test(t)) return say('도우미는 지금 열린 <b>' + esc(c.label) + '</b>만 다룹니다. 다른 과정은 [닫기 · 보드로]를 눌러 보드에서 그 과정을 올리거나 열어 주세요.', [guideChip('닫기 버튼 보기', '[data-bdback]', '<i>닫기 · 보드로</i>')]), true;
+    if (OUTQ.test(t)) return outOfScope(), true;
+    return false;
+  }
+  function outOfScope(src){
+    say('그 질문은 이 화면의 일과 관련이 없어 답하지 않습니다. 저는 <b>' + esc(ctx().label) + '</b>의 교과목 편성·강사 배정만 돕습니다.<br>' + situation() + '<br>예: "앞으로 뭘 해야 해요?", "지금 몇 단계예요?", "이동 모드가 뭐예요?", "금요일 1~3교시 청렴교육 강사 추천해줘"',
+      [{ t: '앞으로 할 일', a: { intent: 'help_next' } }, { t: '지금 몇 단계예요?', fn: function(){ stageNow(); } }, { t: '버튼 설명 보기', fn: btnList }], src);
+  }
+  function btnList(){ say('궁금한 버튼을 누르세요.', BTN.map(function(b){ return { t: b[0], fn: function(){ btnAnswer(b); } }; })); }
+
   /* ---------- 도움말 ---------- */
   function helpStart(src){
     var c = ctx(), st = c.stage;
     var h = '배정은 4단계로 진행합니다.<ol>' + c.steps.map(function(s, i){ return '<li><b>' + esc(s.t) + '</b> — ' + esc(s.d) + (st.lane === i + 1 ? ' <span class="cb-here">← 지금 여기</span>' : '') + '</li>'; }).join('') + '</ol>' +
       '시간표의 빈 칸을 눌러 직접 넣어도 되고, 저에게 <b>"월요일 2교시부터 2시간 청렴교육"</b>처럼 말씀하셔도 됩니다. 저장은 늘 확인 카드의 [배정]을 눌러야 합니다.';
-    say(h, [{ t: '앞으로 할 일', a: { intent: 'help_next' } }, { t: '교과목 넣기', a: { intent: 'assign' } }, { t: '용어 설명 보기', fn: termList }], src);
+    say(h, [{ t: '앞으로 할 일', a: { intent: 'help_next' } }, { t: '교과목 넣기', a: { intent: 'assign' } }, { t: '용어 설명 보기', fn: termList }, { t: '버튼 설명 보기', fn: btnList }], src);
   }
   function helpNext(src){
     var c = ctx(), st = c.stage, h = '', ch = [], li = function(arr){ return '<ol>' + arr.map(function(x){ return '<li>' + x + '</li>'; }).join('') + '</ol>'; };
@@ -576,6 +675,7 @@
     say('비어 있는 시간입니다. 누르면 그 시간에 넣을 교과목을 여쭙겠습니다.', fr.map(function(r){ return { t: dl(r.d) + ' ' + (r.full ? '하루 전체' : pl(r.s, r.e)), a: { intent: 'time', date: r.d, start: r.s, end: r.e } }; }));
   }
   function explain(term, raw, src){
+    var bb = BTN.filter(function(b){ return b[0] === term; })[0]; if (bb) return btnAnswer(bb, src);   // d4c
     var g = GL.filter(function(x){ return x[0] === term; })[0];
     if (!g) return say('그 용어는 제가 가진 설명에 없습니다. 아래 용어 중에서 골라 보시겠어요?', TERMS.slice(4, 12).map(function(t){ return { t: t, a: { intent: 'explain', term: t } }; }), src);
     var rel = GL.indexOf(g), more = [GL[(rel + 1) % GL.length][0], GL[(rel + 2) % GL.length][0]];
