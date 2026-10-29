@@ -275,6 +275,8 @@
   function act(I, raw, src){
     var c = ctx(); if (!c) return;
     if (I.subject && badSubj(I.subject)) I.subject = '';   // d4b
+    // d4f: 고른 강사를 가리키는 말("이 강사", "2번 강사", 후보 이름)은 교과목으로 쓰지 않음(AI가 교과목으로 뽑아도 무시)
+    if (I.subject && (S.wait === 'time' || S.wait === 'pick' || S.slot && S.slot.iid) && (/이\s*강사|그\s*강사|이분|그분|선택한|고른|\d\s*번/.test(String(raw || '')) || (S.cands || []).some(function(x){ return I.subject.indexOf(x.name) > -1; }) || /강사$/.test(I.subject))) I.subject = '';
     if (I.intent === 'other' && S.wait !== 'subject') I.subject = '';   // 교과목을 묻는 중이 아니면 알 수 없는 문장을 교과목으로 쓰지 않음
     if (!S.slot) S.slot = blank();
     var sl = S.slot;
