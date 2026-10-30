@@ -840,6 +840,9 @@
   .ev-ai b{color:#1E4E86;} .ev-ai > span:last-child{flex-basis:100%;}
   .ev-mock,.ev-rule{display:inline-flex;font-size:10.5px;font-weight:800;line-height:1;border-radius:4px;padding:3px 5px;background:#EEF1F5;color:#475467;}
   .ev-links{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;}
+  .ev-chk{background:#FFF8EF;border:1px solid #F4C99A;border-radius:8px;padding:8px 10px;font-size:12.5px;line-height:1.5;color:#475467;margin:6px 0 2px;} .ev-chk b{display:block;color:#9A4A0B;font-size:13px;}
+  .ev-chk-a{display:flex;flex-direction:column;gap:6px;margin-top:8px;} .ev-chk-a .btn{width:100%;justify-content:center;text-align:center;box-sizing:border-box;} .ev-k .ev-chk-a .btn.primary{background:var(--navy);border-color:var(--navy);color:#fff;} .ev-k .ev-chk-a .btn.primary:hover{background:#17304F;} .ev-k .ev-chk-a .btn[disabled]{background:#EEF1F5;border-color:#D0D5DD;color:#98A2B3;cursor:not-allowed;opacity:1;}
+  .ev-chk-h{font-size:11.5px;color:#667085;margin-top:4px;text-align:center;}
   .bdc.ev-ld .bdc-x{display:flex;align-items:center;gap:8px;color:#475467;} .bdc.ev-ld .mi-sp{width:14px;height:14px;border-color:rgba(27,58,95,.2);border-top-color:#1B3A5F;}
   .bdc.ev-ld .sk{display:block;height:10px;border-radius:5px;background:linear-gradient(90deg,#EEF2F6 25%,#E2E8F0 50%,#EEF2F6 75%);background-size:200% 100%;animation:skSh 1.2s linear infinite;margin-top:8px;} .bdc.ev-ld .sk.w1{width:80%;} .bdc.ev-ld .sk.w2{width:55%;}
   .ev-links .ab-lnk{font-weight:700;text-underline-offset:2px;}
@@ -1452,7 +1455,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-30 배정 d4m</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-31 배정 d4n</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -2280,6 +2283,7 @@
         stageMoved[k] = { at: Date.now(), from: 0, to: 1, shown: false, added: true };
       } else {
         delete cxRes[k]; delete evSeen[k]; evHot[k] = Date.now(); evAdded[k] = true;
+        evMark('okv', k, false); evMark('opv', k, false);   // d4n: 처음부터 하면 설문지 확인도 다시
         instructors = null; instrById = {};
       }
       var o = dbs(kind), prev = o.active && o.active !== k ? o.active : '';
@@ -7755,7 +7759,7 @@
   /* ===== d4a: AI 배정 도우미(챗봇) 연결 =====
      도우미 화면은 cb-chat.js(처음 열 때만 불러옴). 도우미는 아래 window.__cbApi로만 읽고 저장함.
      저장은 기존 saveSession에 챗봇 표시(챗봇:1)를 붙여 서버가 겹침을 다시 검사하게 함. AI는 해석·근거만, 확정은 담당자 */
-  var CB_VER = 'd4m';
+  var CB_VER = 'd4n';
   function cbInstrReady(){
     ensureInstructors();
     return new Promise(function(res){ var t0 = Date.now(); (function w(){ if ((instructors !== null && !instrLoading) || Date.now() - t0 > 15000) res(); else setTimeout(w, 150); })(); });
@@ -8390,8 +8394,13 @@
       { t: '결과 반영', s: done ? '완료' : '남음', c: done ? 'done' : 'todo' },
       { t: '강사 환류', s: fb ? fb.n + '명 보냄' : '남음', c: fb ? 'done' : (done ? 'now' : 'todo') }
     ];
-    return { st: st, stage: fb ? 5 : done ? 4 : link ? 2 : 1, M: M };
+    var key0 = j && j.개설키 ? String(j.개설키) : '';
+    return { st: st, stage: fb ? 5 : done ? 4 : link ? 2 : 1, M: M, wait: !!link && !done && !fb && !evOk(key0) };   // d4n: 링크를 만들었지만 아직 확인 전 → 보드 1단계 '확인 대기'
   }
+  // d4n: 설문지 확인(이 브라우저 기록) — 만든 설문지를 열어 본 뒤 [확인 완료 · 공유 시작]을 눌러야 2단계(안내문·QR)로 넘어감
+  function evOk(k){ var o = dbs('ev'); return !!(k && o.okv && o.okv[k]); }
+  function evOpened(k){ var o = dbs('ev'); return !!(k && o.opv && o.opv[k]); }
+  function evMark(field, k, v){ var o = dbs('ev'); o[field] = o[field] || {}; if (v) o[field][k] = Date.now(); else delete o[field][k]; bsSave('ev'); }
   function evFlow(st){
     return '<div class="dflow" role="img" aria-label="평가 단계: ' + st.map(function(x){ return x.t + ' ' + x.s; }).join(', ') + '">' +
       st.map(function(x, i){ return (i ? '<span class="dflow-a" aria-hidden="true">›</span>' : '') + '<div class="dflow-s df-' + x.c + '"><b>' + (i + 1) + '. ' + x.t + '</b><span>' + esc(x.s) + '</span></div>'; }).join('') + '</div>';
@@ -8429,13 +8438,13 @@
   }
   /* d2l: 평가관리 첫 화면 — 강의배정과 같은 칸반 보드(① 설문 준비 → ② 결과 반영 → ③ 강사 환류 → ④ 완료) */
   var EV_STEPS = [
-    { t: '설문 준비', d: '교과목·강사별 설문 링크', tl: [['', '설문 링크·QR 만들기']] },
+    { t: '설문 준비', d: '교과목·강사별 설문 링크', tl: [['', '설문 링크 만들기'], ['hum', '설문지 확인 후 공유']] },
     { t: '응답 수합·결과 반영', m: '응답·반영', d: '응답 받기 → 설문 결과 가져오기', tl: [['ai', '이름 빠진 문항 연결'], ['ai', '서술형 의견 분류·요약']] },
     { t: '강사 환류', d: '강사별 결과 메일', tl: [['ai', '의견 요약을 메일에 담기'], ['hum', '보낼 강사 선택']] },
     { t: '완료', d: '다음 강사 배정에 반영', tl: [['ai', 'AI 강사 배정의 근거로 쓰임']] }
   ];
   var evSeen = {}, evHot = {}, evAdded = {}, evEntered = {}, evJustDone = {};
-  function evLane(S){ return S.stage >= 5 ? 4 : S.stage === 4 ? 3 : S.stage === 2 ? 2 : 1; }
+  function evLane(S){ return S.stage >= 5 ? 4 : S.stage === 4 ? 3 : S.stage === 2 && !S.wait ? 2 : 1; }
   function evAiLine(j){
     var sm = (j.요약 || []).slice().sort(function(a, b){ return (Number(b['의견 수']) || 0) - (Number(a['의견 수']) || 0); })[0];
     if (!sm || !sm['요약']) return '';
@@ -8451,7 +8460,12 @@
     if (err) return '<article class="bdc">' + head + '<div class="note-err">상태를 불러오지 못했습니다.</div></article>';
     var S = evState(j), M = S.M, L = evLane(S), body = '', main = '', links = [];
     var lk = function(attr, txt, cls){ return '<button type="button" class="ab-lnk' + (cls ? ' ' + cls : '') + '" ' + attr + '>' + txt + '</button>'; };
-    if (L === 1) {
+    if (L === 1 && S.wait) {
+      var op = evOpened(key);
+      body = '<div class="ev-chk"><b>설문지를 만들었습니다 · 공유 전 확인</b><span>교육생에게 알리기 전에 설문지를 열어 과정명·교과목·강사 이름과 문항을 확인해 주세요. 확인을 마쳐야 안내문·QR 코드가 나옵니다.</span></div>';
+      main = ro ? '' : '<div class="ev-chk-a"><a class="btn" href="' + esc(j.설문링크) + '" target="_blank" rel="noopener" data-evopen="' + kk + '">' + (op ? '설문지 다시 열기' : '① 설문지 열어 확인하기') + '</a>' +
+        '<button type="button" class="btn primary" data-evok="' + kk + '"' + (op ? '' : ' disabled title="먼저 설문지를 열어 확인해 주세요"') + '>② 확인 완료 · 공유 시작</button></div>' + (op ? '' : '<div class="ev-chk-h">설문지를 열어 본 뒤에 ②를 누를 수 있습니다</div>');
+    } else if (L === 1) {
       body = '';
       main = ro ? '' : '<button type="button" class="btn" data-evform="' + kk + '">설문 링크 만들기</button>';
       links.push(lk('data-cxform="1" data-key="' + kk + '"', '설문지 미리보기'));
@@ -8576,7 +8590,7 @@
     api({ action: 'makeSurveyForm', password: getPw(), 개설키: key }).then(function(j){
       if (!j || j.status !== 'ok') { btn.disabled = false; btn.textContent = '설문 링크 만들기'; alert((j && j.message) || '설문지를 만들지 못했습니다'); return; }
       evRefresh(key);
-      nextGuide('설문 링크를 만들었습니다', 'QR로 직접 응답해 본 뒤 <i>설문 결과 가져오기</i> — 실제 응답에 모자라는 인원은 모의 응답으로 채웁니다', '.ev-k [data-evfetch]');
+      nextGuide('설문지를 만들었습니다', '<i>설문지 열어 확인하기</i> — 과정명·강사 이름·문항을 확인한 뒤 <i>확인 완료 · 공유 시작</i>', '.ev-k [data-evopen]');
     }).catch(function(){ btn.disabled = false; btn.textContent = '설문 링크 만들기'; alert('서버에 연결하지 못했습니다.'); });
   }
   function evQrOpen(key){
@@ -8648,7 +8662,26 @@
     }).catch(function(e){ m.body.innerHTML = '<div class="note-err">' + esc(e.message || '불러오지 못했습니다') + '</div>'; });
   }
   document.addEventListener('click', function(ev){
-    var t = ev.target && ev.target.closest ? ev.target.closest('[data-evform],[data-evcopy],[data-evqr],[data-evundo],[data-evfb],[data-evback],#evAll,#evBack') : null; if (!t) return;
+    var t = ev.target && ev.target.closest ? ev.target.closest('[data-evform],[data-evcopy],[data-evqr],[data-evundo],[data-evfb],[data-evback],[data-evopen],[data-evok],#evAll,#evBack') : null; if (!t) return;
+    var ko = t.getAttribute('data-evopen');
+    if (ko) {   // d4n: 설문지를 연 기록 → ② 버튼을 바로 켬(새 탭은 그대로 열림)
+      evMark('opv', ko, true);
+      var ok2 = document.querySelector('[data-evok="' + (window.CSS && CSS.escape ? CSS.escape(ko) : ko) + '"]'); if (ok2) { ok2.disabled = false; ok2.removeAttribute('title'); }
+      var hh = t.closest('.bdc') && t.closest('.bdc').querySelector('.ev-chk-h'); if (hh) hh.remove();
+      t.textContent = '설문지 다시 열기';
+      return;
+    }
+    var kv = t.getAttribute('data-evok');
+    if (kv) {
+      if (!evOpened(kv)) return;
+      if (window.btnBusy) btnBusy(t, '확인 중…');
+      evMark('okv', kv, true);
+      setTimeout(function(){
+        if (!currentKey && planMode === 'eval') renderEval();
+        nextGuide('설문지 확인을 마쳤습니다', '<i>안내문 복사</i>·<i>QR 코드</i>로 교육생에게 알리고, 응답이 모이면 <i>설문 결과 가져오기</i>', '.ev-k [data-evcopy]');
+      }, 350);
+      return;
+    }
     if (t.id === 'evAll') { document.body.classList.add('evall'); renderEval(); return; }
     if (t.id === 'evBack' || t.getAttribute('data-evback')) { document.body.classList.remove('evall'); renderEval(); window.scrollTo(0, 0); return; }
     var k;
