@@ -39,7 +39,7 @@
   function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   var CB_TEL = '000-000-0000';   // d4e: 시연용 임의 번호(실제 번호 아님)
   function contactLine(){ var c = ctx(); return '<div class="cb-tel">제가 답하지 못한 내용은 담당자에게 문의해 주세요: <b>○○소방학교 ' + esc((c && c.owner) || '교육운영팀') + ' ' + CB_TEL + '</b> <span>(시연용 번호)</span></div>'; }
-  function blank(){ return { subj: '', d: '', s: null, e: null, hours: null, iid: '', iname: '', noInstr: false, row: null, wd: '' }; }
+  function blank(){ return { subj: '', d: '', s: null, e: null, hours: null, iid: '', iname: '', noInstr: false, row: null, wd: '', needLen: false, halfAsk: false }; }
   function ctx(){ return A.ctx(); }
   function dl(d){ return A.md(d); }   // 예: 12/4(금)
   function pl(s, e){ return A.periodLabel(s, e); }
@@ -182,32 +182,87 @@
   function clearHl(){ S.hl = null; document.querySelectorAll('.cb-hl').forEach(function(x){ x.classList.remove('cb-hl'); }); }
 
   /* ---------- 규칙 해석(AI가 응답하지 않을 때·짧은 답) ---------- */
-  function ruleParse(t){
-    var c = ctx(), o = { intent: 'other', weekday: '', date: '', start: null, end: null, hours: null, allday: false, half: '', subject: '', pick: null, term: '' };
-    var w = /([월화수목금토일])\s*요일/.exec(t) || /(^|\s)([월화수목금토일])(?=\s|$)/.exec(t); if (w) o.weekday = w[2] || w[1];
+  /* d4g: 규칙 해석(말투 사전) — AI가 응답하지 않을 때와 AI 결과 보완에 씀. 시험 묶음: tools/cb_rule_test.js */
+  var KNUM = { '한': 1, '하나': 1, '첫': 1, '첫째': 1, '두': 2, '둘': 2, '둘째': 2, '세': 3, '셋': 3, '셋째': 3, '네': 4, '넷': 4, '넷째': 4, '다섯': 5, '다섯째': 5, '여섯': 6, '여섯째': 6, '일곱': 7, '일곱째': 7 };
+  var WDS = ['일', '월', '화', '수', '목', '금', '토'];
+  function hm(s){ var m = /^(\d{1,2}):(\d{2})/.exec(s || ''); return m ? +m[1] * 60 + +m[2] : null; }
+  function ymdAdd(d, n){ var q = d.split('-').map(Number), x = new Date(Date.UTC(q[0], q[1] - 1, q[2] + n)); return x.toISOString().slice(0, 10); }
+  function ymdDow(d){ var q = d.split('-').map(Number); return new Date(Date.UTC(q[0], q[1] - 1, q[2])).getUTCDay(); }
+  var NAME_STOP = /^(이|그|저|담당|같은|다른|새|신규|외부|내부|추천|적합한|좋은|어떤|무슨|해당|이번|지난|관련|교과목|과목|전문|기존|선택한|고른|이분|그분)$/;
+  function normText(t){
+    var s = ' ' + String(t || '').replace(/[，、]/g, ',') + ' ';
+    s = s.replace(/([월화수목금토일])욜/g, '$1요일');
+    s = s.replace(/(첫째|둘째|셋째|넷째|다섯째|여섯째|일곱째|첫|한|하나|두|둘|세|셋|네|넷|다섯|여섯|일곱)\s*(?:번\s*째\s*)?(교시|시간)/g, function(m, k, u){ return KNUM[k] ? KNUM[k] + u : m; });
+    s = s.replace(/(첫|두|세|네|다섯)\s*번\s*째|(첫|둘|셋|넷)째|(첫)\s*번/g, function(m, a, b, c2){ return (KNUM[a || b || c2] || 1) + '번'; });
+    s = s.replace(/(\d{1,2})\s*[,·]\s*(?:\d{1,2}\s*[,·]\s*)*(\d{1,2})\s*교시/g, '$1~$2교시');
+    s = s.replace(/(\s)(\d)\s*[~\-]\s*(\d)(?=\s|에)/g, '$1$2~$3교시');
+    return s;
+  }
+  function ruleParse(t0){
+    var c = ctx(), o = { intent: 'other', weekday: '', date: '', start: null, end: null, hours: null, allday: false, half: '', subject: '', pick: null, term: '', iname: '', needLen: false, halfAsk: false };
+    var t = normText(t0), today = (c && c.today) || '';
+    var w = /([월화수목금토일])\s*요일/.exec(t) || /\s([월화수목금토일])(?=\s)/.exec(t); if (w) o.weekday = w[1];
+    // 상대 날짜: 오늘·내일·모레·글피, 이번 주·다음 주 ○요일
+    var rel = /(오늘|내일|모레|글피)/.exec(t);
+    if (rel && today) o.date = ymdAdd(today, { '오늘': 0, '내일': 1, '모레': 2, '글피': 3 }[rel[1]]);
+    var wk = /(다음\s*주|담주|차주)/.test(t) ? 1 : /(이번\s*주|금주)/.test(t) ? 0 : null;
+    if (wk !== null && o.weekday && today) { var mon = ymdAdd(today, -((ymdDow(today) + 6) % 7)); o.date = ymdAdd(mon, 7 * wk + ((WDS.indexOf(o.weekday) + 6) % 7)); }
     var m = /(\d{1,2})\s*[\/.월]\s*(\d{1,2})\s*일?/.exec(t);
-    if (m && c) { var hit = c.days.filter(function(x){ return +x.d.slice(5, 7) === +m[1] && +x.d.slice(8, 10) === +m[2]; })[0]; if (hit) o.date = hit.d; }
+    if (m && c) { var hit = c.days.filter(function(x){ return +x.d.slice(5, 7) === +m[1] && +x.d.slice(8, 10) === +m[2]; })[0]; if (hit) o.date = hit.d; else if (today) { var y = +today.slice(0, 4); if (+m[1] < +today.slice(5, 7) - 6) y++; o.date = y + '-' + ('0' + m[1]).slice(-2) + '-' + ('0' + m[2]).slice(-2); } }
+    // 교시
     var rg = /(\d{1,2})\s*(?:교시)?\s*(?:~|-|부터|에서)\s*(\d{1,2})\s*교시/.exec(t), hr = /(\d{1,2})\s*시간/.exec(t), one = /(\d{1,2})\s*교시/.exec(t);
     if (rg) { o.start = +rg[1]; o.end = +rg[2]; } else if (one) { o.start = +one[1]; if (!hr) o.end = +one[1]; }
     if (hr) o.hours = +hr[1];
-    if (/하루\s*(전체|종일|다)|종일|온종일|하루\s*내내/.test(t)) o.allday = true;
-    if (/오전/.test(t)) o.half = '오전'; else if (/오후/.test(t)) o.half = '오후';
-    var pk = /(^|\s)(\d)\s*번/.exec(t) || /^\s*(\d)\s*$/.exec(t); if (pk) o.pick = +(pk[2] || pk[1]);
-    o.term = TERMS.filter(function(x){ return t.replace(/\s/g, '').indexOf(x.replace(/\s/g, '')) > -1; })[0] || '';
-    if (/처음|어떻게\s*(써|사용)|사용법/.test(t) && !/다음|앞으로|해야/.test(t)) o.intent = 'help_start';
-    else if (/다음\s*(단계|할\s*일|에\s*뭐)|이제\s*뭐|뭐\s*하면|앞으로|해야\s*(할|하는|될)\s*(일|것)|뭘\s*해야|무엇을\s*해야/.test(t)) o.intent = 'help_next';
-    else if (o.term && /뭐|무엇|뜻|뭔|설명|란\??$|이란/.test(t)) o.intent = 'explain';
-    else if (/^(취소|그만|처음부터|다시)/.test(t.trim())) o.intent = 'cancel';
-    else if (/강사\s*없이|교과목만|강사는\s*나중/.test(t)) o.intent = 'subject_only';
-    else if (/추천|찾아|후보|누가\s*좋/.test(t)) o.intent = 'recommend';
-    else if (o.pick && t.length <= 10) o.intent = 'pick';
-    else if (/^(네|예|응|좋아|좋습니다|그래|확인|배정해|ㅇㅇ)/.test(t.trim())) o.intent = 'confirm';
-    else if (/배정|넣어|채워|편성해/.test(t)) o.intent = 'assign';
-    else if (o.start || o.weekday || o.date || o.allday || o.half) o.intent = 'time';
-    var sj = t.replace(/\d{1,2}\s*(?:교시)?\s*(?:~|-|부터|에서)\s*\d{1,2}\s*교시(?:까지)?|교과목만|과목만|([월화수목금토일])\s*요일|\d{1,2}\s*[\/.월]\s*\d{1,2}\s*일?|\d{1,2}\s*교시|\d{1,2}\s*시간|부터|까지|에서|[~\-]|하루\s*(전체|종일|다)|종일|오전|오후|(^|\s)\d\s*번/g, ' ')
-      .replace(/(관련|관한|에\s*맞는|맞는|할|하는)?\s*(강사|교수|선생님)(님)?(을|를|로|으로|가|이)?/g, ' ')
-      .replace(/(추천|찾아|배정|넣어|채워|편성)[가-힣]*|해\s*줘|해\s*주세요|주세요|줘|교과목(을|를|은|로)?|과목(을|를)?|좀|그리고/g, ' ')
-      .replace(/(^|\s)(에|에서|을|를|은|는|이|가|로|으로|의|도|만|\d+)(?=\s|$)/g, ' ').replace(/\s+/g, ' ').trim();
+    // 시각 → 교시(교시표 시작·끝 시각 기준). "1시~6시"처럼 오전·오후가 없으면 1~6시는 오후로 봄
+    if (o.start == null && c && c.periods && c.periods.length) {
+      var re = /(오전|오후)?\s*(\d{1,2})\s*시(?!간)(?:\s*(\d{1,2})\s*분|\s*(반))?\s*(부터|까지|에|~)?/g, tm = [], mm;
+      while ((mm = re.exec(t))) { var h = +mm[2], mi = mm[3] ? +mm[3] : mm[4] ? 30 : 0; if (mm[1] === '오후' && h < 12) h += 12; else if (!mm[1] && h >= 1 && h <= 6) h += 12; tm.push({ v: h * 60 + mi, end: mm[5] === '까지' }); }
+      var ps = c.periods.map(function(p){ return { n: p.n, s: hm(p.start), e: hm(p.end) }; }).filter(function(p){ return p.s !== null; });
+      var stAt = function(v){ var p = ps.filter(function(x){ return x.s >= v - 5; })[0]; return p ? p.n : null; };
+      var enBy = function(v){ var a = ps.filter(function(x){ return x.e !== null && x.e <= v + 5; }); return a.length ? a[a.length - 1].n : null; };
+      if (tm.length >= 2) { o.start = stAt(tm[0].v); o.end = enBy(tm[1].v); if (o.start !== null && o.end !== null && o.end < o.start) o.end = null; }
+      else if (tm.length === 1) { if (tm[0].end) o.end = enBy(tm[0].v); else o.start = stAt(tm[0].v); }
+    }
+    if (/하루\s*(전체|종일|다|내내|꽉)|종일|온종일/.test(t)) o.allday = true;
+    if (/점심\s*(시간\s*)?(후|이후|먹고|지나서|다음)/.test(t)) o.half = '오후';
+    else if (/점심\s*(시간\s*)?전/.test(t)) o.half = '오전';
+    else if (/오전/.test(t)) o.half = '오전';
+    else if (/오후/.test(t)) o.half = '오후';
+    else if (/반나절/.test(t)) o.halfAsk = true;
+    if (/아침/.test(t) && o.start == null && c && c.am && c.am.length) { o.start = c.am[0]; if (!o.hours) o.needLen = true; }
+    if (/마지막\s*(교시|시간)/.test(t) && c && c.cls) { o.start = o.end = c.cls[c.cls.length - 1]; }
+    var pk = /(^|\s)(\d)\s*번(?!\s*째)/.exec(t) || /^\s*(\d)\s*$/.exec(t); if (pk) o.pick = +(pk[2] || pk[1]);
+    o.term = TERMS.concat(typeof BTN_NAMES !== 'undefined' ? BTN_NAMES : []).filter(function(x){ return t.replace(/\s/g, '').indexOf(x.replace(/\s/g, '')) > -1; })[0] || '';
+    var tt = t.trim();
+    if (/^(취소|그만|처음부터|다시\s*하|새로)/.test(tt)) o.intent = 'cancel';
+    else if (/처음|어떻게\s*(써|사용)|사용법/.test(tt) && !/다음|앞으로|해야/.test(tt)) o.intent = 'help_start';
+    else if (/다음\s*(단계|할\s*일|에\s*뭐)|이제\s*뭐|뭐\s*하면|앞으로|해야\s*(할|하는|될)\s*(일|것)|뭘\s*해야|무엇을\s*해야/.test(tt)) o.intent = 'help_next';
+    else if (o.term && /뭐|무엇|뜻|뭔|설명|란\??$|이란/.test(tt)) o.intent = 'explain';
+    else if (/^(취소|그만|처음부터|다시)/.test(tt)) o.intent = 'cancel';
+    else if (/강사\s*(없이|빼고|는\s*나중|미정|미지정)|교과목만|과목만/.test(tt)) o.intent = 'subject_only';
+    else if (/추천|찾아|후보|누가|누구|적합|어떤\s*강사|좋은\s*강사|강사\s*(있어|있나|있을까)/.test(tt)) o.intent = 'recommend';
+    else if (o.pick && tt.length <= 12) o.intent = 'pick';
+    else if (/^(네|예|응|좋아|좋습니다|그래|확인|배정해|ㅇㅇ|오케이|ok)/i.test(tt)) o.intent = 'confirm';
+    else if (/배정|넣어|넣자|채워|편성|잡아|배치|박아|등록해|추가해|올려/.test(tt)) o.intent = 'assign';
+    else if (o.start || o.weekday || o.date || o.allday || o.half || o.halfAsk) o.intent = 'time';
+    // 강사 이름 지정("박바다 강사로", "홍길동 선생님") — 추천 요청이 아니면 이름 후보로 둠(실제 강사인지는 강사 목록으로 확인)
+    var nmRe = /([가-힣]{2,4})\s*(?:강사|선생님|교수)님?\s*(?:으로|로|한테|에게|을|를|이|가|께|분)?(?=\s|$)/, nm = o.intent !== 'recommend' ? nmRe.exec(t) : null;
+    if (nm && !NAME_STOP.test(nm[1])) o.iname = nm[1];
+    var sj = t;
+    if (o.iname) sj = sj.replace(nmRe, ' ');
+    sj = sj.replace(/강사\s*(는|도)?\s*(나중에?|없이|빼고|미정|미지정)\s*(하고|해서|하고서)?/g, ' ');
+    sj = sj.replace(/\d{1,2}\s*[\/.월]\s*\d{1,2}\s*일?/g, ' ')
+      .replace(/다음\s*주|담주|차주|이번\s*주|금주|오늘|내일|모레|글피/g, ' ')
+      .replace(/([월화수목금토일])\s*요일(에|은|는|날)?/g, ' ').replace(/\s[월화수목금토일](?=\s)/g, ' ')
+      .replace(/\d{1,2}\s*(?:교시)?\s*(?:~|-|부터|에서)\s*\d{1,2}\s*교시(까지|에|에서|를|로)?/g, ' ').replace(/\d{1,2}\s*교시(부터|까지|에|에서|를|로)?/g, ' ')
+      .replace(/\d{1,2}\s*시간(짜리|동안|씩)?/g, ' ').replace(/(오전|오후)?\s*\d{1,2}\s*시(?!간)(\s*\d{1,2}\s*분|\s*반)?(부터|까지|에|~)?/g, ' ')
+      .replace(/하루\s*(전체|종일|다|내내|꽉)|온종일|종일|점심\s*(시간\s*)?(전|후|이후|먹고|지나서|다음)(까지|에)?|반나절|아침(에)?|마지막\s*(교시|시간)|(오전|오후)\s*(내내|전체|중)?(에)?/g, ' ')
+      .replace(/(^|\s)\d\s*번(째)?(으로|로)?/g, ' ').replace(/(이|그|저)\s*강사/g, ' ')
+      .replace(/(관련|관한|에\s*맞는|맞는|할|하는|적합한|좋은|어떤)?\s*(강사|교수|선생님)(님)?(을|를|로|으로|가|이|는)?/g, ' ')
+      .replace(/(추천|찾아|배정|넣어|넣자|채워|편성|잡아|배치|박아|등록|추가|올려)[가-힣]*/g, ' ')
+      .replace(/누가|누구|적합해\??|적합한가요\??|좋아\??|좋을까\??|있어\??|있나요?\??|있을까\??|할까\??|해\s*줘|해\s*주세요|주세요|줘|교과목(을|를|은|로)?만?|과목(을|를)?만?|좀|그리고|하고|수업|짜리|할게|할께|으로|분으로/g, ' ')
+      .replace(/(^|\s)(에|에서|을|를|은|는|이|가|로|으로|의|도|만|에게|한테|\d+|[~,·?!.])(?=\s|$)/g, ' ').replace(/\s+/g, ' ').trim();
+    if (o.intent === 'subject_only') sj = sj.replace(/만$/, '').trim();
     if (sj && sj.length <= 24 && /[가-힣A-Za-z]{2,}/.test(sj) && ['recommend', 'assign', 'subject_only', 'time', 'other'].indexOf(o.intent) > -1 && !/^(네|예|응)$/.test(sj)) o.subject = sj;
     return o;
   }
@@ -239,7 +294,7 @@
     var timer, done = false;
     var fin = function(I, src){ if (done) return; done = true; clearTimeout(timer); setBusy(false); act(I, t, src); };
     timer = setTimeout(function(){ fin(ruleParse(t), '규칙 해석(AI 응답 지연)'); }, 20000);
-    A.parse(t, { 날짜: c.days.map(function(x){ return { d: x.d, w: x.w }; }), 교시: c.cls, 오전: c.am, 오후: c.pm, 용어: TERMS.concat(BTN_NAMES), 후보수: S.cands ? Math.min(S.cands.length, 5) : 0, 대기: S.wait }).then(function(j){
+    A.parse(t, { 오늘: c.today, 교시표: c.periods, 날짜: c.days.map(function(x){ return { d: x.d, w: x.w }; }), 교시: c.cls, 오전: c.am, 오후: c.pm, 용어: TERMS.concat(BTN_NAMES), 후보수: S.cands ? Math.min(S.cands.length, 5) : 0, 대기: S.wait }).then(function(j){
       if (j && j.꺼짐) { S.off = true; done = true; clearTimeout(timer); setBusy(false); say('도우미가 꺼져 있습니다(관리자 설정). 화면의 버튼으로 편성해 주세요.'); sendB.disabled = true; return; }
       if (j && j.status === 'ok' && j.ai && j.해석) fin(fixAi(j.해석, t), 'AI 해석 · ' + (j.모델 || '') + (j.모델번호 ? '(' + j.모델번호 + '번)' : ''));
       else fin(ruleParse(t), '규칙 해석' + (j && j.이유 ? '(' + j.이유 + ')' : ''));
@@ -249,7 +304,14 @@
     var R = ruleParse(t);
     ['weekday', 'date', 'start', 'end', 'hours', 'half', 'pick', 'term'].forEach(function(k){ if ((I[k] === null || I[k] === '' || I[k] === undefined) && R[k] !== null && R[k] !== '') I[k] = R[k]; });
     if (!I.allday && R.allday) I.allday = true;
+    if (!I.iname) I.iname = I.instructor || R.iname || '';   // d4g: 강사 이름 지정
+    if (R.needLen && I.end == null && !I.hours) I.needLen = true;
+    if (R.halfAsk && !I.half && I.start == null) I.halfAsk = true;
     if (!I.subject && R.subject && ['recommend', 'assign', 'subject_only', 'time'].indexOf(I.intent) > -1) I.subject = R.subject;
+    else if (I.subject && R.subject && I.subject !== R.subject && I.subject.indexOf(R.subject) > -1) {   // AI 교과목에 시간·요일 같은 군더더기가 붙었으면 규칙 결과를 씀
+      var extra = I.subject.replace(R.subject, ' ');
+      if (/반나절|시간|교시|\d|시\b|요일|오전|오후|내내|짜리|강사|선생님|수업|아침|점심|까지|부터|관련|다음\s*주|내일|모레/.test(extra)) I.subject = R.subject;
+    }
     return I;
   }
   function onBodyClick(ev){
@@ -307,6 +369,11 @@
     if (I.intent === 'subject_only') { sl.noInstr = true; sl.iid = ''; }
     else if ((I.intent === 'assign' || I.intent === 'recommend') && sl.noInstr && !onlyWord) sl.noInstr = false;   // 이전의 '교과목만'이 새 요청에 이어지지 않게
     var tchg = applyTime(I, src); if (tchg === false) return;
+    if (I.iname && !I._nameDone) {   // d4g: "박바다 강사로 …" — 강사 목록에서 찾아 바로 지정
+      var found = A.findInstr(I.iname);
+      if (!found.length && !I._waited) { I._waited = true; setBusy(true); A.instrReady().then(function(){ setBusy(false); actName(I, raw, src); }); return; }
+      return actName(I, raw, src);
+    }
     if ((I.intent === 'pick' || S.wait === 'pick' || I.pick) && S.cands && (I.pick || nm)) {
       var idx = nm ? nm.i : I.pick - 1;
       if (S.cands[idx]) { sl.iid = S.cands[idx].id; sl.iname = S.cands[idx].name; sl.noInstr = false; }
@@ -315,15 +382,28 @@
     if (I.intent === 'other' && !I.subject && tchg !== true && !sl.iid) return say('말씀을 정확히 알아듣지 못했거나, 이 화면의 일과 관련 없는 질문입니다. 저는 교과목 편성·강사 배정만 돕습니다.<br>' + situation() + '<br>이렇게 말씀해 보세요.<br>· 교과목 넣기: "금요일 1~3교시 청렴교육 강사 추천해줘"<br>· 방법·버튼: "남은 빈 교시를 지난 기수로 채우려면?", "이동 모드가 뭐예요?"<br>· 단계·할 일: "지금 몇 단계예요?", "앞으로 뭘 해야 해요?"' + contactLine(), [{ t: '앞으로 할 일', a: { intent: 'help_next' } }, { t: '지금 몇 단계예요?', fn: function(){ stageNow(); } }, { t: '버튼 설명 보기', fn: btnList }], src);
     advance(src, false);
   }
+  function actName(I, raw, src){
+    var sl = S.slot, found = A.findInstr(I.iname);
+    I._nameDone = true;
+    if (found.length === 1) { sl.iid = found[0].id; sl.iname = found[0].name; sl.noInstr = false; S.cands = null; if (I.intent === 'recommend') I.intent = 'assign'; return advance(src, false); }
+    if (found.length > 1) { S.wait = ''; return say('\'' + esc(I.iname) + '\' 강사가 ' + found.length + '명 있습니다. 누구인가요?', found.slice(0, 5).map(function(x){ return { t: x.name + (x.org ? ' · ' + x.org : ''), fn: function(){ S.slot.iid = x.id; S.slot.iname = x.name; S.slot.noInstr = false; S.cands = null; advance(); } }; }), src); }
+    if (!sl.subj) { sl.subj = I.iname; return advance(src, false); }   // 강사가 아니면 교과목 이름으로 봄(예: "소방전술 강사로")
+    S.wait = '';
+    return say('\'' + esc(I.iname) + '\' 강사는 강사 목록에 없습니다(승인된 강사만 배정할 수 있습니다). 이 교과목에 맞는 후보를 찾을까요?', [{ t: '후보 추천받기', a: { intent: 'recommend' } }, { t: '교과목만 넣기', a: { intent: 'subject_only' } }], src);
+  }
   // 시간 반영: true=바뀜, null=변화 없음, false=되물음(멈춤)
   function applyTime(I, src){
     var c = ctx(), sl = S.slot, chg = null;
     var future = c.days.filter(function(x){ return x.d >= c.today; });
-    if (I.date) { if (future.some(function(x){ return x.d === I.date; })) { sl.d = I.date; chg = true; } else { say(dl(I.date) + '은(는) 이미 지난 날짜라 편성할 수 없습니다.', null, src); return false; } }
+    if (I.date) {
+      if (future.some(function(x){ return x.d === I.date; })) { sl.d = I.date; chg = true; }
+      else if (c.days.some(function(x){ return x.d === I.date; })) { say(dl(I.date) + '은(는) 이미 지난 날짜라 편성할 수 없습니다.', null, src); return false; }
+      else { var d0 = c.days[0], d1 = c.days[c.days.length - 1]; say(esc(I.date.slice(5).replace('-', '/')) + '은(는) 이 과정의 교육일이 아닙니다' + (d0 ? '(교육 기간 ' + dl(d0.d) + '~' + dl(d1.d) + ', 주말 제외)' : '') + '. 다른 날짜를 알려 주세요.', future.slice(0, 5).map(function(x){ return { t: x.md, a: { intent: 'time', date: x.d, start: I.start, end: I.end, hours: I.hours, half: I.half, allday: I.allday } }; }), src); return false; }
+    }
     else if (I.weekday) {
       var ds = future.filter(function(x){ return x.w === I.weekday; });
       if (!ds.length) { var all = c.days.map(function(x){ return x.w; }).filter(function(w, i, a){ return a.indexOf(w) === i; }).join('·'); say(c.days.some(function(x){ return x.w === I.weekday; }) ? '이 과정의 ' + I.weekday + '요일은 이미 지났습니다.' : '이 과정은 ' + all + '요일에 진행합니다. 다른 요일을 알려 주세요.', null, src); return false; }
-      if (ds.length > 1 && !(sl.d && ds.some(function(x){ return x.d === sl.d; }))) { S.dates = ds; sl.wd = I.weekday; keepTime(I); S.wait = 'date'; say(I.weekday + '요일이 ' + ds.length + '번 있습니다. 언제인가요?', ds.map(function(x){ return { t: x.md + '(' + x.w + ')', a: { intent: 'time', date: x.d } }; }), src); return false; }
+      if (ds.length > 1 && !(sl.d && ds.some(function(x){ return x.d === sl.d; }))) { S.dates = ds; sl.wd = I.weekday; keepTime(I); S.wait = 'date'; say(I.weekday + '요일이 ' + ds.length + '번 있습니다. 언제인가요?', ds.map(function(x){ return { t: x.md, a: { intent: 'time', date: x.d } }; }), src); return false; }
       if (ds.length === 1) { sl.d = ds[0].d; chg = true; }
     }
     if (keepTime(I)) chg = true;
@@ -331,7 +411,10 @@
   }
   function keepTime(I){
     var c = ctx(), sl = S.slot, chg = false, cls = c.cls;
-    if (I.allday) { sl.s = cls[0]; sl.e = cls[cls.length - 1]; sl.hours = null; return true; }
+    if (I.allday) { sl.s = cls[0]; sl.e = cls[cls.length - 1]; sl.hours = null; sl.needLen = sl.halfAsk = false; return true; }
+    if (I.halfAsk && !I.half && I.start == null) { sl.halfAsk = true; sl.s = sl.e = null; chg = true; }
+    if (I.needLen && I.start != null && I.end == null && !I.hours) { sl.s = I.start; sl.e = null; sl.needLen = true; sl.halfAsk = false; return true; }
+    if (I.half || I.start != null) { sl.halfAsk = false; sl.needLen = false; }
     if (I.half) { var h = I.half === '오전' ? c.am : c.pm; if (h.length) { if (I.start == null) { sl.s = h[0]; sl.e = h[h.length - 1]; if (I.hours) sl.e = Math.min(h[h.length - 1], h[0] + I.hours - 1); chg = true; } } }
     if (I.start != null) {
       sl.s = I.start;
@@ -355,11 +438,26 @@
     }
     if (!sl.iid && !sl.noInstr && S.cands && !S.cands.length) { S.wait = ''; return say('<b>' + esc(sl.subj) + '</b>에 맞는 강사 후보가 없습니다. 교과목만 먼저 넣고 강사는 나중에 배정할까요?', [{ t: '교과목만 넣기', a: { intent: 'subject_only' } }, { t: '다른 교과목으로', fn: function(){ S.slot = blank(); S.cands = null; S.wait = 'subject'; say('교과목 이름을 알려 주세요.'); } }], src); }
     if (!sl.iid && !sl.noInstr && S.cands) { S.wait = 'pick'; return say('배정할 강사 번호를 골라 주세요. 강사 없이 교과목만 넣으려면 "교과목만"이라고 말씀해 주세요.', candChips(), src); }
+    if (sl.halfAsk && sl.s == null) return askHalf(src);
+    if (sl.s != null && sl.e == null) return askLen(src);
     if (!sl.d || sl.s == null || sl.e == null) return askTime(src);
     var pb = slotProblem(); if (pb) return pb();
     confirmCard(src);
   }
   function norm(s){ return String(s || '').replace(/\s+/g, ''); }
+  // d4g: 애매한 말은 실패 대신 선택지로 되물음
+  function askHalf(src){
+    var c = ctx(), sl = S.slot; S.wait = 'time';
+    say((sl.d ? dl(sl.d) + ' ' : '') + '반나절은 오전·오후 중 언제인가요?', [{ t: '오전 ' + pl(c.am[0], c.am[c.am.length - 1]), a: { intent: 'time', half: '오전', date: sl.d || '' } }, { t: '오후 ' + pl(c.pm[0], c.pm[c.pm.length - 1]), a: { intent: 'time', half: '오후', date: sl.d || '' } }], src);
+  }
+  function askLen(src){
+    var c = ctx(), sl = S.slot, cls = c.cls, s0 = sl.s, occ = sl.d ? A.occ(sl.d) : {}, opts = [];
+    for (var h = 1; h <= 4; h++) { var e = s0 + h - 1; if (cls.indexOf(e) < 0) break; if (occ[e]) break; opts.push({ t: h + '시간 (' + pl(s0, e) + ')', a: { intent: 'time', date: sl.d || '', start: s0, end: e } }); }
+    if (c.am.indexOf(s0) > -1 && c.am.length > 1 && !occ[c.am[c.am.length - 1]]) opts.push({ t: '오전 전체 (' + pl(s0, c.am[c.am.length - 1]) + ')', a: { intent: 'time', date: sl.d || '', start: s0, end: c.am[c.am.length - 1] } });
+    if (!opts.length) { sl.s = null; return askTime(src); }
+    S.wait = 'time';
+    say((sl.d ? dl(sl.d) + ' ' : '') + s0 + '교시부터 몇 시간 할까요?', opts, src);
+  }
   function askTime(src){
     var c = ctx(), sl = S.slot, fr = A.free();
     if (sl.d) fr = fr.filter(function(r){ return r.d === sl.d; });
