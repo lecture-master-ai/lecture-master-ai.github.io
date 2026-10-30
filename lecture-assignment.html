@@ -1288,7 +1288,15 @@
   .ddb.near{background:#FFF1E6;color:#B54708;box-shadow:inset 0 0 0 1px #F7C9A3;}
   .ddb.far{background:#fff;color:#1B3A5F;box-shadow:inset 0 0 0 1px #B8C4D6;}
   .ddb.run{background:#1B3A5F;color:#fff;}
-  /* d4b: [교과목 추가] 접기·펴기(심사용 화면) */
+  /* d4o: 심사용 화면은 아래 [교과목 추가] 입력칸을 두지 않음 — 시간표 빈 칸을 누르면 같은 입력 창이 뜸 */
+  body.simple #sFormPanel:not(.fmodal){display:none !important;}
+  body.simple #sGridWrap td.c.empty[data-new]:not(.gpend){cursor:pointer;position:relative;}
+  body.simple #sGridWrap td.c.empty[data-new]:not(.gpend):not(:has(.gpt))::after{content:"+ 교과목";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#A6B4C6;pointer-events:none;}
+  body.simple #sGridWrap td.c.empty[data-new]:not(.gpend):hover::after,body.simple #sGridWrap td.c.empty[data-new]:not(.gpend):focus-visible::after{content:"+ 교과목 넣기";position:absolute;inset:2px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:#EAF2FB;box-shadow:inset 0 0 0 1.5px #2F6FB2;color:#1B3A5F;font-size:12.5px;font-weight:800;pointer-events:none;}
+  body.simple #sGridWrap.gflash td.c.empty[data-new]:not(.gpend){animation:gflash 1.2s ease-out 2;}
+  body.simple #sGridWrap td.c.empty.gfirst::after{content:"여기를 눌러 교과목 넣기" !important;position:absolute !important;inset:2px !important;display:flex !important;align-items:center;justify-content:center;border-radius:6px !important;background:#EAF2FB !important;box-shadow:inset 0 0 0 2px #2F6FB2 !important;color:#1B3A5F !important;font-size:12.5px !important;font-weight:800 !important;pointer-events:none;}
+  @keyframes gflash{0%{background:#fff;}35%{background:#DCEAF9;}100%{background:#fff;}}
+  @media (prefers-reduced-motion:reduce){ body.simple #sGridWrap.gflash td.c.empty[data-new]{animation:none;} }
   .facc-h{display:none;}
   body.simple #sFormPanel:not(.fmodal) .facc-h{display:flex;align-items:center;gap:10px;width:100%;border:none;background:none;padding:0;margin:0;font:inherit;text-align:left;cursor:pointer;color:inherit;}
   body.simple #sFormPanel:not(.fmodal) .facc-tt{font-size:16px;font-weight:800;color:#1B2433;}
@@ -1455,7 +1463,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-31 배정 d4n</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-31 배정 d4o</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -5364,7 +5372,7 @@
       if (SIMPLE && !viewer && p && !isCancelled(p)) {   // d3u: 편성 시작 두 갈래
         $('sEmpty').innerHTML = '<div class="tw-h">편성을 시작할 방법을 고르세요</div><div class="tw">' +
           (canCopy ? '<div class="tw-c rec"><div class="tw-n">갈래 1 <em>권장</em></div><b>지난 기수 불러오기 + AI 강사 재검토</b><p>교과목·교시는 지난 기수 그대로 가져오고, 강사는 그동안 쌓인 설문 평가를 반영해 AI가 칸마다 <b>유지·교체</b>를 제안합니다.</p><button type="button" class="btn primary" data-cp="1"><span class="ai-badge">AI 도움</span>지난 기수 편성 불러오기</button></div>' : '') +
-          '<div class="tw-c"><div class="tw-n">갈래 ' + (canCopy ? '2' : '1') + '</div><b>교과목 직접 입력 + 칸별 강사 찾기</b><p>위 [교과목 추가]에 교과목을 넣고, 칸마다 <b>[AI 적합한 강사 찾기]</b>로 추천 강사와 이유를 보고 고릅니다.</p><button type="button" class="btn" data-twin="1">교과목 입력하기</button></div></div>' +
+          '<div class="tw-c"><div class="tw-n">갈래 ' + (canCopy ? '2' : '1') + '</div><b>교과목 직접 입력 + 칸별 강사 찾기</b><p>아래 시간표의 <b>빈 칸을 눌러</b> 교과목을 넣고, 칸마다 <b>[AI 적합한 강사 찾기]</b>로 추천 강사와 이유를 보고 고릅니다.</p><button type="button" class="btn" data-twin="1">시간표에서 직접 넣기</button></div></div>' +
           '<div class="tw-ai"><span class="ai-badge">AI 도움</span><span>입력하다 멈춰도 됩니다. ' + (canCopy ? '남은 빈 교시는 <b>[지난 기수로 빈 교시 채우기]</b>, 남은 강사 칸은 <b>[AI 강사 일괄 배정]</b>으로 AI가 한 번에 채웁니다.' : '남은 강사 칸은 <b>[AI 강사 일괄 배정]</b>으로 AI가 한 번에 채웁니다.') + ' 직접 고른 강사는 그대로 둡니다.</span></div>';   // d3y
         return;
       }
@@ -5534,8 +5542,17 @@
     var tc = ev.target && ev.target.closest ? ev.target.closest('#sEmpty .tw-c') : null;   // d3y: 누른 카드로 테두리 이동(터치 화면)
     if (tc) { var tw = tc.parentNode; tw.classList.add('picked'); Array.prototype.forEach.call(tw.children, function(c){ c.classList.toggle('pick', c === tc); }); }
     var b = ev.target && ev.target.closest ? ev.target.closest('[data-twin]') : null; if (!b) return;
-    formExpand();
-    var f = $('sSubj'); if (f) { f.scrollIntoView({ block: 'center', behavior: 'smooth' }); setTimeout(function(){ f.focus(); }, 300); }
+    // d4o: 갈래 2 — 아래 입력칸 대신 격자 시간표를 켜고 '빈 칸을 눌러 넣기'를 알려 줌
+    if (viewMode !== 'grid') { try { setView('grid'); } catch (e) {} }
+    setTimeout(function(){
+      var gw = $('sGridWrap'); if (!gw) return;
+      var first = gw.querySelector('td.c.empty[data-new]:not(.gpend)');
+      gw.classList.remove('gflash'); void gw.offsetWidth; gw.classList.add('gflash');
+      gw.querySelectorAll('.gfirst').forEach(function(x){ x.classList.remove('gfirst'); });
+      if (first) { first.classList.add('gfirst'); first.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+      setTimeout(function(){ gw.classList.remove('gflash'); }, 2600);
+      nextGuide('시간표의 빈 칸을 눌러 교과목을 넣으세요', '칸을 누르면 입력 창이 열립니다 · 여러 교시는 창에서 <i>끝 교시</i>를 고릅니다 · 강사는 창의 <i>AI 적합한 강사 찾기</i>로', first ? '#sGridWrap td.gfirst' : '#sGridWrap');
+    }, 120);
   });
   document.addEventListener('click', function(ev){
     var sa = ev.target && ev.target.closest ? ev.target.closest('#sAiAll') : null; if (!sa) return;
@@ -5904,7 +5921,7 @@
   }
   function formModalOpen(){ return $('sFormPanel').classList.contains('fmodal'); }
   function openFormModal(){
-    if (viewMode !== 'grid' || formState !== 'ok') return false;
+    if ((viewMode !== 'grid' && !SIMPLE) || formState !== 'ok') return false;   // d4o: 심사용은 목록 보기의 [수정]·[복사]도 같은 창
     $('sFormPanel').classList.add('fmodal');
     $('fBackdrop').style.display = 'block';
     return true;
@@ -7759,7 +7776,7 @@
   /* ===== d4a: AI 배정 도우미(챗봇) 연결 =====
      도우미 화면은 cb-chat.js(처음 열 때만 불러옴). 도우미는 아래 window.__cbApi로만 읽고 저장함.
      저장은 기존 saveSession에 챗봇 표시(챗봇:1)를 붙여 서버가 겹침을 다시 검사하게 함. AI는 해석·근거만, 확정은 담당자 */
-  var CB_VER = 'd4n';
+  var CB_VER = 'd4o';
   function cbInstrReady(){
     ensureInstructors();
     return new Promise(function(res){ var t0 = Date.now(); (function w(){ if ((instructors !== null && !instrLoading) || Date.now() - t0 > 15000) res(); else setTimeout(w, 150); })(); });
