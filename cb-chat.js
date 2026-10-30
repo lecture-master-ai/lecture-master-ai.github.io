@@ -38,7 +38,11 @@
   var root, body, inp, sendB, ctxEl, mo;
   function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   var CB_TEL = '000-000-0000';   // d4e: 시연용 임의 번호(실제 번호 아님)
-  function contactLine(){ var c = ctx(); return '<div class="cb-tel">제가 답하지 못한 내용은 담당자에게 문의해 주세요: <b>○○소방학교 ' + esc((c && c.owner) || '교육운영팀') + ' ' + CB_TEL + '</b> <span>(시연용 번호)</span></div>'; }
+  function contactLine(miss){ var c = ctx(); return '<div class="cb-tel">' + (miss ? '말씀하신 일을 제가 정확히 처리하지 못했습니다. 화면의 버튼으로 직접 하시거나 담당자에게 문의해 주세요: ' : '제가 답하지 못한 내용은 담당자에게 문의해 주세요: ') + '<b>○○소방학교 ' + esc((c && c.owner) || '교육운영팀') + ' ' + CB_TEL + '</b> <span>(시연용 번호)</span></div>'; }
+  // d4j: 같은 질문을 되묻게 된 경우(직전 말로 아무것도 바뀌지 않음) 담당자 문의 안내를 붙임
+  function sig(){ var s = S.slot || {}; return [S.wait, s.subj, s.d, s.s, s.e, s.iid, s.noInstr ? 1 : 0, s.halfAsk ? 1 : 0, s.needLen ? 1 : 0, S.cands ? S.cands.length : -1].join('|'); }
+  function rx(){ var t = S.turn; S.turn = null; return t && t === sig() ? contactLine(true) : ''; }
+  function failTel(){ S.turn = null; return contactLine(true); }
   function blank(){ return { subj: '', d: '', s: null, e: null, hours: null, iid: '', iname: '', noInstr: false, row: null, wd: '', needLen: false, halfAsk: false }; }
   function ctx(){ return A.ctx(); }
   function dl(d){ return A.md(d); }   // 예: 12/4(금)
@@ -64,6 +68,8 @@
       '.cb-m.note{align-self:center;background:#ECFDF3;color:#05603A;border:1px solid #ABEFC6;font-size:12.5px;font-weight:700;padding:5px 10px;border-radius:999px}' +
       '.cb-m.err{align-self:flex-start;background:#FEF3F2;color:#912018;border:1px solid #FECDCA}' +
       '.cb-src{display:block;margin-top:6px;font-size:11px;color:#98A2B3}' +
+      '.cb-ways{padding-left:18px !important}.cb-ways li{margin:6px 0 !important}.cb-rec{display:inline-block;font-size:11px;font-weight:800;color:#fff;background:#2F6FB2;border-radius:4px;padding:0 5px;margin-left:2px;vertical-align:1px}.cb-na{font-size:11px;color:#667085;font-weight:600}' +
+      '.cb-ex{margin-top:3px;font-size:12px;color:#475467;background:#F8FAFC;border-left:3px solid #B9CCE4;padding:3px 7px;border-radius:0 6px 6px 0}' +
       '.cb-tel{margin-top:8px;padding:7px 9px;border-radius:8px;background:#F2F4F7;font-size:12.5px;color:#344054;line-height:1.5}.cb-tel b{color:#1B3A5F}.cb-tel span{color:#98A2B3;font-size:11px}' +
       '.cb-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}' +
       '.cb-chip{border:1px solid #B9CCE4;background:#F3F8FE;color:#1B3A5F;border-radius:999px;padding:5px 11px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;transition:background-color .15s ease-out}' +
@@ -162,8 +168,16 @@
     var g = '안녕하세요. <b>' + esc(c.label) + '</b>의 교과목 편성과 강사 배정을 말로 도와 드립니다.';
     if (c.viewer) g += '<br>조회 전용 계정이라 배정은 할 수 없고, 사용법과 다음 단계 안내만 드립니다.';
     else if (c.ended) g += '<br>교육이 끝난 과정이라 편성은 바꿀 수 없습니다. 사용법 안내만 드립니다.';
-    else g += '<br>예: <b>"금요일 1~3교시 청렴교육 강사 추천해줘"</b>';
+    else g += waysHtml(c);
     say(g, [{ t: '처음인데 어떻게 해요?', a: { intent: 'help_start' } }, { t: '앞으로 할 일', a: { intent: 'help_next' } }, { t: '교과목 넣기', a: { intent: 'assign' } }, { t: '강사 추천받기', a: { intent: 'recommend' } }]);
+  }
+  // d4j: 첫 인사에 편성 시작 두 갈래·권장·말 예시
+  function waysHtml(c){
+    var st = c.stage, rec1 = c.canCopy;
+    var w1 = '<li><b>갈래 1 · 지난 기수 불러오기</b>' + (rec1 ? ' <span class="cb-rec">권장</span>' : ' <span class="cb-na">이 과정은 지난 기수 없음</span>') + '<br>지난 기수 교과목·교시를 그대로 가져오고, 강사는 AI가 평가를 반영해 유지·교체를 제안합니다. 같은 과정을 다시 열 때 가장 빠릅니다.<div class="cb-ex">말 예시: "지난 기수 불러오기는 어떻게 해요?"</div></li>';
+    var w2 = '<li><b>갈래 2 · 직접 입력</b>' + (rec1 ? '' : ' <span class="cb-rec">권장</span>') + '<br>새 과정이거나 교과목이 바뀐 경우입니다. 저에게 말로 넣거나 시간표 빈 칸을 눌러 넣습니다.<div class="cb-ex">말 예시: "금요일 1~3교시 청렴교육 강사 추천해줘" · "수요일 하루 전체 화재조사 실무 넣어줘" · "박바다 강사로 월요일 2교시부터 2시간 소방법규"</div></li>';
+    var lead = st.lane === 1 && !st.n ? '<br><b>편성은 두 갈래로 시작합니다.</b>' : '<br>편성 방법은 두 갈래입니다' + (st.n ? '(이미 교과목 ' + st.n + '칸이 있어 이어서 하면 됩니다)' : '') + '.';
+    return lead + '<ol class="cb-ways">' + w1 + w2 + '</ol>' + (st.lane === 1 && st.n && st.gap && rec1 ? '남은 빈 교시 ' + st.gap + '칸은 시간표 위 <b>[지난 기수로 빈 교시 채우기]</b>로 한 번에 채울 수 있습니다.' : '');
   }
   function note(t){ if (!root || !S.open) return; add('note', esc(t)); renderCtx(); }
   function ctxChanged(key){
@@ -280,14 +294,15 @@
     inp.value = ''; inp.style.height = 'auto';
     me(t);
     var c = ctx(); if (!c) return;
+    S.turn = sig();
     if (quick(t)) { act(ruleParse(t), t, ''); return; }
     if (offTopic(t)) return;   // d4c: 개인정보·인사·다른 과정·주제 밖 질문
     if (STAGE_Q.test(t)) { stageNow(''); return; }
     if (NEXT_Q.test(t) && !/할\s*일|해야/.test(t)) { stageNext(''); return; }
     var bt = btnFind(t), what = /뭐|무엇|뜻|기능|역할|용도|누르면|무슨\s*버튼/.test(t) || t.replace(/[\s?？]/g, '').length <= 12;
     if (bt && what) { btnAnswer(bt, ''); return; }   // d4c: "○○가 뭐예요?"는 버튼 설명
-    var R0e = ruleParse(t); if (R0e.intent === 'explain' && R0e.term && !/려면|어떻게|방법/.test(t)) { act(R0e, t, ''); return; }   // "○○가 뭐예요?"는 용어 설명
-    var hk = howTopic(t); if (hk) { howTo(hk, ''); return; }   // d4b: "~하려면?"은 절차 안내
+    var R0e = ruleParse(t); if (R0e.intent === 'explain' && R0e.term && !/려면|어떻게|(^|\s)방법/.test(t)) { act(R0e, t, ''); return; }   // "○○가 뭐예요?"는 용어 설명
+    var hk = howTopic(t); if (hk) { howTo(hk, '', DOQ.test(t) && !HOWQ.test(t)); return; }   // d4b: "~하려면?"은 절차 안내
     if (bt) { btnAnswer(bt, ''); return; }
     var R0 = ruleParse(t); if (R0.intent === 'help_start' || R0.intent === 'help_next' || (R0.intent === 'explain' && R0.term)) { act(R0, t, ''); return; }   // 사용법·할 일·용어 질문은 화면 정보로 바로 답함   // d4b: "~하려면?" 같은 방법 질문·도우미가 대신 못 하는 일은 절차 안내
     setBusy(true);
@@ -304,7 +319,9 @@
     var R = ruleParse(t);
     ['weekday', 'date', 'start', 'end', 'hours', 'half', 'pick', 'term'].forEach(function(k){ if ((I[k] === null || I[k] === '' || I[k] === undefined) && R[k] !== null && R[k] !== '') I[k] = R[k]; });
     if (!I.allday && R.allday) I.allday = true;
+    if (I.intent === 'other' && R.intent !== 'other' && R.intent !== 'cancel') I.intent = R.intent;   // d4j: AI가 못 고른 의도는 규칙 결과로
     if (!I.iname) I.iname = I.instructor || R.iname || '';   // d4g: 강사 이름 지정
+    if (I.iname && I.subject && I.subject.indexOf(I.iname) > -1) I.subject = I.subject.replace(I.iname, ' ').replace(/\s+/g, ' ').trim() || R.subject;   // d4j: 교과목에 강사 이름이 섞이지 않게
     if (R.needLen && I.end == null && !I.hours) I.needLen = true;
     if (R.halfAsk && !I.half && I.start == null) I.halfAsk = true;
     if (!I.subject && R.subject && ['recommend', 'assign', 'subject_only', 'time'].indexOf(I.intent) > -1) I.subject = R.subject;
@@ -320,7 +337,7 @@
     if (ci != null) {
       var c = CH[Number(ci)]; if (!c || S.busy) return;
       b.parentNode.querySelectorAll('.cb-chip').forEach(function(x){ x.disabled = true; });
-      me(c.t);
+      me(c.t); S.turn = null;
       if (c.fn) { c.fn(); return; }
       act(Object.assign({ intent: 'other', weekday: '', date: '', start: null, end: null, hours: null, allday: false, half: '', subject: '', pick: null, term: '', _chip: true }, c.a), c.t, '');
       return;
@@ -333,7 +350,7 @@
   }
 
   /* ---------- 대화 진행 ---------- */
-  function badSubj(x){ return !x || x.length > 24 || /[?？]|려면|어떻게|방법|나머지|전체|하나요|되나요|돼요|할까|해야|뭐예요|무엇/.test(x); }
+  function badSubj(x){ return !x || x.length > 24 || /[?？]|려면|어떻게|(^|\s)방법|나머지|하나요|되나요|돼요|할까|해야|뭐예요|무엇/.test(x) || /(^|\s)전체(\s|$)/.test(x); }   // d4j: '소방법규'의 '방법'은 막지 않음
   function act(I, raw, src){
     var c = ctx(); if (!c) return;
     if (I.subject && badSubj(I.subject)) I.subject = '';   // d4b
@@ -351,7 +368,7 @@
     if (c.viewer) return say('조회 전용 계정은 배정할 수 없습니다. 사용법이나 다음 단계는 안내해 드릴 수 있습니다.', [{ t: '앞으로 할 일', a: { intent: 'help_next' } }], src);
     if (c.ended || c.cancelled) return say((c.ended ? '교육이 끝난 과정' : '취소된 기수') + '이라 편성을 바꿀 수 없습니다.', null, src);
     if (I.intent === 'confirm' && S.wait === 'confirm') { var gb = body.querySelector('.cb-conf:not(.done) [data-cbgo]'); if (gb) return confirmSave(gb); }
-    if (/^(아니|아니요|취소)/.test(String(raw || '').trim()) && S.wait === 'confirm') { var cf = body.querySelector('.cb-conf:not(.done)'); if (cf) cf.classList.add('done'); clearHl(); S.wait = ''; return say('배정하지 않았습니다. 고칠 것을 말씀해 주세요.', null, src); }
+    if (/^(아니|아니요|취소)/.test(String(raw || '').trim()) && S.wait === 'confirm') { var cf = body.querySelector('.cb-conf:not(.done)'); if (cf) cf.classList.add('done'); clearHl(); S.wait = ''; return say('배정하지 않았습니다. 고칠 것을 말씀해 주세요.' + rx(), null, src); }
     // 다른 교과목으로 새로 요청하면 이전 값(일시·강사)을 비우고 새로 시작
     if (I.subject && sl.subj && norm(I.subject) !== norm(sl.subj) && ['recommend', 'assign', 'subject_only'].indexOf(I.intent) > -1) {
       var pc = body.querySelector('.cb-conf:not(.done)'); if (pc) pc.classList.add('done');
@@ -368,15 +385,18 @@
     if (I.intent === 'subject_only' && !onlyWord && !(I._chip)) I.intent = 'assign';
     if (I.intent === 'subject_only') { sl.noInstr = true; sl.iid = ''; }
     else if ((I.intent === 'assign' || I.intent === 'recommend') && sl.noInstr && !onlyWord) sl.noInstr = false;   // 이전의 '교과목만'이 새 요청에 이어지지 않게
+    if ((I.intent === 'pick' || S.wait === 'pick' || I.pick) && S.cands && (I.pick || nm)) {
+      var idx = nm ? nm.i : I.pick - 1;
+      if (S.cands[idx]) { sl.iid = S.cands[idx].id; sl.iname = S.cands[idx].name; sl.noInstr = false; }
+    }   // d4j: 날짜를 되묻기 전에 고른 강사를 먼저 반영
+    if (!I.iname && S.pendName && (I.intent === 'time' || I._chip)) I.iname = S.pendName;   // d4j: 날짜를 되물은 사이 잊지 않게
+    S.pendName = I.iname || '';
     var tchg = applyTime(I, src); if (tchg === false) return;
+    S.pendName = '';
     if (I.iname && !I._nameDone) {   // d4g: "박바다 강사로 …" — 강사 목록에서 찾아 바로 지정
       var found = A.findInstr(I.iname);
       if (!found.length && !I._waited) { I._waited = true; setBusy(true); A.instrReady().then(function(){ setBusy(false); actName(I, raw, src); }); return; }
       return actName(I, raw, src);
-    }
-    if ((I.intent === 'pick' || S.wait === 'pick' || I.pick) && S.cands && (I.pick || nm)) {
-      var idx = nm ? nm.i : I.pick - 1;
-      if (S.cands[idx]) { sl.iid = S.cands[idx].id; sl.iname = S.cands[idx].name; sl.noInstr = false; }
     }
     if (I.intent === 'recommend') { sl.iid = ''; sl.noInstr = false; return advance(src, true); }
     if (I.intent === 'other' && !I.subject && tchg !== true && !sl.iid) return say('말씀을 정확히 알아듣지 못했거나, 이 화면의 일과 관련 없는 질문입니다. 저는 교과목 편성·강사 배정만 돕습니다.<br>' + situation() + '<br>이렇게 말씀해 보세요.<br>· 교과목 넣기: "금요일 1~3교시 청렴교육 강사 추천해줘"<br>· 방법·버튼: "남은 빈 교시를 지난 기수로 채우려면?", "이동 모드가 뭐예요?"<br>· 단계·할 일: "지금 몇 단계예요?", "앞으로 뭘 해야 해요?"' + contactLine(), [{ t: '앞으로 할 일', a: { intent: 'help_next' } }, { t: '지금 몇 단계예요?', fn: function(){ stageNow(); } }, { t: '버튼 설명 보기', fn: btnList }], src);
@@ -389,7 +409,7 @@
     if (found.length > 1) { S.wait = ''; return say('\'' + esc(I.iname) + '\' 강사가 ' + found.length + '명 있습니다. 누구인가요?', found.slice(0, 5).map(function(x){ return { t: x.name + (x.org ? ' · ' + x.org : ''), fn: function(){ S.slot.iid = x.id; S.slot.iname = x.name; S.slot.noInstr = false; S.cands = null; advance(); } }; }), src); }
     if (!sl.subj) { sl.subj = I.iname; return advance(src, false); }   // 강사가 아니면 교과목 이름으로 봄(예: "소방전술 강사로")
     S.wait = '';
-    return say('\'' + esc(I.iname) + '\' 강사는 강사 목록에 없습니다(승인된 강사만 배정할 수 있습니다). 이 교과목에 맞는 후보를 찾을까요?', [{ t: '후보 추천받기', a: { intent: 'recommend' } }, { t: '교과목만 넣기', a: { intent: 'subject_only' } }], src);
+    return say('\'' + esc(I.iname) + '\' 강사는 강사 목록에 없습니다(승인된 강사만 배정할 수 있습니다). 이 교과목에 맞는 후보를 찾을까요?' + failTel(), [{ t: '후보 추천받기', a: { intent: 'recommend' } }, { t: '교과목만 넣기', a: { intent: 'subject_only' } }], src);
   }
   // 시간 반영: true=바뀜, null=변화 없음, false=되물음(멈춤)
   function applyTime(I, src){
@@ -398,12 +418,12 @@
     if (I.date) {
       if (future.some(function(x){ return x.d === I.date; })) { sl.d = I.date; chg = true; }
       else if (c.days.some(function(x){ return x.d === I.date; })) { say(dl(I.date) + '은(는) 이미 지난 날짜라 편성할 수 없습니다.', null, src); return false; }
-      else { var d0 = c.days[0], d1 = c.days[c.days.length - 1]; say(esc(I.date.slice(5).replace('-', '/')) + '은(는) 이 과정의 교육일이 아닙니다' + (d0 ? '(교육 기간 ' + dl(d0.d) + '~' + dl(d1.d) + ', 주말 제외)' : '') + '. 다른 날짜를 알려 주세요.', future.slice(0, 5).map(function(x){ return { t: x.md, a: { intent: 'time', date: x.d, start: I.start, end: I.end, hours: I.hours, half: I.half, allday: I.allday } }; }), src); return false; }
+      else { var d0 = c.days[0], d1 = c.days[c.days.length - 1]; say(esc(I.date.slice(5).replace('-', '/')) + '은(는) 이 과정의 교육일이 아닙니다' + (d0 ? '(교육 기간 ' + dl(d0.d) + '~' + dl(d1.d) + ', 주말 제외)' : '') + '. 다른 날짜를 알려 주세요.' + rx(), future.slice(0, 5).map(function(x){ return { t: x.md, a: { intent: 'time', date: x.d, start: I.start, end: I.end, hours: I.hours, half: I.half, allday: I.allday } }; }), src); return false; }
     }
     else if (I.weekday) {
       var ds = future.filter(function(x){ return x.w === I.weekday; });
-      if (!ds.length) { var all = c.days.map(function(x){ return x.w; }).filter(function(w, i, a){ return a.indexOf(w) === i; }).join('·'); say(c.days.some(function(x){ return x.w === I.weekday; }) ? '이 과정의 ' + I.weekday + '요일은 이미 지났습니다.' : '이 과정은 ' + all + '요일에 진행합니다. 다른 요일을 알려 주세요.', null, src); return false; }
-      if (ds.length > 1 && !(sl.d && ds.some(function(x){ return x.d === sl.d; }))) { S.dates = ds; sl.wd = I.weekday; keepTime(I); S.wait = 'date'; say(I.weekday + '요일이 ' + ds.length + '번 있습니다. 언제인가요?', ds.map(function(x){ return { t: x.md, a: { intent: 'time', date: x.d } }; }), src); return false; }
+      if (!ds.length) { var all = c.days.map(function(x){ return x.w; }).filter(function(w, i, a){ return a.indexOf(w) === i; }).join('·'); say(c.days.some(function(x){ return x.w === I.weekday; }) ? '이 과정의 ' + I.weekday + '요일은 이미 지났습니다.' : '이 과정은 ' + all + '요일에 진행합니다. 다른 요일을 알려 주세요.' + rx(), null, src); return false; }
+      if (ds.length > 1 && !(sl.d && ds.some(function(x){ return x.d === sl.d; }))) { S.dates = ds; sl.wd = I.weekday; keepTime(I); S.wait = 'date'; say(I.weekday + '요일이 ' + ds.length + '번 있습니다. 언제인가요?' + rx(), ds.map(function(x){ return { t: x.md, a: { intent: 'time', date: x.d } }; }), src); return false; }
       if (ds.length === 1) { sl.d = ds[0].d; chg = true; }
     }
     if (keepTime(I)) chg = true;
@@ -430,14 +450,14 @@
       var rows = A.rows(sl.d).filter(function(r){ return r.s <= sl.e && sl.s <= r.e; });
       if (rows.length === 1 && !rows[0].iid && !rows[0].iname && (!sl.subj || norm(sl.subj) === norm(rows[0].subj))) { sl.row = rows[0]; sl.subj = rows[0].subj; sl.s = rows[0].s; sl.e = rows[0].e; }
     }
-    if (!sl.subj) { S.wait = 'subject'; var ex = sl.d ? dl(sl.d) + (sl.s != null ? ' ' + pl(sl.s, sl.e) : '') + '에 ' : ''; return say(ex + '어떤 교과목인가요? 교과목 이름을 알려 주세요.' + (forceRec ? '<br>교과목에 맞는 강사를 찾아 드립니다.' : ''), null, src); }
+    if (!sl.subj) { S.wait = 'subject'; var ex = sl.d ? dl(sl.d) + (sl.s != null ? ' ' + pl(sl.s, sl.e) : '') + '에 ' : ''; return say(ex + '어떤 교과목인가요? 교과목 이름을 알려 주세요.' + (forceRec ? '<br>교과목에 맞는 강사를 찾아 드립니다.' : '') + rx(), null, src); }
     if (!sl.iid && !sl.noInstr && (forceRec || !S.cands)) {
       var slot = sl.d && sl.s != null && sl.e != null ? { d: sl.d, s: sl.s, e: sl.e } : null;
       if (slot) { var bad = slotProblem(); if (bad) return bad(); setHl(slot.d, slot.s, slot.e); }
       return recommend(slot, src);
     }
-    if (!sl.iid && !sl.noInstr && S.cands && !S.cands.length) { S.wait = ''; return say('<b>' + esc(sl.subj) + '</b>에 맞는 강사 후보가 없습니다. 교과목만 먼저 넣고 강사는 나중에 배정할까요?', [{ t: '교과목만 넣기', a: { intent: 'subject_only' } }, { t: '다른 교과목으로', fn: function(){ S.slot = blank(); S.cands = null; S.wait = 'subject'; say('교과목 이름을 알려 주세요.'); } }], src); }
-    if (!sl.iid && !sl.noInstr && S.cands) { S.wait = 'pick'; return say('배정할 강사 번호를 골라 주세요. 강사 없이 교과목만 넣으려면 "교과목만"이라고 말씀해 주세요.', candChips(), src); }
+    if (!sl.iid && !sl.noInstr && S.cands && !S.cands.length) { S.wait = ''; return say('<b>' + esc(sl.subj) + '</b>에 맞는 강사 후보가 없습니다. 교과목만 먼저 넣고 강사는 나중에 배정할까요?' + failTel(), [{ t: '교과목만 넣기', a: { intent: 'subject_only' } }, { t: '다른 교과목으로', fn: function(){ S.slot = blank(); S.cands = null; S.wait = 'subject'; say('교과목 이름을 알려 주세요.'); } }], src); }
+    if (!sl.iid && !sl.noInstr && S.cands) { S.wait = 'pick'; return say('배정할 강사 번호를 골라 주세요. 강사 없이 교과목만 넣으려면 "교과목만"이라고 말씀해 주세요.' + rx(), candChips(), src); }
     if (sl.halfAsk && sl.s == null) return askHalf(src);
     if (sl.s != null && sl.e == null) return askLen(src);
     if (!sl.d || sl.s == null || sl.e == null) return askTime(src);
@@ -448,7 +468,7 @@
   // d4g: 애매한 말은 실패 대신 선택지로 되물음
   function askHalf(src){
     var c = ctx(), sl = S.slot; S.wait = 'time';
-    say((sl.d ? dl(sl.d) + ' ' : '') + '반나절은 오전·오후 중 언제인가요?', [{ t: '오전 ' + pl(c.am[0], c.am[c.am.length - 1]), a: { intent: 'time', half: '오전', date: sl.d || '' } }, { t: '오후 ' + pl(c.pm[0], c.pm[c.pm.length - 1]), a: { intent: 'time', half: '오후', date: sl.d || '' } }], src);
+    say((sl.d ? dl(sl.d) + ' ' : '') + '반나절은 오전·오후 중 언제인가요?' + rx(), [{ t: '오전 ' + pl(c.am[0], c.am[c.am.length - 1]), a: { intent: 'time', half: '오전', date: sl.d || '' } }, { t: '오후 ' + pl(c.pm[0], c.pm[c.pm.length - 1]), a: { intent: 'time', half: '오후', date: sl.d || '' } }], src);
   }
   function askLen(src){
     var c = ctx(), sl = S.slot, cls = c.cls, s0 = sl.s, occ = sl.d ? A.occ(sl.d) : {}, opts = [];
@@ -456,7 +476,7 @@
     if (c.am.indexOf(s0) > -1 && c.am.length > 1 && !occ[c.am[c.am.length - 1]]) opts.push({ t: '오전 전체 (' + pl(s0, c.am[c.am.length - 1]) + ')', a: { intent: 'time', date: sl.d || '', start: s0, end: c.am[c.am.length - 1] } });
     if (!opts.length) { sl.s = null; return askTime(src); }
     S.wait = 'time';
-    say((sl.d ? dl(sl.d) + ' ' : '') + s0 + '교시부터 몇 시간 할까요?', opts, src);
+    say((sl.d ? dl(sl.d) + ' ' : '') + s0 + '교시부터 몇 시간 할까요?' + rx(), opts, src);
   }
   function askTime(src){
     var c = ctx(), sl = S.slot, fr = A.free();
@@ -470,18 +490,18 @@
     opts = opts.slice(0, 5);
     S.wait = 'time';
     var who = sl.iid ? sl.iname + ' 강사를 ' : sl.noInstr ? '교과목만 ' : '';
-    if (!opts.length) return say((sl.d ? dl(sl.d) + '에는 ' : '') + '비어 있는 ' + (want ? want + '시간짜리 ' : '') + '시간이 없습니다. 다른 날짜를 말씀해 주세요.', null, src);
-    say(who + '언제 배정할까요? 비어 있는 시간입니다.' + (want ? '' : '<br>예: "월요일 2교시부터 2시간", "수요일 하루 전체"'), opts.map(function(o){ return { t: dl(o.d) + ' ' + (o.full ? '하루 전체' : pl(o.s, o.e)), a: { intent: 'time', date: o.d, start: o.s, end: o.e } }; }), src);
+    if (!opts.length) return say((sl.d ? dl(sl.d) + '에는 ' : '') + '비어 있는 ' + (want ? want + '시간짜리 ' : '') + '시간이 없습니다. 다른 날짜를 말씀해 주세요.' + failTel(), null, src);
+    say(who + '언제 배정할까요? 비어 있는 시간입니다.' + (want ? '' : '<br>예: "월요일 2교시부터 2시간", "수요일 하루 전체"') + rx(), opts.map(function(o){ return { t: dl(o.d) + ' ' + (o.full ? '하루 전체' : pl(o.s, o.e)), a: { intent: 'time', date: o.d, start: o.s, end: o.e } }; }), src);
   }
   function slotProblem(){
     var c = ctx(), sl = S.slot, cls = c.cls;
-    if (cls.indexOf(sl.s) < 0 || cls.indexOf(sl.e) < 0 || sl.e < sl.s) { var s0 = sl.s, e0 = sl.e; sl.s = sl.e = null; return function(){ S.wait = 'time'; say(pl(s0, e0) + '은(는) 이 과정의 수업 교시(' + cls[0] + '~' + cls[cls.length - 1] + '교시)를 벗어납니다. 다시 알려 주세요.'); }; }
+    if (cls.indexOf(sl.s) < 0 || cls.indexOf(sl.e) < 0 || sl.e < sl.s) { var s0 = sl.s, e0 = sl.e; sl.s = sl.e = null; return function(){ S.wait = 'time'; say(pl(s0, e0) + '은(는) 이 과정의 수업 교시(' + cls[0] + '~' + cls[cls.length - 1] + '교시)를 벗어납니다. 다시 알려 주세요.' + rx()); }; }
     if (sl.row) return null;
     var occ = A.occ(sl.d), hit = [];
     for (var q = sl.s; q <= sl.e; q++) if (occ[q]) hit.push(q + '교시 ' + occ[q]);
     if (hit.length) {
       var d = sl.d, fr = A.free().filter(function(r){ return r.d === d; });
-      return function(){ S.wait = 'time'; sl.s = sl.e = null; say(dl(d) + ' ' + esc(hit.join(', ')) + '이(가) 이미 있습니다. 비어 있는 시간을 골라 주세요.', fr.slice(0, 4).map(function(r){ return { t: dl(r.d) + ' ' + pl(r.s, r.e), a: { intent: 'time', date: r.d, start: r.s, end: r.e } }; }).concat([{ t: '다른 날짜', fn: function(){ S.slot.d = ''; askTime(); } }])); };
+      return function(){ S.wait = 'time'; sl.s = sl.e = null; say(dl(d) + ' ' + esc(hit.join(', ')) + '이(가) 이미 있습니다. 비어 있는 시간을 골라 주세요.' + rx(), fr.slice(0, 4).map(function(r){ return { t: dl(r.d) + ' ' + pl(r.s, r.e), a: { intent: 'time', date: r.d, start: r.s, end: r.e } }; }).concat([{ t: '다른 날짜', fn: function(){ S.slot.d = ''; askTime(); } }])); };
     }
     return null;
   }
@@ -498,7 +518,7 @@
       if (!list.length) {
         S.wait = '';
         var why = g.ex.length ? '<br>관련 강사 ' + g.ex.length + '명은 ' + esc(g.ex.slice(0, 2).map(function(x){ return x.name + '(' + x.why[0] + ')'; }).join(', ')) + (g.ex.length > 2 ? ' 등' : '') + ' 사유로 제외했습니다.' : '';
-        return say('<b>' + esc(when + sl.subj) + '</b>에 맞는 강사를 찾지 못했습니다.' + why + '<br>다른 시간으로 찾거나, 교과목만 먼저 넣을 수 있습니다.', [{ t: '다른 시간으로', fn: function(){ S.slot.d = ''; S.slot.s = S.slot.e = null; clearHl(); askTime(); } }, { t: '교과목만 넣기', a: { intent: 'subject_only' } }], srcTxt);
+        return say('<b>' + esc(when + sl.subj) + '</b>에 맞는 강사를 찾지 못했습니다.' + why + '<br>다른 시간으로 찾거나, 교과목만 먼저 넣을 수 있습니다.' + failTel(), [{ t: '다른 시간으로', fn: function(){ S.slot.d = ''; S.slot.s = S.slot.e = null; clearHl(); askTime(); } }, { t: '교과목만 넣기', a: { intent: 'subject_only' } }], srcTxt);
       }
       var h = '<b>' + esc(when + sl.subj) + '</b>에 맞는 참고용 후보입니다.' + list.map(function(x, i){
         var rk = x.rank === null ? '<span class="rk n">' + (x.evN ? '평가 자료 부족' : '신규') + '</span>' : '<span class="rk">★' + x.rank.toFixed(1) + '</span>';
@@ -508,7 +528,7 @@
         '<div style="margin-top:6px;">' + (slot ? '이 중 한 분을 배정할까요?' : '이 중 한 분을 고르시면 시간을 여쭙겠습니다.') + '</div>';
       S.wait = 'pick';
       say(h, candChips(), srcTxt);
-    }).catch(function(){ setBusy(false); add('err', '후보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'); });
+    }).catch(function(){ setBusy(false); add('err', '후보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.' + failTel()); });
   }
   function candChips(){ return (S.cands || []).slice(0, 4).map(function(x, i){ return { t: (i + 1) + '번 ' + x.name, fn: function(){ pickCand(i); } }; }).concat([{ t: '교과목만 넣기', a: { intent: 'subject_only' } }]); }
   function pickCand(i){
@@ -558,7 +578,7 @@
       if (!res || res.status !== 'ok') {
         cf.classList.add('done'); clearHl();
         S.wait = '';
-        return add('err', esc((res && res.message) || '저장하지 못했습니다') + chips([{ t: '최신 시간표로 다른 시간 고르기', fn: function(){ setBusy(true); A.reload().catch(function(){}).then(function(){ setBusy(false); renderCtx(); S.slot.d = ''; S.slot.s = S.slot.e = null; S.slot.row = null; askTime(); }); } }, { t: '처음부터', a: { intent: 'cancel' } }]));
+        return add('err', esc((res && res.message) || '저장하지 못했습니다') + failTel() + chips([{ t: '최신 시간표로 다른 시간 고르기', fn: function(){ setBusy(true); A.reload().catch(function(){}).then(function(){ setBusy(false); renderCtx(); S.slot.d = ''; S.slot.s = S.slot.e = null; S.slot.row = null; askTime(); }); } }, { t: '처음부터', a: { intent: 'cancel' } }]));
       }
       if (window.btnOk) window.btnOk(btn, '배정 완료');
       setTimeout(function(){
@@ -577,12 +597,12 @@
         say('배정했습니다: <b>' + esc(dl(o.d) + ' ' + pl(o.s, o.e) + ' ' + o.subj) + '</b> · ' + esc(who) + '<br>' + esc(next) + warns, ch);
         if (nx) S.slot = blank();
       }, 650);
-    }).catch(function(){ S.busy = false; sendB.disabled = S.off; if (window.btnReset) window.btnReset(btn); cf.querySelector('.ed').disabled = false; add('err', '서버에 연결하지 못했습니다. 잠시 후 [배정]을 다시 눌러 주세요.'); });
+    }).catch(function(){ S.busy = false; sendB.disabled = S.off; if (window.btnReset) window.btnReset(btn); cf.querySelector('.ed').disabled = false; add('err', '서버에 연결하지 못했습니다. 잠시 후 [배정]을 다시 눌러 주세요.' + failTel()); });
   }
 
   /* ---------- d4b: 방법 질문("~하려면?")·할 일 안내 ---------- */
-  var HOWQ = /(려면|어떻게|방법|하나요|하나\?|되나요|돼요\?|되요\?|할\s*수\s*있|어디서|어디에|어디\s*있|뭘\s*눌러|무엇을\s*눌러|\?\s*$)/;
-  var DOQ = /(채워|해\s*줘|해줘|해\s*주세요|돌려|불러와|보내\s*줘|넘겨\s*줘)/;
+  var HOWQ = /(려면|어떻게|(?:^|\s)방법|하나요|하나\?|되나요|돼요\?|되요\?|할\s*수\s*있|어디서|어디에|어디\s*있|뭘\s*눌러|무엇을\s*눌러|\?\s*$)/;
+  var DOQ = /(채워|해\s*줘|해줘|해\s*주세요|돌려|불러와|보내\s*줘|넘겨\s*줘|줘$|줘\s*[.!?]?$|주세요|주실래|해\s*봐|하자$)/;   // d4j: "지워줘" 같은 시키는 말 전체
   function guideChip(t, sel, txt){ return { t: t, fn: function(){ A.guide(sel, txt); say('화면의 버튼을 강조했습니다.'); } }; }
   function howTopic(t){
     var c = ctx(), st = c.stage, how = HOWQ.test(t), doit = DOQ.test(t);
@@ -590,13 +610,13 @@
       { k: 'copy', re: /지난\s*기수|지난기수|이전\s*기수|전\s*기수|작년\s*편성/, ok: how || doit },
       { k: 'batch', re: /일괄|한\s*번에\s*강사|강사.*(한꺼번에|전부|모두|다\s*채)/, ok: how || doit },
       { k: 'blank', re: /비워둠|비워\s*두|비우/, ok: how || doit },
-      { k: 'move', re: /옮기|옮겨|이동\s*모드|맞바꾸|자리\s*바꾸/, ok: how || doit },
-      { k: 'delete', re: /삭제|지우/, ok: how || doit },
+      { k: 'move', re: /옮기|옮겨|이동\s*모드|맞바꾸|맞바꿔|자리\s*바꾸|자리\s*바꿔/, ok: how || doit },
+      { k: 'delete', re: /삭제|지우|지워|없애/, ok: how || doit },
       { k: 'handoff', re: /4\s*단계로|넘기|넘겨/, ok: how || doit },
       { k: 'send', re: /발송|안내\s*(를\s*)?보내|문자|메일/, ok: how || doit },
       { k: 'reset', re: /초기화|처음부터\s*다시/, ok: how || doit },
-      { k: 'instr', re: /강사.*(바꾸|바꿔|교체|변경)/, ok: how },
-      { k: 'room', re: /강의실/, ok: how },
+      { k: 'instr', re: /강사.*(바꾸|바꿔|교체|변경)/, ok: how || doit },
+      { k: 'room', re: /강의실/, ok: how || doit },
       { k: 'add', re: /교과목.*(넣|추가|입력)|과목.*(넣|추가)/, ok: how }
     ];
     for (var i = 0; i < T.length; i++) if (T[i].re.test(t) && T[i].ok) return T[i].k;
@@ -610,7 +630,7 @@
     if (st.held) a.push('안내 대기 강사 ' + st.held + '명');
     return '지금 상황: <b>' + st.lane + '단계 ' + esc(c.steps[st.lane - 1].t) + '</b> · ' + esc(a.join(' · '));
   }
-  function howTo(k, src){
+  function howTo(k, src, doReq){
     var c = ctx(), st = c.stage, h = '', ch = [], li = function(arr){ return '<ol>' + arr.map(function(x){ return '<li>' + x + '</li>'; }).join('') + '</ol>'; };
     if (k === 'copy') {
       if (!c.canCopy) h = '이 과정은 불러올 <b>지난 기수 편성이 없습니다.</b> 교과목은 시간표 빈 칸을 누르거나 저에게 말씀해 넣어 주세요. 예: "월요일 1~3교시 소방전술"';
@@ -635,7 +655,8 @@
     } else if (k === 'send') {
       h = '강사 안내(문자·메일) 발송 방법입니다.' + li(['3단계에서 화면 맨 아래 <b>[4단계로 넘기기]</b>를 누릅니다', '보드 4단계 카드의 <b>[최종 확인하고 발송]</b>을 누릅니다', '확인 창에서 강사별 교과목·일시를 보고 [발송]합니다(강사 1명에게 1통씩)']) + (st.lane < 3 ? '지금은 ' + st.lane + '단계라 아직 발송할 수 없습니다.' : '');
     } else if (k === 'reset') {
-      h = '과정을 <b>처음부터 다시</b> 하는 방법입니다.' + li(['편성 화면 맨 아래 [닫기 · 보드로]를 누릅니다', '1단계 카드면 <b>[이 과정 초기화]</b>, 다른 단계면 <b>[처음부터]</b>를 누르고 확인합니다']) + '초기화하면 이 과정의 교과목·강사가 모두 지워집니다.';
+      h = '과정을 <b>처음부터 다시</b> 짜는 방법입니다.' + li(['편성 화면 맨 아래 <b>[처음부터 다시 짜기]</b>를 누릅니다(보드 2·3·4단계 카드에도 있습니다)', '확인 창에서 지울 칸 수를 보고 [확인]을 누릅니다', '교과목·강사가 모두 지워지고, 과정은 보드 1단계 \'교과목 편성\'에 남습니다']) + '되돌릴 수 없고, 이미 보낸 강사 안내는 취소되지 않습니다. 1단계 카드의 <b>[이 과정 초기화]</b>는 과정을 보드에서 내립니다.';
+      if (st.n && !c.viewer) ch.push(guideChip('버튼 위치 보기', '.db-redo', '<i>처음부터 다시 짜기</i> — 교과목·강사를 모두 지우고 1단계로'));
     } else if (k === 'instr') {
       h = '이미 정한 <b>강사를 바꾸는</b> 방법입니다.' + li(['시간표에서 그 교과목 칸을 누릅니다', '교과목 수정 창의 강사 검색칸에서 다른 강사를 고르거나 <b>[적합한 강사 찾기]</b>로 후보를 봅니다', '[수정 저장]을 누릅니다']) + '강사가 비어 있는 칸이면 저에게 "화요일 2교시 강사 추천해줘"라고 말씀하셔도 됩니다.';
     } else if (k === 'room') {
@@ -644,7 +665,8 @@
       h = '교과목을 넣는 방법은 세 가지입니다.' + li(['저에게 말씀하기 — 예: "금요일 1~3교시 청렴교육 강사 추천해줘"', '시간표의 빈 칸을 누르기 — 입력 창이 열립니다', '시간표 아래 <b>[교과목 추가]</b>를 펼쳐 직접 입력하기']);
       ch.push({ t: '말로 교과목 넣기', a: { intent: 'assign' } });
     }
-    say(situation() + '<br>' + h, ch, src);
+    S.turn = null;
+    say(situation() + '<br>' + h + (doReq ? '<div class="cb-tel">이 작업은 제가 대신 하지 않습니다. 위 순서대로 화면에서 직접 해 주시고, 막히면 담당자에게 문의해 주세요: <b>○○소방학교 ' + esc(c.owner || '교육운영팀') + ' ' + CB_TEL + '</b> <span>(시연용 번호)</span></div>' : ''), ch, src);
   }
 
   /* ---------- d4c: 버튼 설명집(화면 코드 기준) · 단계 질문 · 주제 밖 질문 ---------- */
@@ -674,6 +696,7 @@
     ['최종 확인하고 발송', /최종\s*확인/, '보드 4단계 카드에 있습니다. 강사별로 교과목·일시를 묶어 다시 보여 주고, [발송]을 누르면 강사 1명에게 문자·메일이 1통씩 갑니다(시연 모드에서는 기록).', ''],
     ['+ 과정 올리기', /과정\s*올리기|올리기\s*버튼/, '보드 1단계 칸의 버튼입니다. 시연할 과정을 골라 1단계에 올립니다. 진행 중이던 과정은 \'진행한 과정\'에 저장됩니다.', ''],
     ['올리기 취소', /올리기\s*취소/, '교과목이 아직 없는 1단계 카드에 있습니다. 보드에서 내리고, 그 전에 올라 있던 과정이 있으면 다시 올립니다.', ''],
+    ['처음부터 다시 짜기', /처음부터\s*다시\s*짜/, '편성 화면 맨 아래와 보드 2·3·4단계 카드에 있습니다. 이 과정의 교과목·강사를 모두 지우고 1단계 \'교과목 편성\'으로 되돌립니다. 과정은 보드에 남습니다. 되돌릴 수 없고, 이미 보낸 강사 안내는 취소되지 않습니다.', '.db-redo'],
     ['이 과정 초기화', /초기화/, '1단계 카드에 있습니다. 이 과정의 교과목·강사를 모두 지우고 보드에서 내려 과정 목록으로 돌려보냅니다. 되돌릴 수 없습니다.', ''],
     ['이어서 하기 / 처음부터', /이어서\s*하기|처음부터\s*버튼/, '멈춤 카드의 버튼입니다. [이어서 하기]는 멈춘 단계부터 다시 열고, [처음부터]는 그 과정을 처음 상태로 되돌려 다시 올립니다.', ''],
     ['보낸 내용 보기', /보낸\s*내용/, '시연 모드에서 보낸(것처럼 처리한) 문자·메일 내용을 보여 줍니다. 실제로 보낸 건은 \'실제 발송\'으로 표시됩니다.', ''],
