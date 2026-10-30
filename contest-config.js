@@ -5,7 +5,7 @@
      로그인은 비밀번호 없이 [로그인] 버튼 하나로, 강사 승인은 확인창으로 줄입니다. false로 바꾸면 원래 화면으로 돌아갑니다(코드는 지우지 않음). */
 window.CONTEST_CONFIG = {
   WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbzYdVSZsLnSw3JN01aIDuXa1Ubxh6ERWYC-0TEQxu6tRYrcI9-WNYEoKv3Cfk9qyUvJ/exec',
-  VERSION: '대회용 d4j',
+  VERSION: '대회용 d4k',
   ORG_NAME: '○○소방학교',
   SYS_ORG: '○○소방학교',   // d3e: 로그인 카드 아래 운영기관 이름(다른 학교에서 쓸 때 여기만 바꿈)
   SIMPLE: true,
@@ -93,10 +93,11 @@ window.CONTEST_CONFIG = {
     aiBatchAssign: '강사카드·평가·의견을 읽고 교과목 관련성을 판단하고 있습니다',
     aiCardFill: '강사카드 글을 읽고 칸을 나누고 있습니다',
     aiRecommend: '비슷한 교과목을 찾고 근거를 쓰고 있습니다',
-    surveyPreview: '서술형 의견을 분류·요약하고 있습니다'
+    surveyPreview: '서술형 의견을 분류·요약하고 있습니다',
+    surveyFetch: '설문지 응답을 가져와 의견을 분류·요약하고 있습니다'
   };
   var AI_TIP = 'AI 도움: 강사카드·평가·의견 같은 글을 AI가 읽고 근거를 제시합니다. 적용·발송은 담당자가 결정합니다.';
-  var AI_BTN = ['#abBar [data-ab="draft"]', '#abBar [data-ab="review"]', '#cxFind', '#cardMdl label.filebtn', '[data-cxsurvey]'];
+  var AI_BTN = ['#abBar [data-ab="draft"]', '#abBar [data-ab="review"]', '#cxFind', '#cardMdl label.filebtn', '.btn[data-cxsurvey]', '.btn[data-evfetch]'];   // d4k: 설문 결과 가져오기
   function aiCss() {
     if (document.getElementById('aiCss')) return;
     var st = document.createElement('style'); st.id = 'aiCss';

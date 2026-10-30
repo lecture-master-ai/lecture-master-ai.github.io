@@ -1271,6 +1271,11 @@
   @media print{ .cb-fab{display:none !important;} }
   /* d4i: 처음부터 다시 짜기(편성 화면 맨 아래) */
   .navbar.dbnav .db-redo{color:#B42318;border-color:#F4C7C3;}
+  .navbar.dbnav .db-row{width:100%;max-width:760px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+  .navbar.dbnav .db-row.one{justify-content:center;} .navbar.dbnav .db-l,.navbar.dbnav .db-r{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .navbar.dbnav .db-r{margin-left:auto;} .navbar.dbnav .db-row.one .db-r{margin-left:0;justify-content:center;}
+  .navbar.dbnav.hofon .hof{margin-bottom:10px;}
+  @media (max-width:560px){ .navbar.dbnav .db-row{flex-wrap:nowrap;gap:8px;} .navbar.dbnav .db-l,.navbar.dbnav .db-r{flex:1 1 0;min-width:0;margin-left:0;} .navbar.dbnav .db-row.one .db-r{flex:0 1 auto;} .navbar.dbnav .db-row .db-plain{width:100%;justify-content:center;white-space:nowrap;padding:0 8px;font-size:13px;} .navbar.dbnav .db-row .db-plain svg{display:none;} }
   .navbar.dbnav .db-redo:hover{background:#FEF3F2;}
   /* d4h: 개강 D-day 배지 */
   .ddb{display:inline-flex;align-items:center;height:20px;padding:0 8px;margin-left:4px;border-radius:999px;font-size:11.5px;font-weight:800;letter-spacing:-0.2px;vertical-align:1px;white-space:nowrap;}
@@ -1445,7 +1450,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-30 배정 d4j</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-30 배정 d4k</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -1477,7 +1482,7 @@
 
   function $(id){ return document.getElementById(id); }
   /* C7: 선 아이콘(문자 기호 대신) */
-  var IC = {chevL: '<path d="M15 18l-6-6 6-6"/>', chevR: '<path d="M9 18l6-6-6-6"/>', chevD: '<path d="M6 9l6 6 6-6"/>', chevU: '<path d="M18 15l-6-6-6 6"/>', x: '<path d="M18 6L6 18M6 6l12 12"/>', alert: '<path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>', check: '<path d="M20 6L9 17l-5-5"/>', pencil: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>', arrowL: '<path d="M19 12H5M12 19l-7-7 7-7"/>', arrowR: '<path d="M5 12h14M12 5l7 7-7 7"/>'};
+  var IC = {rotate: '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/>', chevL: '<path d="M15 18l-6-6 6-6"/>', chevR: '<path d="M9 18l6-6-6-6"/>', chevD: '<path d="M6 9l6 6 6-6"/>', chevU: '<path d="M18 15l-6-6-6 6"/>', x: '<path d="M18 6L6 18M6 6l12 12"/>', alert: '<path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>', check: '<path d="M20 6L9 17l-5-5"/>', pencil: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>', arrowL: '<path d="M19 12H5M12 19l-7-7 7-7"/>', arrowR: '<path d="M5 12h14M12 5l7 7-7 7"/>'};
   function ic(n, side){ return '<svg class="ic' + (side ? ' ' + side : '') + '" viewBox="0 0 24 24" aria-hidden="true">' + IC[n] + '</svg>'; }
   function esc(s){
     return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
@@ -2192,7 +2197,7 @@
       var row = function(p){
         var k = p['과정+기수'], mine = k === o.active, rc = recent(k);
         var src = kind === 'ab' ? defaultCopySource(p, copyCandidates(p)) : '';
-        var sub = kind === 'ab' ? (src ? esc(String(src).split(' ').pop()) + ' 편성을 불러와 시작합니다' : '') : '교과목·강사 ' + courseTeachersN(k) + '개 · 예시 응답 파일 있음';
+        var sub = kind === 'ab' ? (src ? esc(String(src).split(' ').pop()) + ' 편성을 불러와 시작합니다' : '') : '교과목·강사 ' + courseTeachersN(k) + '개 · 시연용 모의 응답 있음';
         return '<div class="bp-r"><div><div class="bp-t">' + esc(k) + (mine ? ' <span class="bp-near">지금 보드에 있음</span>' : '') + '</div>' +
           '<div class="bp-p">' + esc(ipgyo(p)) + (kind === 'ab' && dDay(p) ? ' ' + ddBadge(dDay(p)) : '') + '</div>' +
           (sub ? '<div class="bp-w">' + sub + '</div>' : '') +
@@ -3007,7 +3012,7 @@
   /* 현재 목록 화면의 제목·안내·되돌아갈 주소 */
   function headInfo(){
     if (planMode === 'cal') return { t: '월 캘린더', s: '월별 과정 일정을 달력으로 봅니다. 과정마다 색이 다르며, 칸을 누르면 그날의 교과목·강사·강의실이 열립니다.', h: '#v=cal' };
-    if (planMode === 'eval') return { t: '평가관리', s: '끝난 과정의 성과측정 설문지를 만들고, 응답 파일을 반영해 결과지와 강사별 환류 자료를 받습니다.', h: '#v=eval' };
+    if (planMode === 'eval') return { t: '평가관리', s: '끝난 과정의 성과측정 설문지를 만들고, 설문 결과를 가져와 결과지와 강사별 환류 자료를 받습니다.', h: '#v=eval' };
     if (planMode === 'room') return { t: '강의실 현황·예약', s: '날짜와 교시를 정해 비어 있는 강의실을 찾고, 과정·대관용으로 강의실을 미리 잡아 둡니다.', h: '#v=room' };
     if (weekFilter) {
       var tm = mondayOf(ymd(new Date())), a = weekFilter, b = addDays(weekFilter, 4), rg = md(a).replace(/\(.\)/, '') + '~' + md(b).replace(/\(.\)/, '');
@@ -3081,9 +3086,12 @@
         var hs = courseStage(currentKey), hof = hs.lane === 3 && hs.sure && !isViewer();   // d3z: 3단계면 맨 아래에 [4단계로 넘기기]
         nb.className = 'navbar dbnav' + (hof ? ' hofon' : '');
         nb.innerHTML = (hof ? '<div class="hof"><div><b>3단계 배정 완료</b><span>교과목 ' + hs.n + '칸 · 강사 ' + hs.held + '명 안내 대기 · 넘기면 보드 4단계에서 최종 확인하고 발송합니다</span></div><button type="button" class="btn primary hof-b" data-handoff="1">4단계로 넘기기 ›</button></div>' : '') +
-          '<button type="button" class="btn db-plain" data-bdback="1">' + ic('x', 'l') + closeLabel(currentKey, hs) + '</button>' +
-          (hs.n && !isViewer() && closeLabel(currentKey, hs) !== '닫기' ? '<button type="button" class="btn db-plain db-redo" data-bdredo="' + esc(currentKey) + '">처음부터 다시 짜기</button>' : '') +   // d4i
-          (dashBack && dashBack.key === currentKey ? '<a class="btn db-plain" href="instructor-dashboard.html#i=' + encodeURIComponent(dashBack.id) + '">' + ic('arrowL', 'l') + (dashBack.name ? esc(dashBack.name) + ' 강사 상세로 돌아가기' : '강사 상세로 돌아가기') + '</a>' : '');
+          (function(){   // d4k: 아래 버튼은 한 줄 — 왼쪽 '처음부터 다시 짜기'(지우는 일), 오른쪽 이동(닫기·강사 상세로)
+            var redo = hs.n && !isViewer() && closeLabel(currentKey, hs) !== '닫기' ? '<button type="button" class="btn db-plain db-redo" data-bdredo="' + esc(currentKey) + '">' + ic('rotate', 'l') + '처음부터 다시 짜기</button>' : '';   // d4i
+            var back = (dashBack && dashBack.key === currentKey ? '<a class="btn db-plain" href="instructor-dashboard.html#i=' + encodeURIComponent(dashBack.id) + '">' + ic('arrowL', 'l') + (dashBack.name ? esc(dashBack.name) + ' 강사 상세로 돌아가기' : '강사 상세로 돌아가기') + '</a>' : '') +
+              '<button type="button" class="btn db-plain db-close" data-bdback="1">' + ic('x', 'l') + closeLabel(currentKey, hs) + '</button>';
+            return '<div class="db-row' + (redo ? '' : ' one') + '">' + (redo ? '<div class="db-l">' + redo + '</div>' : '') + '<div class="db-r">' + back + '</div></div>';
+          })();
       }
       else { nb.className = 'navbar'; nb.style.display = 'none'; nb.innerHTML = ''; }
       return;
@@ -7512,7 +7520,7 @@
       '.cx-md h3{margin:0 0 10px;font-size:17px;padding-right:40px}.cx-foot{display:flex;justify-content:center;margin-top:14px;padding-top:12px;border-top:1px solid #EAECF0}.cx-foot .btn{min-width:120px;justify-content:center;text-align:center}.cx-x{position:absolute;top:10px;right:12px;border:none;background:none;font-size:20px;cursor:pointer;color:#667085;width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:background-color .15s ease-out}.cx-x:hover{background:#F2F4F7}' +
       '.cx-tbl{width:100%;border-collapse:collapse;font-size:12.5px}.cx-tbl th,.cx-tbl td{border-bottom:1px solid #EAECF0;padding:6px;text-align:left;vertical-align:top}.cx-tbl th{background:#F9FAFB;font-weight:800}' +
       '.cx-mail{border:1px solid #EAECF0;border-radius:8px;padding:10px;margin-bottom:10px}.cx-mail pre{white-space:pre-wrap;font-family:inherit;font-size:12.5px;margin:6px 0 0;line-height:1.55}' +
-      '.rvl tr.rvgrp td{background:#F5F8FC}.rvl tr.rvsub td{font-size:12px;color:#475467;background:#FCFDFD}.rvtog{font-size:12px;margin-left:6px}.todo .tfold{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.todo .tfold .sum{font-size:13px;color:#475467}.todo .tunfold{margin-left:auto}.cx-paper{border:1px solid #CBD4E0;border-radius:8px;padding:14px 16px;background:#fff}.cx-ph{font-size:18px;font-weight:800;text-align:center;color:#1B2433}.cx-pm{text-align:center;color:#475467;font-size:13px;margin:2px 0 10px}.cx-pn{background:#F3F6FA;border-radius:6px;padding:8px 10px;font-size:13px;color:#344054;margin-bottom:10px}.cx-fl{padding-left:20px;margin:0}.cx-fl li{margin:0 0 10px}.cx-fq{font-weight:700;font-size:13.5px;margin-bottom:4px}.cx-fo{display:inline-block;margin:0 12px 2px 0;font-size:13px;color:#475467}.cx-fbox{border:1px dashed #B8C4D6;border-radius:6px;height:38px}.cx-ps{margin:14px 0 6px;font-size:14.5px;color:#1B3A5F}.cx-dist{display:flex;height:12px;border-radius:3px;overflow:hidden;background:#F2F4F7}.cx-dist i{display:block;height:100%}.cx-leg{font-size:11.5px;color:#475467;margin:2px 0 4px}.cx-leg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 3px 0 8px;vertical-align:-1px}.cx-pf{margin-top:10px;font-size:12px;color:#667085}@media (max-width:640px){.cx-paper{padding:10px}.cx-paper .cx-tbl{min-width:560px}}.cx-hb{display:inline-flex;gap:6px;flex-wrap:wrap;vertical-align:middle}.cx-flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:4px;margin:10px 0}.cx-flow span{flex:1 1 110px;background:#F3F6FA;border:1px solid #D5DCE6;border-radius:8px;padding:6px 8px;font-size:12.5px;font-weight:700;color:#1B3A5F;line-height:1.3}.cx-flow span b{display:inline-block;width:18px;height:18px;border-radius:50%;background:#1B3A5F;color:#fff;font-size:11px;text-align:center;line-height:18px;margin-right:5px}.cx-flow span small{display:block;font-weight:500;color:#667085;font-size:11.5px;margin-top:2px}.cx-flow span.ai{background:#EEF5FF;border-color:#B8C4D6}.cx-flow i{align-self:center;color:#98A2B3;font-style:normal}.cx-sample{background:#FFFBEB;border:1px solid #F3D88C;border-radius:8px;padding:8px 10px;font-size:13px;margin:0 0 10px}.cx-sample a{font-weight:700;color:#1B3A5F}@media (max-width:640px){.cx-flow i{display:none}.cx-flow span{flex-basis:45%}}.cx-op{margin-top:14px;border-top:1px solid #D5DCE6;padding-top:12px}.cx-op-h{font-weight:800;color:#1B3A5F;margin-bottom:6px;font-size:14px}.cx-q{font-size:12.5px;color:#344054;margin:2px 0;line-height:1.45}.cx-opall{margin-top:8px}.cx-opall summary{cursor:pointer;color:#1B3A5F;font-weight:700;font-size:13px}.cx-survey{margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#F4FBF9;border:1px solid #D5DCE6;border-radius:8px;padding:8px 10px;font-size:12.5px}' +
+      '.rvl tr.rvgrp td{background:#F5F8FC}.rvl tr.rvsub td{font-size:12px;color:#475467;background:#FCFDFD}.rvtog{font-size:12px;margin-left:6px}.todo .tfold{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.todo .tfold .sum{font-size:13px;color:#475467}.todo .tunfold{margin-left:auto}.cx-paper{border:1px solid #CBD4E0;border-radius:8px;padding:14px 16px;background:#fff}.cx-ph{font-size:18px;font-weight:800;text-align:center;color:#1B2433}.cx-pm{text-align:center;color:#475467;font-size:13px;margin:2px 0 10px}.cx-pn{background:#F3F6FA;border-radius:6px;padding:8px 10px;font-size:13px;color:#344054;margin-bottom:10px}.cx-fl{padding-left:20px;margin:0}.cx-fl li{margin:0 0 10px}.cx-fq{font-weight:700;font-size:13.5px;margin-bottom:4px}.cx-fo{display:inline-block;margin:0 12px 2px 0;font-size:13px;color:#475467}.cx-fbox{border:1px dashed #B8C4D6;border-radius:6px;height:38px}.cx-ps{margin:14px 0 6px;font-size:14.5px;color:#1B3A5F}.cx-dist{display:flex;height:12px;border-radius:3px;overflow:hidden;background:#F2F4F7}.cx-dist i{display:block;height:100%}.cx-leg{font-size:11.5px;color:#475467;margin:2px 0 4px}.cx-leg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 3px 0 8px;vertical-align:-1px}.cx-pf{margin-top:10px;font-size:12px;color:#667085}@media (max-width:640px){.cx-paper{padding:10px}.cx-paper .cx-tbl{min-width:560px}}.cx-hb{display:inline-flex;gap:6px;flex-wrap:wrap;vertical-align:middle}.cx-flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:4px;margin:10px 0}.cx-flow span{flex:1 1 110px;background:#F3F6FA;border:1px solid #D5DCE6;border-radius:8px;padding:6px 8px;font-size:12.5px;font-weight:700;color:#1B3A5F;line-height:1.3}.cx-flow span b{display:inline-block;width:18px;height:18px;border-radius:50%;background:#1B3A5F;color:#fff;font-size:11px;text-align:center;line-height:18px;margin-right:5px}.cx-flow span small{display:block;font-weight:500;color:#667085;font-size:11.5px;margin-top:2px}.cx-flow span.ai{background:#EEF5FF;border-color:#B8C4D6}.cx-flow i{align-self:center;color:#98A2B3;font-style:normal}.cx-sample{background:#FFFBEB;border:1px solid #F3D88C;border-radius:8px;padding:8px 10px;font-size:13px;margin:0 0 10px}.cx-sample a{font-weight:700;color:#1B3A5F}.cx-alt{font-size:13px;color:#475467;margin:0 0 10px}.cx-fetch{background:#EEF5FF;border:1px solid #B8CCE6;border-left:4px solid #2F6FB2;border-radius:8px;padding:10px 12px;margin:0 0 10px;font-size:14px;color:#1B2433;line-height:1.5}.cx-fetch b{color:#1B3A5F}.cx-fetch span{display:block;font-size:12.5px;color:#475467;margin-top:2px}.cx-fetching{display:flex;gap:12px;align-items:center;background:#F8FAFC;border:1px solid #E4E7EC;border-radius:10px;padding:16px}.cx-fetching .mi-sp{flex:none;width:22px;height:22px;border-width:3px;border-color:#B8CCE6;border-top-color:#1B3A5F}.cx-fetching b{display:block;color:#1B3A5F}.cx-fetching span{font-size:12.5px;color:#667085}.ev-tip{position:relative;margin-top:8px;background:#1B3A5F;color:#fff;font-size:12px;line-height:1.45;padding:7px 10px;border-radius:8px}.ev-tip::before{content:"";position:absolute;top:-5px;left:22px;width:10px;height:10px;background:#1B3A5F;transform:rotate(45deg)}@media (max-width:640px){.cx-flow i{display:none}.cx-flow span{flex-basis:45%}}.cx-op{margin-top:14px;border-top:1px solid #D5DCE6;padding-top:12px}.cx-op-h{font-weight:800;color:#1B3A5F;margin-bottom:6px;font-size:14px}.cx-q{font-size:12.5px;color:#344054;margin:2px 0;line-height:1.45}.cx-opall{margin-top:8px}.cx-opall summary{cursor:pointer;color:#1B3A5F;font-weight:700;font-size:13px}.cx-survey{margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#F4FBF9;border:1px solid #D5DCE6;border-radius:8px;padding:8px 10px;font-size:12.5px}' +
       '.cx8-bq{font-size:13px;padding:4px 0}.cx8-bq+.cx8-bq{border-top:1px dashed #E4E7EC}.cx8-bc{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:3px;color:#344054}'+
       '.cx8-subj{border:1px solid #D5DCE6;border-radius:8px;padding:8px 10px;margin:0 0 10px;break-inside:avoid}.cx8-sh{font-size:14px;margin-bottom:6px;color:#1B2433}.cx8-sh span{color:#475467;margin-left:4px}.cx8-tt{font-style:normal;font-size:11px;font-weight:700;color:#93370D;background:#FEF0C7;border-radius:999px;padding:1px 7px;margin-left:4px}.cx8-grid{width:100%;border-collapse:collapse;font-size:12.5px}.cx8-grid th,.cx8-grid td{border:1px solid #D5DCE6;padding:5px 6px;vertical-align:middle}.cx8-grid th{background:#F3F6FA;font-weight:700;text-align:center}.cx8-sc{width:50px;font-size:11px;line-height:1.2}.cx8-ck{text-align:center;color:#98A2B3;width:50px}.cx8-lb{font-weight:800;text-align:center;width:58px;color:#1B3A5F;white-space:nowrap}.cx8-op{margin-top:6px;font-size:12.5px;color:#344054}.cx8-op>span{font-weight:800;color:#1B3A5F;margin-right:4px}.cx8-tabs{display:flex;gap:6px;margin:0 0 10px;flex-wrap:wrap}.cx8-tabs button{height:34px;padding:0 14px;border:1px solid #CBD4E0;border-radius:8px;background:#fff;font-weight:700;cursor:pointer;font-family:inherit;color:#344054}.cx8-tabs button.on{background:#1B3A5F;color:#fff;border-color:#1B3A5F}.cx8-meta{width:100%;border-collapse:collapse;font-size:12.5px;margin:0 0 8px}.cx8-meta th,.cx8-meta td{border:1px solid #D5DCE6;padding:5px 7px;text-align:left}.cx8-meta th{background:#F3F6FA;width:92px;font-weight:700}.cx8-it{font-size:10.5px;color:#667085;display:block;line-height:1.1}.cx8-few{background:#FFFBEB;border:1px solid #F3D88C;border-radius:6px;padding:7px 10px;font-size:12.5px;margin:6px 0}.cx8-fb{border:1px solid #CBD4E0;border-radius:8px;padding:14px 16px;margin:0 0 14px;background:#fff}.cx8-fbh{font-size:17px;font-weight:800;text-align:center;margin-bottom:10px;color:#1B2433}.cx8-fb h5{margin:10px 0 4px;font-size:13.5px;color:#1B3A5F}.cx8-close{margin-top:12px;font-size:13px;color:#344054;line-height:1.6}.cx8-sign{text-align:right;font-weight:800;margin-top:8px}.cx8-cnt{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;background:#F3F6FA;border:1px solid #D5DCE6;border-radius:8px;padding:8px 10px;margin-top:10px;font-size:13px}.cx8-cnt input{width:76px;height:30px;margin-left:4px}.cx8-low{color:#B42318;font-weight:700}.cx-tag{white-space:nowrap}@media (max-width:640px){.cx8-subj{overflow-x:auto}.cx8-grid{min-width:560px}.cx8-meta th{width:auto;white-space:nowrap}.cx8-meta td{word-break:keep-all}}.cx-paper .cx-tbl td b{white-space:nowrap}' +
       '.ev-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:4px 0 12px}.ev-card{background:#fff;border:1px solid #CBD4E0;border-radius:10px;padding:10px 12px}.ev-card .n{font-size:24px;font-weight:800;color:#1B2433}.ev-card .l{font-size:12.5px;color:#475467;font-weight:700}.ev-card.ok .n{color:#067647}.ev-card.wait{border-color:#F3D88C;background:#FFFBEB}.ev-card.wait .n{color:#B54708}.ev-h{font-size:15px;margin:14px 0 6px;color:#1B3A5F}.ev-wrap{overflow:auto}.ev-tbl{width:100%;border-collapse:collapse;font-size:13px;background:#fff}.ev-tbl th,.ev-tbl td{border-bottom:1px solid #EAECF0;padding:8px;text-align:left;vertical-align:middle}.ev-tbl th{background:#F3F6FA;font-weight:800;white-space:nowrap}.ev-c{text-align:center!important}.ev-act{white-space:nowrap}.ev-act .btn{margin:2px 0}.ev-tbl tr.ev-wait td{background:#FFFBEB}.ev-nm{font-weight:800;color:#1B3A5F;text-decoration:none}.ev-nm:hover{text-decoration:underline}.cx-flow span.ext{background:#fff;border-style:dashed}.cx8-mailrow{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:10px;border-top:1px dashed #D5DCE6;padding-top:8px}.cx8-src{font-size:12.5px;color:#667085;margin:0 0 8px}.cx8-src .cx-link{font-size:12.5px}.ev-svq{font-size:12.5px;color:#667085;margin:-4px 0 10px 2px}.ev-svq .cx-link{font-size:12.5px}.cx8-how{margin-top:10px;border:1px solid #B8C4D6;border-radius:8px;background:#F7F9FC;padding:8px 10px}.cx8-how summary{cursor:pointer;font-weight:800;color:#1B3A5F;font-size:13.5px}.cx8-hw{display:grid;gap:6px;margin-top:8px}.cx8-hs{display:flex;gap:8px;align-items:flex-start;background:#fff;border:1px solid #E4E8EF;border-radius:8px;padding:7px 9px}.cx8-hs>b{flex:0 0 auto;width:20px;height:20px;border-radius:50%;background:#1B3A5F;color:#fff;font-size:11px;text-align:center;line-height:20px}.cx8-hh{font-weight:800;font-size:13px;color:#1B2433;margin-bottom:2px}.cx8-hk{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;font-size:12.5px;margin:2px 0}.cx8-hk span{color:#667085}.cx8-hk b{background:#EEF5FF;border-radius:4px;padding:1px 6px;color:#1B3A5F}.cx8-coh{margin:12px 0 4px;font-size:13.5px;color:#1B3A5F}.cx8-mail{white-space:pre-wrap;font-family:inherit;font-size:13px;line-height:1.6;background:#F9FAFB;border:1px solid #EAECF0;border-radius:8px;padding:12px;margin:8px 0 0}@media (max-width:640px){.ev-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.ev-tbl{min-width:760px}.ev-tbl td:first-child{min-width:150px;word-break:keep-all}}' +
@@ -7745,7 +7753,7 @@
   /* ===== d4a: AI 배정 도우미(챗봇) 연결 =====
      도우미 화면은 cb-chat.js(처음 열 때만 불러옴). 도우미는 아래 window.__cbApi로만 읽고 저장함.
      저장은 기존 saveSession에 챗봇 표시(챗봇:1)를 붙여 서버가 겹침을 다시 검사하게 함. AI는 해석·근거만, 확정은 담당자 */
-  var CB_VER = 'd4j';
+  var CB_VER = 'd4k';
   function cbInstrReady(){
     ensureInstructors();
     return new Promise(function(res){ var t0 = Date.now(); (function w(){ if ((instructors !== null && !instrLoading) || Date.now() - t0 > 15000) res(); else setTimeout(w, 150); })(); });
@@ -8216,14 +8224,16 @@
       '<a href="samples/' + b + '.csv" download="' + esc(nm) + '.csv">CSV 받기</a> · <a href="samples/' + b + '.xlsx" download="' + esc(nm) + '.xlsx">엑셀 받기</a>' +
       ({ survey_leadership16: ' <span class="hint">(강사 이름이 빠진 교과목 1개 포함 → AI 문항 연결 확인용)</span>', survey_command11: ' <span class="hint">(5일 과정 · 강사 이름이 빠진 교과목 1개 포함 → AI 문항 연결 확인용)</span>', survey_ems2: ' <span class="hint">(5일 과정 · 실습 교과목 포함 → 훈련 문항 집계 확인용)</span>' }[b] || ' <span class="hint">(실습 교과목 1개 포함 → 훈련 문항 집계 확인용)</span>') + '</div>';
   }
-  function cxSurveyOpen(k0){
-    var key = k0 || currentKey, p = planByKey(key);
+  function cxSurveyOpen(k0, fetchMode){
+    var key = k0 || currentKey, p = planByKey(key), ttl = (p ? p['과정명'] + ' ' + (p['기수'] || '') : key);
+    if (fetchMode) return cxSurveyFetch(key, ttl);
     var m = cxModal('설문 결과 올리기 · ' + (p ? p['과정명'] + ' ' + (p['기수'] || '') : key),
       '<div class="cx-guide">네이버 폼·구글폼에서 내려받은 <b>설문 응답 파일(CSV 또는 엑셀)</b>을 올려 주세요(첫 줄 질문, 둘째 줄부터 응답). 열 제목 "교과목 | 강사 | 항목"으로 교과목·강사를 규칙 연결해 4문항 평균(종합)을 계산하고, 강사 이름이 빠진 문항처럼 애매한 것만 AI가 연결합니다. 저장 전에 결과와 응답 인원을 확인합니다.</div>' +
       '<div class="cx-flow"><span><b>1</b>파일 올리기<small>CSV·엑셀</small></span><i>›</i><span><b>2</b>점수는 규칙 계산<small>4문항 평균·50점 환산</small></span><i>›</i><span class="ai"><b>3</b>의견은 AI 분류·요약<small>8개 항목·칭찬/개선</small></span><i>›</i><span><b>4</b>확인 후 반영<small>담당자 결정</small></span><i>›</i><span><b>5</b>엑셀 내려받기<small>의견 분석</small></span></div>' +
       cxSampleHtml(key) +
-      '<input type="file" id="cxCsv" accept=".csv,text/csv,.xlsx,.xls"> <span class="hint">CSV 또는 엑셀(첫 줄 질문, 둘째 줄부터 응답)</span><div id="cxSv" style="margin-top:12px;"></div>');
+      '<div class="cx-alt">구글 설문지에서 바로 가져오려면 <button type="button" class="ab-lnk" data-evfetch="' + esc(key) + '">설문 결과 가져오기</button></div><input type="file" id="cxCsv" accept=".csv,text/csv,.xlsx,.xls"> <span class="hint">CSV 또는 엑셀(첫 줄 질문, 둘째 줄부터 응답)</span><div id="cxSv" style="margin-top:12px;"></div>');
     var box = m.body.querySelector('#cxSv');
+    var show = cxSurveyShow(m, box, key);
     m.body.querySelector('#cxCsv').addEventListener('change', function(ev){
       var f = ev.target.files && ev.target.files[0]; if (!f) return;
       if (f.size > 2 * 1024 * 1024) { box.innerHTML = '<div class="note-err">파일이 너무 큽니다(2MB 이하).</div>'; return; }
@@ -8245,58 +8255,82 @@
       if (isXl) rd.readAsArrayBuffer(f); else rd.readAsText(f, 'utf-8');
       function send(csvText){
         cxT0 = Date.now();
-        api({ action: 'surveyPreview', password: getPw(), 개설키: key, csv: csvText, 모델: cx.modelPref }).then(function(j){
-          if (j.status !== 'ok') { box.innerHTML = '<div class="note-err">' + esc(j.message || '처리하지 못했습니다') + '</div>'; return; }
-          var d = j.data;
-          var rows = d.items.map(function(it){
-            var nm = it.항목명 || [], sc = it.항목점수 || {}, few = it.응답수 < CX_MIN_RESP;
-            return '<tr><td>' + esc(it.교과목) + (it.비고 ? '<br><span class="hint">' + esc(it.비고) + '</span>' : '') + '</td><td><b>' + esc(it.강사명) + '</b><br><span class="hint">' + esc(it.유형 === '훈련' ? '실습(훈련) 문항' : (it.유형 === '종합' ? '종합 1문항' : '강의 문항')) + '</span></td>' +
-              '<td style="white-space:nowrap;">' + nm.map(function(l){ return esc(l) + ' ' + (sc[l] !== undefined ? Number(sc[l]).toFixed(2) : '-'); }).join('<br>') + '</td>' +
-              '<td>' + cxStars(it.평균) + ' <b>' + Number(it.평균).toFixed(2) + '</b><br><span class="hint" style="white-space:nowrap;">50점 환산 ' + it.환산 + '점</span></td><td>' + it.응답수 + (few ? '<br><span class="cx8-low">참고용</span>' : '') + '</td>' +
-              '<td>' + esc(it.좋았던점 || '-') + '</td><td>' + esc(it.개선할점 || '-') + '</td><td>' + (it.연결 === 'AI' ? '<span class="cx-tag ai">AI 연결</span>' : '<span class="cx-tag">규칙</span>') + '</td></tr>';
-          }).join('');
-          var op0 = d.의견 || {}, nAiLink = d.items.filter(function(it){ return it.연결 === 'AI'; }).length, nOp = (op0.items || []).length, nCat = (op0.cats || []).length, aiSec = ((Date.now() - cxT0) / 1000).toFixed(1);
-          var aiDid = (op0.ai || d.ai.연결) ? '<div class="ai-did"><span class="ai-badge">AI 도움</span><b>AI가 한 일</b><span>' + [nAiLink ? '이름 빠진 문항 ' + nAiLink + '개를 교과목·강사에 연결' : '', op0.ai && nOp ? '서술형 의견 ' + nOp + '건을 ' + nCat + '개 항목으로 분류·요약' : ''].filter(Boolean).join(' · ') + '</span><small>' + esc(op0.ai || d.ai.연결 || '') + ' · ' + aiSec + '초</small>' + (nOp ? '<button type="button" class="ab-lnk" data-aijump="1">AI 결과 보기</button>' : '') + '</div>'
-            : '<div class="ai-did off"><b>AI가 응답하지 않아</b><span>점수는 규칙으로 계산했고, 의견은 낱말 규칙으로 분류했습니다.</span></div>';
-          var cmHtml = (d.공통 && d.공통.length) ? '<div class="hint" style="margin-top:8px;"><b>교육 환경(참고·평가지표 제외)</b> ' + d.공통.map(function(c){ return esc(c.문항) + ' ' + Number(c.평균).toFixed(2); }).join(' · ') + '</div>' : '';
-          box.innerHTML = aiDid + '<div class="hint" style="margin-bottom:6px;">응답 ' + d.응답자 + '건 · 평가 교과목 ' + d.items.length + '개' + (d.ai.요약 ? ' · 의견 요약 AI: ' + esc(d.ai.요약) : ' · 의견 요약: 원문 발췌(AI 미사용)') + (d.ai.연결 ? ' · 문항 연결 AI: ' + esc(d.ai.연결) : '') + '</div>' +
-            '<div style="overflow:auto;"><table class="cx-tbl"><thead><tr><th>교과목</th><th>강사</th><th>문항별 평균</th><th>종합(5점)</th><th>응답</th><th>좋았던 점(요약)</th><th>개선할 점(요약)</th><th>연결</th></tr></thead><tbody>' + rows + '</tbody></table></div>' + cmHtml +
-            cxOpinionHtml(d.의견) +
-            (d.미연결.length ? '<div class="note-warn" style="margin-top:8px;">강사와 연결하지 못한 문항 ' + d.미연결.length + '개는 반영하지 않습니다: ' + esc(d.미연결.slice(0, 3).join(' / ')) + '</div>' : '') +
-            (d.이미반영 ? '<div class="note-warn" style="margin-top:10px;">이미 반영한 파일입니다. 같은 파일은 한 번만 반영됩니다.</div>'
-              : '<div class="cx8-cnt"><b>응답 인원 확인</b><label>입교 인원 <input type="number" id="cx8In" min="1" max="999" value="' + (d.입교인원 || '') + '">명</label><label>확정 응답 인원 <input type="number" id="cx8Ok" min="1" max="999" value="' + d.응답자 + '">명</label><span id="cx8Rate" class="hint"></span></div>' +
-                '<div id="cx8Warn"></div><div style="margin-top:12px;display:flex;gap:8px;"><button type="button" class="btn primary" id="cxCommit">이 결과로 반영하기</button><button type="button" class="btn" id="cxCancel">반영 안 함</button></div>');
-          var inEl = box.querySelector('#cx8In'), okEl = box.querySelector('#cx8Ok');
-          var cnt = function(){
-            if (!inEl) return true;
-            var iN = Number(inEl.value) || 0, oN = Number(okEl.value) || 0, w = box.querySelector('#cx8Warn'), c = box.querySelector('#cxCommit'), msg = '', block = false;
-            box.querySelector('#cx8Rate').textContent = iN ? '응답률 ' + (Math.round(oN / iN * 1000) / 10) + '%' : '';
-            if (!iN || !oN) { msg = '입교 인원과 확정 응답 인원을 입력해 주세요.'; block = true; }
-            else if (oN > iN) { msg = '확정 응답 인원이 입교 인원보다 많습니다. 숫자를 확인해 주세요.'; block = true; }
-            else if (oN !== d.응답자) msg = '파일의 응답 건수(' + d.응답자 + '건)와 다릅니다. 중복·시험 응답이 있으면 파일에서 지운 뒤 다시 올리는 것이 정확합니다.';
-            w.innerHTML = msg ? '<div class="' + (block ? 'note-err' : 'note-warn') + '" style="margin-top:8px;">' + esc(msg) + '</div>' : '';
-            if (c) c.disabled = block;
-            return !block;
-          };
-          if (inEl) { inEl.addEventListener('input', cnt); okEl.addEventListener('input', cnt); cnt(); }
-          if (!d.이미반영) nextGuide(nOp ? 'AI가 의견 ' + nOp + '건을 ' + nCat + '개 항목으로 분류했습니다' : '점수를 계산했습니다', '<i>이 결과로 반영하기</i> — 응답 인원을 확인한 뒤 저장합니다', '#cxCommit');
-          var cm = box.querySelector('#cxCommit');
-          if (cm) cm.addEventListener('click', function(){
-            if (!cnt()) return;
-            cm.disabled = true; cm.textContent = '반영하는 중…';
-            api({ action: 'surveyCommit', password: getPw(), hash: d.hash, 파일명: f.name, 입교인원: Number(inEl.value) || 0, 확정응답인원: Number(okEl.value) || 0 }).then(function(r){
-              if (r.status !== 'ok') { box.insertAdjacentHTML('beforeend', '<div class="note-err" style="margin-top:8px;">' + esc(r.message || '반영하지 못했습니다') + '</div>'); cm.disabled = false; cm.textContent = '이 결과로 반영하기'; return; }
-              box.innerHTML = '<div class="note-ok">교과목·강사 ' + r.반영 + '건을 강의평가에 반영했습니다' + (r.공통 ? '(교육 환경 ' + r.공통 + '문항은 참고로 저장)' : '') + '. 강사 랭크가 새 평가로 다시 계산됩니다.' + (r.의견 ? ' 서술형 의견 ' + r.의견 + '건의 분류 결과도 저장했습니다.' : '') + '</div>' +
-                '<div style="margin-top:10px;display:flex;gap:8px;"><button type="button" class="btn primary" data-cxres="1" data-key="' + esc(key) + '">결과지 보기</button><button type="button" class="btn" data-cxopdl="1" data-key="' + esc(key) + '">엑셀 내려받기</button></div>';
-              delete cxRes[key]; cxHeadState(key, true); if (!currentKey && planMode === 'eval') renderEval();
-              nextGuide('설문 결과를 반영했습니다', '창을 닫고 <i>강사 환류 보내기</i> — 강사별 결과 메일을 미리 보고 보냅니다', '[data-evfb]');
-              instructors = null; instrById = {}; ensureInstructors();
-            }).catch(function(){ cm.disabled = false; cm.textContent = '이 결과로 반영하기'; box.insertAdjacentHTML('beforeend', '<div class="note-err">서버에 연결하지 못했습니다. 다시 시도해 주세요.</div>'); });
-          });
-          var cc = box.querySelector('#cxCancel'); if (cc) cc.addEventListener('click', m.close);
-        }).catch(function(){ box.innerHTML = '<div class="note-err">서버에 연결하지 못했습니다. 다시 시도해 주세요.</div>'; });
+        api({ action: 'surveyPreview', password: getPw(), 개설키: key, csv: csvText, 모델: cx.modelPref }).then(function(j){ show(j, f.name); }).catch(function(){ box.innerHTML = '<div class="note-err">서버에 연결하지 못했습니다. 다시 시도해 주세요.</div>'; });
       }
     });
+  }
+  // d4k: 설문 미리보기 화면(파일 올리기·설문 결과 가져오기 공용)
+  function cxSurveyShow(m, box, key){
+    return function(j, srcName){
+          if (j.status !== 'ok') { box.innerHTML = '<div class="note-err">' + esc(j.message || '처리하지 못했습니다') + '</div>'; return; }
+        var d = j.data;
+        var rows = d.items.map(function(it){
+          var nm = it.항목명 || [], sc = it.항목점수 || {}, few = it.응답수 < CX_MIN_RESP;
+          return '<tr><td>' + esc(it.교과목) + (it.비고 ? '<br><span class="hint">' + esc(it.비고) + '</span>' : '') + '</td><td><b>' + esc(it.강사명) + '</b><br><span class="hint">' + esc(it.유형 === '훈련' ? '실습(훈련) 문항' : (it.유형 === '종합' ? '종합 1문항' : '강의 문항')) + '</span></td>' +
+            '<td style="white-space:nowrap;">' + nm.map(function(l){ return esc(l) + ' ' + (sc[l] !== undefined ? Number(sc[l]).toFixed(2) : '-'); }).join('<br>') + '</td>' +
+            '<td>' + cxStars(it.평균) + ' <b>' + Number(it.평균).toFixed(2) + '</b><br><span class="hint" style="white-space:nowrap;">50점 환산 ' + it.환산 + '점</span></td><td>' + it.응답수 + (few ? '<br><span class="cx8-low">참고용</span>' : '') + '</td>' +
+            '<td>' + esc(it.좋았던점 || '-') + '</td><td>' + esc(it.개선할점 || '-') + '</td><td>' + (it.연결 === 'AI' ? '<span class="cx-tag ai">AI 연결</span>' : '<span class="cx-tag">규칙</span>') + '</td></tr>';
+        }).join('');
+        var op0 = d.의견 || {}, nAiLink = d.items.filter(function(it){ return it.연결 === 'AI'; }).length, nOp = (op0.items || []).length, nCat = (op0.cats || []).length, aiSec = ((Date.now() - cxT0) / 1000).toFixed(1);
+        var aiDid = (op0.ai || d.ai.연결) ? '<div class="ai-did"><span class="ai-badge">AI 도움</span><b>AI가 한 일</b><span>' + [nAiLink ? '이름 빠진 문항 ' + nAiLink + '개를 교과목·강사에 연결' : '', op0.ai && nOp ? '서술형 의견 ' + nOp + '건을 ' + nCat + '개 항목으로 분류·요약' : ''].filter(Boolean).join(' · ') + '</span><small>' + esc(op0.ai || d.ai.연결 || '') + ' · ' + aiSec + '초</small>' + (nOp ? '<button type="button" class="ab-lnk" data-aijump="1">AI 결과 보기</button>' : '') + '</div>'
+          : '<div class="ai-did off"><b>AI가 응답하지 않아</b><span>점수는 규칙으로 계산했고, 의견은 낱말 규칙으로 분류했습니다.</span></div>';
+        var cmHtml = (d.공통 && d.공통.length) ? '<div class="hint" style="margin-top:8px;"><b>교육 환경(참고·평가지표 제외)</b> ' + d.공통.map(function(c){ return esc(c.문항) + ' ' + Number(c.평균).toFixed(2); }).join(' · ') + '</div>' : '';
+        var G = d.가져오기, fetchHtml = G ? '<div class="cx-fetch"><b>' + (G.실제 ? '구글 설문지 실제 응답 ' + G.실제 + '건' : '구글 설문지 실제 응답 0건') + (G.모의 ? ' + 시연용 모의 응답 ' + G.모의 + '건' : '') + ' = 총 ' + G.합계 + '건</b>을 결과에 반영합니다.<span>' + (G.모의 ? '실제 응답은 그대로 쓰고, 계획 인원(' + G.계획 + '명)에 모자라는 ' + G.모의 + '건만 모의 응답으로 채웠습니다. 모의 응답은 대회 심사용 사본에만 쓰입니다.' : '모두 실제 응답입니다.') + (G.설문지 ? '' : ' 이 과정은 설문 링크를 만들지 않아 실제 응답이 없습니다.') + '</span></div>' : '';
+        box.innerHTML = fetchHtml + aiDid + '<div class="hint" style="margin-bottom:6px;">응답 ' + d.응답자 + '건 · 평가 교과목 ' + d.items.length + '개' + (d.ai.요약 ? ' · 의견 요약 AI: ' + esc(d.ai.요약) : ' · 의견 요약: 원문 발췌(AI 미사용)') + (d.ai.연결 ? ' · 문항 연결 AI: ' + esc(d.ai.연결) : '') + '</div>' +
+          '<div style="overflow:auto;"><table class="cx-tbl"><thead><tr><th>교과목</th><th>강사</th><th>문항별 평균</th><th>종합(5점)</th><th>응답</th><th>좋았던 점(요약)</th><th>개선할 점(요약)</th><th>연결</th></tr></thead><tbody>' + rows + '</tbody></table></div>' + cmHtml +
+          cxOpinionHtml(d.의견) +
+          (d.미연결.length ? '<div class="note-warn" style="margin-top:8px;">강사와 연결하지 못한 문항 ' + d.미연결.length + '개는 반영하지 않습니다: ' + esc(d.미연결.slice(0, 3).join(' / ')) + '</div>' : '') +
+          (d.이미반영 ? '<div class="note-warn" style="margin-top:10px;">이미 반영한 파일입니다. 같은 파일은 한 번만 반영됩니다.</div>'
+            : '<div class="cx8-cnt"><b>응답 인원 확인</b><label>입교 인원 <input type="number" id="cx8In" min="1" max="999" value="' + (d.입교인원 || '') + '">명</label><label>확정 응답 인원 <input type="number" id="cx8Ok" min="1" max="999" value="' + d.응답자 + '">명</label><span id="cx8Rate" class="hint"></span></div>' +
+              '<div id="cx8Warn"></div><div style="margin-top:12px;display:flex;gap:8px;"><button type="button" class="btn primary" id="cxCommit">이 결과로 반영하기</button><button type="button" class="btn" id="cxCancel">반영 안 함</button></div>');
+        var inEl = box.querySelector('#cx8In'), okEl = box.querySelector('#cx8Ok');
+        var cnt = function(){
+          if (!inEl) return true;
+          var iN = Number(inEl.value) || 0, oN = Number(okEl.value) || 0, w = box.querySelector('#cx8Warn'), c = box.querySelector('#cxCommit'), msg = '', block = false;
+          box.querySelector('#cx8Rate').textContent = iN ? '응답률 ' + (Math.round(oN / iN * 1000) / 10) + '%' : '';
+          if (!iN || !oN) { msg = '입교 인원과 확정 응답 인원을 입력해 주세요.'; block = true; }
+          else if (oN > iN) { msg = '확정 응답 인원이 입교 인원보다 많습니다. 숫자를 확인해 주세요.'; block = true; }
+          else if (oN !== d.응답자) msg = (d.가져오기 ? '가져온 응답 건수(' : '파일의 응답 건수(') + d.응답자 + '건)와 다릅니다. 중복·시험 응답이 있으면 파일에서 지운 뒤 다시 올리는 것이 정확합니다.';
+          w.innerHTML = msg ? '<div class="' + (block ? 'note-err' : 'note-warn') + '" style="margin-top:8px;">' + esc(msg) + '</div>' : '';
+          if (c) c.disabled = block;
+          return !block;
+        };
+        if (inEl) { inEl.addEventListener('input', cnt); okEl.addEventListener('input', cnt); cnt(); }
+        if (!d.이미반영) nextGuide(nOp ? 'AI가 의견 ' + nOp + '건을 ' + nCat + '개 항목으로 분류했습니다' : '점수를 계산했습니다', '<i>이 결과로 반영하기</i> — 응답 인원을 확인한 뒤 저장합니다', '#cxCommit');
+        var cm = box.querySelector('#cxCommit');
+        if (cm) cm.addEventListener('click', function(){
+          if (!cnt()) return;
+          cm.disabled = true; cm.textContent = '반영하는 중…';
+          api({ action: 'surveyCommit', password: getPw(), hash: d.hash, 파일명: srcName, 입교인원: Number(inEl.value) || 0, 확정응답인원: Number(okEl.value) || 0 }).then(function(r){
+            if (r.status !== 'ok') { box.insertAdjacentHTML('beforeend', '<div class="note-err" style="margin-top:8px;">' + esc(r.message || '반영하지 못했습니다') + '</div>'); cm.disabled = false; cm.textContent = '이 결과로 반영하기'; return; }
+            box.innerHTML = '<div class="note-ok">교과목·강사 ' + r.반영 + '건을 강의평가에 반영했습니다' + (r.공통 ? '(교육 환경 ' + r.공통 + '문항은 참고로 저장)' : '') + '. 강사 랭크가 새 평가로 다시 계산됩니다.' + (r.의견 ? ' 서술형 의견 ' + r.의견 + '건의 분류 결과도 저장했습니다.' : '') + '</div>' +
+              '<div style="margin-top:10px;display:flex;gap:8px;"><button type="button" class="btn primary" data-cxres="1" data-key="' + esc(key) + '">결과지 보기</button><button type="button" class="btn" data-cxopdl="1" data-key="' + esc(key) + '">엑셀 내려받기</button></div>';
+            delete cxRes[key]; cxHeadState(key, true); if (!currentKey && planMode === 'eval') renderEval();
+            nextGuide('설문 결과를 반영했습니다', '창을 닫고 <i>강사 환류 보내기</i> — 강사별 결과 메일을 미리 보고 보냅니다', '[data-evfb]');
+            instructors = null; instrById = {}; ensureInstructors();
+          }).catch(function(){ cm.disabled = false; cm.textContent = '이 결과로 반영하기'; box.insertAdjacentHTML('beforeend', '<div class="note-err">서버에 연결하지 못했습니다. 다시 시도해 주세요.</div>'); });
+        });
+        var cc = box.querySelector('#cxCancel'); if (cc) cc.addEventListener('click', m.close);
+    };
+  }
+  // d4k: 설문 결과 가져오기 — 구글 설문지의 실제 응답 + 계획 인원에 모자라면 시연용 모의 응답(대회 심사용 사본)
+  function cxSurveyFetch(key, ttl){
+    var m = cxModal('설문 결과 가져오기 · ' + ttl,
+      '<div class="cx-guide">이 과정의 <b>구글 설문지에 모인 응답</b>을 서버가 바로 읽어 교과목·강사별로 집계합니다. 내려받거나 올릴 파일이 없습니다. 심사용 사본에서는 계획 인원에 모자라는 응답을 <b>시연용 모의 응답</b>으로 채워, 실제 응답과 모의 응답 건수를 나눠 보여 드립니다.</div>' +
+      '<div class="cx-flow"><span><b>1</b>설문지 응답 가져오기<small>구글 설문지</small></span><i>›</i><span><b>2</b>점수는 규칙 계산<small>4문항 평균·50점 환산</small></span><i>›</i><span class="ai"><b>3</b>의견은 AI 분류·요약<small>8개 항목·칭찬/개선</small></span><i>›</i><span><b>4</b>확인 후 반영<small>담당자 결정</small></span></div>' +
+      '<div id="cxSv"><div class="cx-fetching"><span class="mi-sp"></span><div><b>구글 설문지에서 응답을 가져오는 중입니다…</b><span>가져온 뒤 서술형 의견은 AI가 항목별로 분류·요약합니다(10~30초).</span></div></div></div>' +
+      '<div class="cx-alt" style="margin-top:10px;">다른 곳에서 만든 설문이면 <button type="button" class="ab-lnk" data-cxsurvey="1" data-key="' + esc(key) + '">응답 파일로 올리기</button></div>');
+    var box = m.body.querySelector('#cxSv'), show = cxSurveyShow(m, box, key), b = CX_SURVEY_SAMPLES[key];
+    var go = function(mock){
+      cxT0 = Date.now();
+      api({ action: 'surveyFetch', password: getPw(), 개설키: key, 모의: mock, 모델: cx.modelPref }).then(function(j){
+        if (j.status !== 'ok') { box.innerHTML = '<div class="note-err">' + (/unknown action/.test(j.message || '') ? '서버가 아직 \'설문 결과 가져오기\'를 지원하지 않습니다(대회용 서버 d2r 배포 필요). 지금은 아래 [응답 파일로 올리기]를 써 주세요.' : esc(j.message || '가져오지 못했습니다')) + '</div>'; return; }
+        var G = j.data.가져오기 || {};
+        show(j, '구글 설문 가져오기(실제 ' + (G.실제 || 0) + '건' + (G.모의 ? '+모의 ' + G.모의 + '건' : '') + ')');
+      }).catch(function(){ box.innerHTML = '<div class="note-err">서버에 연결하지 못했습니다. 다시 시도해 주세요.</div>'; });
+    };
+    if (!b) { go(''); return; }
+    fetch('samples/' + b + '.csv', { cache: 'no-cache' }).then(function(r){ return r.ok ? r.text() : ''; }).catch(function(){ return ''; }).then(function(t){ go(String(t || '').replace(/^\ufeff/, '')); });
   }
 
   /* ===== 대회용 c6b: 평가관리(끝난 과정의 설문지 → 결과 반영 → 결과지 → 강사 환류) ===== */
@@ -8372,12 +8406,12 @@
       tag = '<span class="ev2-tag wait">반영 대기</span>';
       body = '성과측정 설문의 응답 링크를 만듭니다. 문항은 강의배정DB <b>설문문항</b> 탭의 기본틀에서 불러와, 이 과정의 교과목·강사별로 구글 설문지를 만듭니다. 응답 파일이 이미 있으면 바로 올릴 수 있습니다.';
       acts = (isViewer() ? '' : '<button type="button" class="btn primary" data-evform="' + kk + '">설문 링크 만들기</button>') + formB +
-        (isViewer() ? '' : '<button type="button" class="btn sm" data-cxsurvey="1" data-key="' + kk + '">결과 파일 올리기</button>');
+        (isViewer() ? '' : '<button type="button" class="btn sm" data-evfetch="' + kk + '">설문 결과 가져오기</button>');
     } else if (S.stage === 2) {
       tag = '<span class="ev2-tag wait">응답 수합 중</span>';
       body = '<div class="ev2-link"><span>응답 링크</span><a href="' + esc(j.설문링크) + '" target="_blank" rel="noopener">' + esc(j.설문링크) + '</a></div>' +
         '<div class="ev2-sub">단톡방 안내문이나 강의실 화면의 QR 코드로 알립니다. 응답이 모이면 폼에서 결과 파일(CSV·엑셀)을 내려받아 올립니다.</div>';
-      acts = (isViewer() ? '' : '<button type="button" class="btn primary" data-cxsurvey="1" data-key="' + kk + '">결과 파일 올리기</button>') +
+      acts = (isViewer() ? '' : '<button type="button" class="btn primary" data-evfetch="' + kk + '">설문 결과 가져오기</button>') +
         '<button type="button" class="btn sm" data-evcopy="' + kk + '">안내문 복사</button><button type="button" class="btn sm" data-evqr="' + kk + '">QR 코드</button>' + formB;
     } else {
       var avg = M.ev.reduce(function(a, e){ return a + Number(e.평균); }, 0) / M.ev.length;
@@ -8394,7 +8428,7 @@
   /* d2l: 평가관리 첫 화면 — 강의배정과 같은 칸반 보드(① 설문 준비 → ② 결과 반영 → ③ 강사 환류 → ④ 완료) */
   var EV_STEPS = [
     { t: '설문 준비', d: '교과목·강사별 설문 링크', tl: [['', '설문 링크·QR 만들기']] },
-    { t: '결과 반영', d: '응답 파일 올리기', tl: [['ai', '이름 빠진 문항 연결'], ['ai', '서술형 의견 분류·요약']] },
+    { t: '결과 반영', d: '설문 결과 가져오기', tl: [['ai', '이름 빠진 문항 연결'], ['ai', '서술형 의견 분류·요약']] },
     { t: '강사 환류', d: '강사별 결과 메일', tl: [['ai', '의견 요약을 메일에 담기'], ['hum', '보낼 강사 선택']] },
     { t: '완료', d: '다음 강사 배정에 반영', tl: [['ai', 'AI 강사 배정의 근거로 쓰임']] }
   ];
@@ -8418,12 +8452,13 @@
       body = '';
       main = ro ? '' : '<button type="button" class="btn" data-evform="' + kk + '">설문 링크 만들기</button>';
       links.push(lk('data-cxform="1" data-key="' + kk + '"', '설문지 미리보기'));
-      if (!ro) links.push(lk('data-cxsurvey="1" data-key="' + kk + '"', '응답 파일 바로 올리기'));
+      if (!ro) links.push(lk('data-evfetch="' + kk + '"', '설문 결과 바로 가져오기'));
     } else if (L === 2) {
       body = '<div class="ev-link"><span>응답 링크</span><a href="' + esc(j.설문링크) + '" target="_blank" rel="noopener">' + esc(j.설문링크) + '</a></div>' +
         '<div class="bdc-x"><span class="ai-badge">AI 도움</span>문항 연결 · 의견 분류·요약</div>';
-      main = ro ? '' : '<button type="button" class="btn primary ab-ai" data-cxsurvey="1" data-key="' + kk + '">결과 파일 올리기</button>';
+      main = ro ? '' : '<button type="button" class="btn primary ab-ai" data-evfetch="' + kk + '">설문 결과 가져오기</button><div class="ev-tip">구글 설문지에 모인 응답을 가져와 집계합니다. 계획 인원에 모자라면 시연용 모의 응답으로 채웁니다.</div>';
       links.push(lk('data-evcopy="' + kk + '"', '안내문 복사'), lk('data-evqr="' + kk + '"', 'QR 코드'), lk('data-cxform="1" data-key="' + kk + '"', '설문지 미리보기'));
+      if (!ro) links.push(lk('data-cxsurvey="1" data-key="' + kk + '"', '응답 파일로 올리기'));
     } else {
       var avg = M.ev.reduce(function(a, e){ return a + Number(e.평균); }, 0) / M.ev.length;
       var low = M.ev.filter(function(e){ return Number(e.응답수) >= CX_MIN_RESP && Number(e.평균) < 3.5; }).length;
@@ -8525,7 +8560,7 @@
     api({ action: 'makeSurveyForm', password: getPw(), 개설키: key }).then(function(j){
       if (!j || j.status !== 'ok') { btn.disabled = false; btn.textContent = '설문 링크 만들기'; alert((j && j.message) || '설문지를 만들지 못했습니다'); return; }
       evRefresh(key);
-      nextGuide('설문 링크를 만들었습니다', '<i>결과 파일 올리기</i> — 시험용 예시 응답 파일을 받아 올려 보세요', '.ev-k [data-cxsurvey]');
+      nextGuide('설문 링크를 만들었습니다', 'QR로 직접 응답해 본 뒤 <i>설문 결과 가져오기</i> — 실제 응답에 모자라는 인원은 모의 응답으로 채웁니다', '.ev-k [data-evfetch]');
     }).catch(function(){ btn.disabled = false; btn.textContent = '설문 링크 만들기'; alert('서버에 연결하지 못했습니다.'); });
   }
   function evQrOpen(key){
@@ -8760,9 +8795,10 @@
   document.addEventListener('click', function(ev){
     var lg = ev.target && ev.target.closest ? ev.target.closest('[data-cx8log],[data-cx8svq]') : null;
     if (lg) { if (lg.getAttribute('data-cx8log')) cx8LogOpen(); else cx8SvqOpen(); return; }
-    var t = ev.target && ev.target.closest ? ev.target.closest('[data-cxsurvey],[data-cxout],[data-cxopdl],[data-cxform],[data-cxres]') : null;
+    var t = ev.target && ev.target.closest ? ev.target.closest('[data-cxsurvey],[data-cxout],[data-cxopdl],[data-cxform],[data-cxres],[data-evfetch]') : null;
     if (!t) return;
-    var inMd = t.closest('.cx-ov'); if (inMd && (t.getAttribute('data-cxres') || t.getAttribute('data-cxsurvey'))) inMd.parentNode.removeChild(inMd);   // 창 안에서 다른 창으로 넘어갈 때 앞 창 닫기
+    var inMd = t.closest('.cx-ov'); if (inMd && inMd.parentNode && (t.getAttribute('data-cxres') || t.getAttribute('data-cxsurvey') || t.getAttribute('data-evfetch'))) inMd.parentNode.removeChild(inMd);
+    if (t.getAttribute('data-evfetch')) { cxSurveyOpen(t.getAttribute('data-evfetch'), true); return; }   // d4k: 설문 결과 가져오기   // 창 안에서 다른 창으로 넘어갈 때 앞 창 닫기
     var tk = t.getAttribute('data-key') || '';
     if (t.getAttribute('data-cxform')) cxFormOpen(tk);
     if (t.getAttribute('data-cxres')) cxResultOpen(tk);
