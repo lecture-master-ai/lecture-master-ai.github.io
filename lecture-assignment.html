@@ -7480,6 +7480,8 @@
     }).finally(function(){ btn.disabled = false; btn.textContent = '로그인'; });
   });
 
+  // 직전 데이터로 먼저 그리기는 이 스크립트의 정의(EV_STEPS 등)가 모두 끝난 뒤에 실행(평가관리 새로고침 때 '불러오는 중' 칸이 메뉴 위에 남던 문제)
+  setTimeout(function(){
   var saved = getPw();
   if (saved) {
     var bc = bootRead(saved), fast = false;
@@ -7493,6 +7495,7 @@
       if (fast) showMsg('warn', '직전에 불러온 내용을 보여 주고 있습니다. 최신 내용으로 바꾸지 못했으니 잠시 후 새로고침해 주세요. (' + (err.message || '연결 실패') + ')'); else showMsg('err', err.message || '불러오지 못했습니다');
     }).then(window.__autoDone, window.__autoDone);
   }
+  }, 0);
 
   /* =====================================================================
      [대회용 추가] 적합한 강사 찾기(AI) · 랭크(별 5개) · 설문 결과 올리기 · 시연 모드 보낸 내용 보기
