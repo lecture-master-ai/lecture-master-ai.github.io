@@ -840,6 +840,8 @@
   .ev-ai b{color:#1E4E86;} .ev-ai > span:last-child{flex-basis:100%;}
   .ev-mock,.ev-rule{display:inline-flex;font-size:10.5px;font-weight:800;line-height:1;border-radius:4px;padding:3px 5px;background:#EEF1F5;color:#475467;}
   .ev-links{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;}
+  .bdc.ev-ld .bdc-x{display:flex;align-items:center;gap:8px;color:#475467;} .bdc.ev-ld .mi-sp{width:14px;height:14px;border-color:rgba(27,58,95,.2);border-top-color:#1B3A5F;}
+  .bdc.ev-ld .sk{display:block;height:10px;border-radius:5px;background:linear-gradient(90deg,#EEF2F6 25%,#E2E8F0 50%,#EEF2F6 75%);background-size:200% 100%;animation:skSh 1.2s linear infinite;margin-top:8px;} .bdc.ev-ld .sk.w1{width:80%;} .bdc.ev-ld .sk.w2{width:55%;}
   .ev-links .ab-lnk{font-weight:700;text-underline-offset:2px;}
   .ev-links .ab-lnk.danger{color:#B42318;margin-left:auto;}
   .ai-did{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;background:#EEF4FB;border-radius:10px;padding:10px 12px;margin:0 0 10px;font-size:13.5px;color:#101828;}
@@ -1450,7 +1452,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-30 배정 d4k</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-30 배정 d4l</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -7753,7 +7755,7 @@
   /* ===== d4a: AI 배정 도우미(챗봇) 연결 =====
      도우미 화면은 cb-chat.js(처음 열 때만 불러옴). 도우미는 아래 window.__cbApi로만 읽고 저장함.
      저장은 기존 saveSession에 챗봇 표시(챗봇:1)를 붙여 서버가 겹침을 다시 검사하게 함. AI는 해석·근거만, 확정은 담당자 */
-  var CB_VER = 'd4k';
+  var CB_VER = 'd4l';
   function cbInstrReady(){
     ensureInstructors();
     return new Promise(function(res){ var t0 = Date.now(); (function w(){ if ((instructors !== null && !instrLoading) || Date.now() - t0 > 15000) res(); else setTimeout(w, 150); })(); });
@@ -8442,9 +8444,10 @@
     var t = String(sm['요약']); if (t.length > 70) t = t.slice(0, 68) + '…';
     return '<div class="ev-ai">' + tag + '<b>의견 ' + n + '건 → ' + k + '개 항목</b><span>' + esc(sm['분류']) + ': ' + esc(t) + '</span></div>';
   }
-  function evCardB(p, j, err, hot){
+  function evCardB(p, j, err, hot, loading){
     var key = String(p['과정+기수']), kk = esc(key), ro = isViewer();
     var head = '<div><div class="bdc-t">' + esc(cx8Title(p, key)) + '</div><div class="bdc-p">' + esc(cx8Period(p)) + ' · 계획 ' + (Number(p['계획인원']) || '-') + '명</div></div>';
+    if (loading) return '<article class="bdc ev-k' + (hot ? ' moved' : '') + ' ev-ld">' + (hot ? '<span class="bdc-mv">' + (hot === 'add' ? '방금 올림' : '방금 이동') + '</span>' : '') + head + '<div class="bdc-x"><span class="mi-sp"></span>진행 상황을 불러오는 중입니다</div><i class="sk w1"></i><i class="sk w2"></i></article>';
     if (err) return '<article class="bdc">' + head + '<div class="note-err">상태를 불러오지 못했습니다.</div></article>';
     var S = evState(j), M = S.M, L = evLane(S), body = '', main = '', links = [];
     var lk = function(attr, txt, cls){ return '<button type="button" class="ab-lnk' + (cls ? ' ' + cls : '') + '" ' + attr + '>' + txt + '</button>'; };
@@ -8476,6 +8479,7 @@
   function evBoardHtml(rows, hist){
     var lanes = [[], [], [], [], []], moves = [];
     rows.forEach(function(r){
+      if (r.loading) { lanes[evSeen[String(r.p['과정+기수'])] || 1].push(r); return; }   // d4l: 받기 전에는 직전 단계 칸(처음이면 1단계)에 둠
       if (r.err || !r.j) { lanes[1].push(r); return; }
       var key = String(r.p['과정+기수']), L = evLane(evState(r.j));
       if (evSeen[key] !== undefined && L > evSeen[key]) { evHot[key] = Date.now(); moves.push(cx8Title(r.p, key) + '이(가) ' + L + '단계 \'' + EV_STEPS[L - 1].t + '\'(으)로 이동했습니다.'); }
@@ -8491,7 +8495,7 @@
       h += '<div class="bd-lane' + (L.length ? '' : ' empty') + (i ? '' : ' first') + '" id="evl' + (i + 1) + '"><div class="bd-lh"><span>' + (i + 1) + '. ' + s.t + '</span>' + (L.length ? '<em>' + L.length + '과정</em>' : '') + '</div>';
       var canEd = !isViewer(), act = dbs('ev').active;
       if (!L.length) h += i === 0 && canEd ? '<button type="button" class="bd-empty bd-add' + (act ? '' : ' go') + '" data-evadd="1"><b>' + (act ? '+ 다른 과정 올리기' : '+ 과정 올리기') + '</b></button>' : laneEmptyHtml('ev', i + 1, lanes);
-      L.forEach(function(r){ var key = String(r.p['과정+기수']), hot = evHot[key] && Date.now() - evHot[key] < 5000; var cH = evCardB(r.p, r.j, r.err, hot ? (evAdded[key] ? 'add' : true) : false); if (r.fin) cH = cH.replace(/<span class="bdc-mv">[^<]*<\/span>/, '').replace(/^<article class="bdc ev-k[^"]*">/, '<article class="bdc fin ev-k"><span class="bdc-mv">완료</span>').replace(/<\/article>$/, '<div class="bdc-x bdc-fin">' + ic('check', 'l') + '평가·환류 완료 · 곧 \'진행한 과정\'으로 옮겨집니다</div></article>'); var eK = key + '|' + evHot[key]; if (hot && !evEntered[eK]) evEntered[eK] = Date.now(); var eMs = hot ? Date.now() - evEntered[eK] : 9999; if (eMs < 350) cH = cH.replace('class="bdc ev-k moved"', 'class="bdc ev-k moved enter" style="animation-delay:-' + eMs + 'ms"'); h += cH; if (hot) setTimeout(function(){ delete evAdded[key]; }, 5000); });
+      L.forEach(function(r){ var key = String(r.p['과정+기수']), hot = evHot[key] && Date.now() - evHot[key] < 5000; var cH = evCardB(r.p, r.j, r.err, hot ? (evAdded[key] ? 'add' : true) : false, r.loading); if (r.fin) cH = cH.replace(/<span class="bdc-mv">[^<]*<\/span>/, '').replace(/^<article class="bdc ev-k[^"]*">/, '<article class="bdc fin ev-k"><span class="bdc-mv">완료</span>').replace(/<\/article>$/, '<div class="bdc-x bdc-fin">' + ic('check', 'l') + '평가·환류 완료 · 곧 \'진행한 과정\'으로 옮겨집니다</div></article>'); var eK = key + '|' + evHot[key]; if (hot && !evEntered[eK]) evEntered[eK] = Date.now(); var eMs = hot ? Date.now() - evEntered[eK] : 9999; if (eMs < 350) cH = cH.replace(/class="bdc ev-k moved( ev-ld)?"/, 'class="bdc ev-k moved$1 enter" style="animation-delay:-' + eMs + 'ms"'); h += cH; if (hot) setTimeout(function(){ delete evAdded[key]; }, 5000); });
       if (i === 0 && L.length && canEd) h += '<button type="button" class="bd-addsm" data-evadd="1">+ 다른 과정 올리기</button>';
       h += '</div>';
     });
@@ -8500,8 +8504,8 @@
     if (hist.length) h += '<details class="bd-done" open><summary>진행한 과정 ' + hist.length + '개 <span>자동 저장됨 · 이어서 하거나 처음부터</span></summary><ul>' + hist.map(function(r){
       var k = String(r.p['과정+기수']), L = r.j ? evLane(evState(r.j)) : 0;
       var rs = restartedByOther(k, 'ev'), le = lastEditText(k);
-      return '<li><div><b>' + esc(cx8Title(r.p, k)) + '</b><span>' + (rs ? '<em class="bd-rs">다른 평가관이 ' + hmText(rs) + '에 처음부터 다시 시작함</em> · ' : '') + (!L ? '상태를 불러오지 못했습니다' : L === 4 ? '평가·환류 완료' : L + '단계 \'' + EV_STEPS[L - 1].t + '\'에서 멈춤') + (le ? ' · ' + leHtml(le) : '') + '</span></div><div class="bd-hb">' +
-        (isViewer() ? '' : (L && L < 4 ? '<button type="button" class="btn sm primary" data-evgo="' + esc(k) + '">이어서 하기</button>' : '') + '<button type="button" class="btn sm" data-evre="' + esc(k) + '">처음부터</button>') + '</div></li>'; }).join('') + '</ul></details>';
+      return '<li><div><b>' + esc(cx8Title(r.p, k)) + '</b><span>' + (rs ? '<em class="bd-rs">다른 평가관이 ' + hmText(rs) + '에 처음부터 다시 시작함</em> · ' : '') + (r.loading ? '진행 상황을 불러오는 중입니다' : !L ? '상태를 불러오지 못했습니다' : L === 4 ? '평가·환류 완료' : L + '단계 \'' + EV_STEPS[L - 1].t + '\'에서 멈춤') + (le ? ' · ' + leHtml(le) : '') + '</span></div><div class="bd-hb">' +
+        (isViewer() || r.loading ? '' : (L && L < 4 ? '<button type="button" class="btn sm primary" data-evgo="' + esc(k) + '">이어서 하기</button>' : '') + '<button type="button" class="btn sm" data-evre="' + esc(k) + '">처음부터</button>') + '</div></li>'; }).join('') + '</ul></details>';
     return h;
   }
   function renderEvalSimple(box){
@@ -8538,9 +8542,9 @@
       box.innerHTML = evBoardHtml(act, hist) + foot;
     };
     var ready = keys.every(function(k){ return cxRes[k]; });
-    if (ready) draw(keys.map(function(k){ return { p: planByKey(k), j: cxRes[k] }; }));
-    else box.innerHTML = '<div class="info">평가 진행 상황을 불러오는 중입니다…</div>' + foot;
-    if (keys.length) Promise.all(keys.map(function(k){ var p = planByKey(k); return cxResGet(k).then(function(j){ return { p: p, j: j }; }, function(){ return { p: p, err: true }; }); }))
+    // d4l: 불러오는 동안 보드를 지우지 않음(깜박임 방지) — 아직 받지 못한 과정만 그 자리에 '불러오는 중' 카드로 둠
+    draw(keys.map(function(k){ return cxRes[k] ? { p: planByKey(k), j: cxRes[k] } : { p: planByKey(k), loading: true }; }));
+    if (!ready && keys.length) Promise.all(keys.map(function(k){ var p = planByKey(k); return cxResGet(k).then(function(j){ return { p: p, j: j }; }, function(){ return { p: p, err: true }; }); }))
       .then(function(rows){ if (seq !== evalSeq) return; draw(rows); });
     $('hTitle').textContent = '평가관리';
     $('hSub').textContent = '과정을 골라 올리면 설문 준비부터 강사 환류까지 차례로 진행합니다.';
