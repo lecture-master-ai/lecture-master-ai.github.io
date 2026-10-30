@@ -1452,7 +1452,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-30 배정 d4l</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-30 배정 d4m</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -7755,7 +7755,7 @@
   /* ===== d4a: AI 배정 도우미(챗봇) 연결 =====
      도우미 화면은 cb-chat.js(처음 열 때만 불러옴). 도우미는 아래 window.__cbApi로만 읽고 저장함.
      저장은 기존 saveSession에 챗봇 표시(챗봇:1)를 붙여 서버가 겹침을 다시 검사하게 함. AI는 해석·근거만, 확정은 담당자 */
-  var CB_VER = 'd4l';
+  var CB_VER = 'd4m';
   function cbInstrReady(){
     ensureInstructors();
     return new Promise(function(res){ var t0 = Date.now(); (function w(){ if ((instructors !== null && !instrLoading) || Date.now() - t0 > 15000) res(); else setTimeout(w, 150); })(); });
@@ -8430,7 +8430,7 @@
   /* d2l: 평가관리 첫 화면 — 강의배정과 같은 칸반 보드(① 설문 준비 → ② 결과 반영 → ③ 강사 환류 → ④ 완료) */
   var EV_STEPS = [
     { t: '설문 준비', d: '교과목·강사별 설문 링크', tl: [['', '설문 링크·QR 만들기']] },
-    { t: '결과 반영', d: '설문 결과 가져오기', tl: [['ai', '이름 빠진 문항 연결'], ['ai', '서술형 의견 분류·요약']] },
+    { t: '응답 수합·결과 반영', m: '응답·반영', d: '응답 받기 → 설문 결과 가져오기', tl: [['ai', '이름 빠진 문항 연결'], ['ai', '서술형 의견 분류·요약']] },
     { t: '강사 환류', d: '강사별 결과 메일', tl: [['ai', '의견 요약을 메일에 담기'], ['hum', '보낼 강사 선택']] },
     { t: '완료', d: '다음 강사 배정에 반영', tl: [['ai', 'AI 강사 배정의 근거로 쓰임']] }
   ];
@@ -8476,6 +8476,13 @@
     body += (rsE ? '<div class="bdc-warn">다른 평가관이 ' + hmText(rsE) + '에 처음부터 다시 시작했습니다</div>' : '') + (!rsE && leE ? '<div class="bdc-ed">' + leHtml(leE) + '</div>' : '');
     return '<article class="bdc ev-k' + (hot ? ' moved' : '') + '">' + (hot ? '<span class="bdc-mv">' + (hot === 'add' ? '방금 올림' : '방금 이동') + '</span>' : '') + head + body + main + (links.length ? '<div class="ev-links">' + links.join('') + '</div>' : '') + '</article>';
   }
+  function evPausedCard(r){
+    var key = String(r.p['과정+기수']), kk = esc(key), rs = restartedByOther(key, 'ev'), le = lastEditText(key);
+    return '<article class="bdc ev-k paused"><span class="bdc-mv">멈춤</span><div><div class="bdc-t">' + esc(cx8Title(r.p, key)) + '</div><div class="bdc-p">' + esc(cx8Period(r.p)) + ' · 계획 ' + (Number(r.p['계획인원']) || '-') + '명</div></div>' +
+      '<div class="bdc-x">' + r.L + '단계 \'' + EV_STEPS[r.L - 1].t + '\'에서 멈춤 · 자동 저장됨</div>' +
+      (rs ? '<div class="bdc-warn">다른 평가관이 ' + hmText(rs) + '에 처음부터 다시 시작했습니다</div>' : le ? '<div class="bdc-ed">' + leHtml(le) + '</div>' : '') +
+      (isViewer() ? '' : '<div class="bdc-pb"><button type="button" class="btn" data-evgo="' + kk + '">이어서 하기</button><button type="button" class="bdc-re" data-evre="' + kk + '">처음부터</button></div>') + '</article>';
+  }
   function evBoardHtml(rows, hist){
     var lanes = [[], [], [], [], []], moves = [];
     rows.forEach(function(r){
@@ -8486,22 +8493,27 @@
       evSeen[key] = L; r.L = L; lanes[L].push(r);
     });
     if (moves.length) setTimeout(function(){ moves.forEach(function(t){ stageToast(t, 0); }); }, 50);
+    // d4l: 멈춘 과정(진행한 과정 중 1~3단계)은 강의배정 보드처럼 각자 단계 칸에 흐린 '멈춤' 카드로 둠 → 아래 목록에는 끝낸 과정만
+    hist = (hist || []).filter(function(r){
+      if (r.loading || r.err || !r.j) return true;
+      var L = evLane(evState(r.j)); if (L >= 4) return true;
+      lanes[L].push({ p: r.p, j: r.j, paused: true, L: L }); return false;
+    });
     var h = '<section class="bd" aria-label="평가 단계와 과정 위치"><div class="bd-track">' + EV_STEPS.map(function(s, i){
       var c = lanes[i + 1].length;
       return '<div class="bd-st"><div class="bd-n">' + (i + 1) + '</div><div class="t">' + s.t + '</div>' + (c ? '<div class="bd-c">' + c + '과정</div>' : '') + '<div class="tls">' + s.tl.map(stTool).join('') + '</div></div>'; }).join('') + '</div>' +
-      '<nav class="bd-mini" aria-label="단계 바로가기">' + EV_STEPS.map(function(s, i){ var c = lanes[i + 1].length; return '<button type="button" data-bdgo="evl' + (i + 1) + '"' + (c ? '' : ' class="zero"') + '><i>' + (i + 1) + '</i>' + s.t + (c ? '<em>' + c + '과정</em>' : '') + '</button>'; }).join('') + '</nav><div class="bd-lanes">';
+      '<nav class="bd-mini" aria-label="단계 바로가기">' + EV_STEPS.map(function(s, i){ var c = lanes[i + 1].length; return '<button type="button" data-bdgo="evl' + (i + 1) + '"' + (c ? '' : ' class="zero"') + '><i>' + (i + 1) + '</i>' + (s.m || s.t) + (c ? '<em>' + c + '과정</em>' : '') + '</button>'; }).join('') + '</nav><div class="bd-lanes">';
     EV_STEPS.forEach(function(s, i){
       var L = lanes[i + 1];
       h += '<div class="bd-lane' + (L.length ? '' : ' empty') + (i ? '' : ' first') + '" id="evl' + (i + 1) + '"><div class="bd-lh"><span>' + (i + 1) + '. ' + s.t + '</span>' + (L.length ? '<em>' + L.length + '과정</em>' : '') + '</div>';
       var canEd = !isViewer(), act = dbs('ev').active;
       if (!L.length) h += i === 0 && canEd ? '<button type="button" class="bd-empty bd-add' + (act ? '' : ' go') + '" data-evadd="1"><b>' + (act ? '+ 다른 과정 올리기' : '+ 과정 올리기') + '</b></button>' : laneEmptyHtml('ev', i + 1, lanes);
-      L.forEach(function(r){ var key = String(r.p['과정+기수']), hot = evHot[key] && Date.now() - evHot[key] < 5000; var cH = evCardB(r.p, r.j, r.err, hot ? (evAdded[key] ? 'add' : true) : false, r.loading); if (r.fin) cH = cH.replace(/<span class="bdc-mv">[^<]*<\/span>/, '').replace(/^<article class="bdc ev-k[^"]*">/, '<article class="bdc fin ev-k"><span class="bdc-mv">완료</span>').replace(/<\/article>$/, '<div class="bdc-x bdc-fin">' + ic('check', 'l') + '평가·환류 완료 · 곧 \'진행한 과정\'으로 옮겨집니다</div></article>'); var eK = key + '|' + evHot[key]; if (hot && !evEntered[eK]) evEntered[eK] = Date.now(); var eMs = hot ? Date.now() - evEntered[eK] : 9999; if (eMs < 350) cH = cH.replace(/class="bdc ev-k moved( ev-ld)?"/, 'class="bdc ev-k moved$1 enter" style="animation-delay:-' + eMs + 'ms"'); h += cH; if (hot) setTimeout(function(){ delete evAdded[key]; }, 5000); });
+      L.forEach(function(r){ if (r.paused) { h += evPausedCard(r); return; } var key = String(r.p['과정+기수']), hot = evHot[key] && Date.now() - evHot[key] < 5000; var cH = evCardB(r.p, r.j, r.err, hot ? (evAdded[key] ? 'add' : true) : false, r.loading); if (r.fin) cH = cH.replace(/<span class="bdc-mv">[^<]*<\/span>/, '').replace(/^<article class="bdc ev-k[^"]*">/, '<article class="bdc fin ev-k"><span class="bdc-mv">완료</span>').replace(/<\/article>$/, '<div class="bdc-x bdc-fin">' + ic('check', 'l') + '평가·환류 완료 · 곧 \'진행한 과정\'으로 옮겨집니다</div></article>'); var eK = key + '|' + evHot[key]; if (hot && !evEntered[eK]) evEntered[eK] = Date.now(); var eMs = hot ? Date.now() - evEntered[eK] : 9999; if (eMs < 350) cH = cH.replace(/class="bdc ev-k moved( ev-ld)?"/, 'class="bdc ev-k moved$1 enter" style="animation-delay:-' + eMs + 'ms"'); h += cH; if (hot) setTimeout(function(){ delete evAdded[key]; }, 5000); });
       if (i === 0 && L.length && canEd) h += '<button type="button" class="bd-addsm" data-evadd="1">+ 다른 과정 올리기</button>';
       h += '</div>';
     });
     h += '</div><div class="bd-foot"><span class="legend"><span class="ai-badge">AI 도움</span>AI가 문항을 연결하고 의견을 분류·요약합니다. 점수 계산은 규칙으로, 반영·발송은 담당자가 결정합니다.</span></div></section>';
-    hist = hist || [];
-    if (hist.length) h += '<details class="bd-done" open><summary>진행한 과정 ' + hist.length + '개 <span>자동 저장됨 · 이어서 하거나 처음부터</span></summary><ul>' + hist.map(function(r){
+    if (hist.length) h += '<details class="bd-done" open><summary>진행한 과정 ' + hist.length + '개 <span>평가·환류까지 마친 과정 · 다시 하려면 처음부터</span></summary><ul>' + hist.map(function(r){
       var k = String(r.p['과정+기수']), L = r.j ? evLane(evState(r.j)) : 0;
       var rs = restartedByOther(k, 'ev'), le = lastEditText(k);
       return '<li><div><b>' + esc(cx8Title(r.p, k)) + '</b><span>' + (rs ? '<em class="bd-rs">다른 평가관이 ' + hmText(rs) + '에 처음부터 다시 시작함</em> · ' : '') + (r.loading ? '진행 상황을 불러오는 중입니다' : !L ? '상태를 불러오지 못했습니다' : L === 4 ? '평가·환류 완료' : L + '단계 \'' + EV_STEPS[L - 1].t + '\'에서 멈춤') + (le ? ' · ' + leHtml(le) : '') + '</span></div><div class="bd-hb">' +
