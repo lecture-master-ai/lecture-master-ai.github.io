@@ -1269,6 +1269,9 @@
   body.cb-fab-on #editView{padding-bottom:72px;} body.cb-open .cb-fab{display:none !important;}
   @media (max-width:600px){ .cb-fab{right:14px;bottom:14px;height:46px;} }
   @media print{ .cb-fab{display:none !important;} }
+  /* d4i: 처음부터 다시 짜기(편성 화면 맨 아래) */
+  .navbar.dbnav .db-redo{color:#B42318;border-color:#F4C7C3;}
+  .navbar.dbnav .db-redo:hover{background:#FEF3F2;}
   /* d4h: 개강 D-day 배지 */
   .ddb{display:inline-flex;align-items:center;height:20px;padding:0 8px;margin-left:4px;border-radius:999px;font-size:11.5px;font-weight:800;letter-spacing:-0.2px;vertical-align:1px;white-space:nowrap;}
   .ddb.hot{background:#E8762B;color:#fff;}
@@ -1442,7 +1445,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-30 배정 d4h</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-30 배정 d4i</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -2254,7 +2257,7 @@
     var L = laneOf(k, kind), Lp = prev ? laneOf(prev, kind) : 0;
     stageToast(courseLabel(k) + '을(를) ' + (L ? L + '단계부터 ' : '') + '이어서 진행합니다.' + (prev ? ' ' + courseLabel(prev) + '은(는) ' + (Lp ? Lp + '단계까지 ' : '') + '저장했습니다.' : ''), L || 0);
   }
-  function demoStart(k, btn, done, fail, kind){
+  function demoStart(k, btn, done, fail, kind, msg){
     kind = kind || 'ab';
     var t0 = Date.now();
     if (btn) btnBusy(btn, '올리는 중…');   // d3zh: 회전 → 체크
@@ -2280,6 +2283,7 @@
       if (done) { if (btn && btn.isConnected) { var wt = Math.max(0, 500 - (Date.now() - t0)); setTimeout(function(){ btnOk(btn, '올렸습니다'); }, wt); setTimeout(done, wt + 650); } else done(); }
       if (kind === 'ab') renderDemo(); else if (!currentKey && planMode === 'eval') renderEval();
       var Lp = prev ? laneOf(prev, kind) : 0;
+      if (msg) { nextGuide(msg, kind === 'ab' ? '<i>편성 화면 열기</i> — 지난 기수 불러오기 또는 직접 입력으로 다시 시작합니다' : '', kind === 'ab' && !currentKey ? '[data-demo-open="' + k.replace(/"/g, '') + '"]' : ''); return; }
       nextGuide(courseLabel(k) + '을(를) 1단계에 올렸습니다' + (prev ? ' · ' + courseLabel(prev) + '은(는) ' + (Lp ? Lp + '단계까지 ' : '') + '저장' : ''),
         kind === 'ab' ? '<i>편성 화면 열기</i> — 지난 기수 편성을 불러와 시작합니다' : '<i>설문 링크 만들기</i> — 교과목·강사별 설문지를 만듭니다',
         kind === 'ab' ? '[data-demo-open="' + k.replace(/"/g, '') + '"]' : '[data-evform="' + k.replace(/"/g, '') + '"]');
@@ -2301,6 +2305,14 @@
     nextGuide(courseLabel(k) + ' 올리기를 취소했습니다', back ? courseLabel(back) + '을(를) 다시 보드에 올렸습니다' : '<i>+ 과정 올리기</i>에서 다른 과정을 고를 수 있습니다', back ? '' : '[data-bdadd]');
   }
   function cxLinkify(h){ return String(h).replace(/(https?:\/\/[^\s<()]+)/g, '<a href="$1" target="_blank" rel="noopener" style="color:#1B3A5F;word-break:break-all;">$1</a>'); }
+  /* d4i: 처음부터 다시 짜기 — 교과목·강사를 모두 지우고 보드 1단계에 남김(서버 demoCourseStart 재사용) */
+  function demoRedo(k, btn){
+    var n = sessionsOf(k).length;
+    if (!confirm(courseLabel(k) + '을(를) 처음부터 다시 짭니다.\n\n교과목·강사 ' + n + '칸을 모두 지우고 1단계 \'교과목 편성\'으로 되돌립니다. 과정은 보드에 그대로 남습니다.\n되돌릴 수 없습니다. 이미 보낸 강사 안내는 취소되지 않습니다.\n\n진행할까요?')) return;
+    demoStart(k, btn, function(){
+      if (currentKey === k) { try { renderHead(planByKey(k)); renderSessionList(); window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) {} }
+    }, null, 'ab', courseLabel(k) + '을(를) 처음부터 다시 짜도록 1단계로 되돌렸습니다');
+  }
   function demoZero(k, btn){
     var n = sessionsOf(k).length;
     if (!confirm(courseLabel(k) + '을(를) 초기화합니다.\n\n교과목·강사 ' + n + '칸을 모두 지우고 보드에서 내려 과정 목록으로 돌려보냅니다.\n되돌릴 수 없습니다. 다시 하려면 [+ 과정 올리기]에서 고르면 됩니다.\n\n진행할까요?')) return;
@@ -2418,9 +2430,10 @@
           '<div class="bdc-x">' + (st.nx.ai ? '<span class="ai-badge">AI 도움</span>' : '') + esc(st.nx.x) + '</div>' + (st.n && st.lane !== 1 && gapOf(r.p) ? '<div class="bdc-gap">빈 교시 ' + gapOf(r.p) + '칸 남음</div>' : '') +
           (restartedByOther(key, 'ab') ? '<div class="bdc-warn">다른 평가관이 ' + hmText(restartedByOther(key, 'ab')) + '에 처음부터 다시 시작했습니다</div>' : '') +
           (!restartedByOther(key, 'ab') && lastEditText(key) ? '<div class="bdc-ed">' + leHtml(lastEditText(key)) + '</div>' : '') +
-          (st.nx.wait && canEdit ? '<button type="button" class="btn primary bdc-send" data-bdsend="' + esc(key) + '">최종 확인하고 발송</button><div class="bdc-pb bdc-sub"><button type="button" class="bdc-re" data-demo-open="' + esc(key) + '">돌아가서 고치기</button></div>'
+          (st.nx.wait && canEdit ? '<button type="button" class="btn primary bdc-send" data-bdsend="' + esc(key) + '">최종 확인하고 발송</button><div class="bdc-pb bdc-sub"><button type="button" class="bdc-re" data-demo-open="' + esc(key) + '">돌아가서 고치기</button><button type="button" class="bdc-re" data-bdredo="' + esc(key) + '">처음부터 다시 짜기</button></div>'
             : st.lane === 1 && st.n && canEdit ? '<div class="bdc-pb"><button type="button" class="btn" data-demo-open="' + esc(key) + '">편성 화면 열기</button><button type="button" class="bdc-re" data-bdzero="' + esc(key) + '">이 과정 초기화</button></div>'
             : st.lane === 1 && !st.n && canEdit ? '<div class="bdc-pb"><button type="button" class="btn" data-demo-open="' + esc(key) + '">편성 화면 열기</button><button type="button" class="bdc-re" data-bdundo="' + esc(key) + '">올리기 취소</button></div>'
+            : canEdit && st.n ? '<div class="bdc-pb"><button type="button" class="btn" data-demo-open="' + esc(key) + '">편성 화면 열기</button><button type="button" class="bdc-re" data-bdredo="' + esc(key) + '">처음부터 다시 짜기</button></div>'   // d4i: 2·3단계도 전 과목 다시 짜기
             : '<button type="button" class="btn" data-demo-open="' + esc(key) + '">편성 화면 열기</button>') + '</article>';   // d3x: 1단계 과정은 초기화 후 과정 목록으로
       });
       if (i === 0 && L.length && canEdit) h += '<button type="button" class="bd-addsm" data-bdadd="1">+ 다른 과정 올리기</button>';
@@ -2493,6 +2506,7 @@
     var re = t.getAttribute('data-bsre'); if (re) { demoStart(re, t); return; }
     var zr = t.getAttribute('data-bdzero'); if (zr) { demoZero(zr, t); return; }
     var ud = t.getAttribute('data-bdundo'); if (ud) { demoUndo(ud); return; }
+    var rd0 = t.getAttribute('data-bdredo'); if (rd0) { demoRedo(rd0, t); return; }
     var sd = t.getAttribute('data-bdsend'); if (sd) { if (!(ab.held[sd] && ab.held[sd].강사)) { abHeldFetchDemo(sd); alert('발송 대기 정보를 불러오는 중입니다. 잠시 뒤 다시 눌러 주세요.'); return; } abFinal(sd); return; }
     var rg = t.getAttribute('data-bsgo'); if (rg) { demoResume(rg, 'ab'); return; }
     var eg = t.getAttribute('data-evgo'); if (eg) { demoResume(eg, 'ev'); return; }
@@ -3068,6 +3082,7 @@
         nb.className = 'navbar dbnav' + (hof ? ' hofon' : '');
         nb.innerHTML = (hof ? '<div class="hof"><div><b>3단계 배정 완료</b><span>교과목 ' + hs.n + '칸 · 강사 ' + hs.held + '명 안내 대기 · 넘기면 보드 4단계에서 최종 확인하고 발송합니다</span></div><button type="button" class="btn primary hof-b" data-handoff="1">4단계로 넘기기 ›</button></div>' : '') +
           '<button type="button" class="btn db-plain" data-bdback="1">' + ic('x', 'l') + closeLabel(currentKey, hs) + '</button>' +
+          (hs.n && !isViewer() && closeLabel(currentKey, hs) !== '닫기' ? '<button type="button" class="btn db-plain db-redo" data-bdredo="' + esc(currentKey) + '">처음부터 다시 짜기</button>' : '') +   // d4i
           (dashBack && dashBack.key === currentKey ? '<a class="btn db-plain" href="instructor-dashboard.html#i=' + encodeURIComponent(dashBack.id) + '">' + ic('arrowL', 'l') + (dashBack.name ? esc(dashBack.name) + ' 강사 상세로 돌아가기' : '강사 상세로 돌아가기') + '</a>' : '');
       }
       else { nb.className = 'navbar'; nb.style.display = 'none'; nb.innerHTML = ''; }
@@ -7730,7 +7745,7 @@
   /* ===== d4a: AI 배정 도우미(챗봇) 연결 =====
      도우미 화면은 cb-chat.js(처음 열 때만 불러옴). 도우미는 아래 window.__cbApi로만 읽고 저장함.
      저장은 기존 saveSession에 챗봇 표시(챗봇:1)를 붙여 서버가 겹침을 다시 검사하게 함. AI는 해석·근거만, 확정은 담당자 */
-  var CB_VER = 'd4h';
+  var CB_VER = 'd4i';
   function cbInstrReady(){
     ensureInstructors();
     return new Promise(function(res){ var t0 = Date.now(); (function w(){ if ((instructors !== null && !instrLoading) || Date.now() - t0 > 15000) res(); else setTimeout(w, 150); })(); });
