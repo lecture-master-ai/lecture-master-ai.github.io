@@ -1269,6 +1269,12 @@
   body.cb-fab-on #editView{padding-bottom:72px;} body.cb-open .cb-fab{display:none !important;}
   @media (max-width:600px){ .cb-fab{right:14px;bottom:14px;height:46px;} }
   @media print{ .cb-fab{display:none !important;} }
+  /* d4h: 개강 D-day 배지 */
+  .ddb{display:inline-flex;align-items:center;height:20px;padding:0 8px;margin-left:4px;border-radius:999px;font-size:11.5px;font-weight:800;letter-spacing:-0.2px;vertical-align:1px;white-space:nowrap;}
+  .ddb.hot{background:#E8762B;color:#fff;}
+  .ddb.near{background:#FFF1E6;color:#B54708;box-shadow:inset 0 0 0 1px #F7C9A3;}
+  .ddb.far{background:#fff;color:#1B3A5F;box-shadow:inset 0 0 0 1px #B8C4D6;}
+  .ddb.run{background:#1B3A5F;color:#fff;}
   /* d4b: [교과목 추가] 접기·펴기(심사용 화면) */
   .facc-h{display:none;}
   body.simple #sFormPanel:not(.fmodal) .facc-h{display:flex;align-items:center;gap:10px;width:100%;border:none;background:none;padding:0;margin:0;font:inherit;text-align:left;cursor:pointer;color:inherit;}
@@ -1436,7 +1442,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-30 배정 d4g</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-30 배정 d4h</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -2185,7 +2191,7 @@
         var src = kind === 'ab' ? defaultCopySource(p, copyCandidates(p)) : '';
         var sub = kind === 'ab' ? (src ? esc(String(src).split(' ').pop()) + ' 편성을 불러와 시작합니다' : '') : '교과목·강사 ' + courseTeachersN(k) + '개 · 예시 응답 파일 있음';
         return '<div class="bp-r"><div><div class="bp-t">' + esc(k) + (mine ? ' <span class="bp-near">지금 보드에 있음</span>' : '') + '</div>' +
-          '<div class="bp-p">' + esc(ipgyo(p)) + (kind === 'ab' ? ' · ' + esc(dDay(p)) : '') + '</div>' +
+          '<div class="bp-p">' + esc(ipgyo(p)) + (kind === 'ab' && dDay(p) ? ' ' + ddBadge(dDay(p)) : '') + '</div>' +
           (sub ? '<div class="bp-w">' + sub + '</div>' : '') +
           (lastEditText(k) ? '<div class="bp-ed">' + leHtml(lastEditText(k)) + '</div>' : '') +
           (rc ? '<div class="bp-warn">다른 평가관이 ' + agoText(rc, Date.now()) + ' 수정했습니다. 진행 중일 수 있어 다른 과정을 권합니다.</div>' : '') +
@@ -2334,6 +2340,12 @@
       setTimeout(function(){ openCourse(k); setTimeout(function(){ var c = LANE_GO[n]; if (c) nextGuide('', c.t(k), c.sel(k)); }, 1200); }, 300);
     });
   }
+  /* d4h: 개강 D-day 배지 — 3일 이내·오늘은 주황 채움, 7일 이내 연한 주황, 그 밖 남색 테두리, 진행 중은 남색 채움(색 규칙: 남색·주황만) */
+  function ddBadge(dd){
+    var m = /D-(\d+)/.exec(dd), n = m ? +m[1] : (/오늘/.test(dd) ? 0 : null);
+    var cls = /진행/.test(dd) ? 'run' : n === null ? 'far' : n <= 3 ? 'hot' : n <= 7 ? 'near' : 'far';
+    return '<span class="ddb ' + cls + '">' + esc(dd) + '</span>';
+  }
   function bdcPg(st, pct){   // d3u: 1단계(빈 교시 남음)는 편성 교시, 2단계부터는 강사 칸 진행
     if (st.lane === 1 && st.gs && st.gs.t) { var q = Math.round(st.gs.f / st.gs.t * 100); return '<div class="bdc-pg"><span>편성 ' + st.gs.f + ' / ' + st.gs.t + '교시</span><i><b style="width:' + q + '%"></b></i></div>'; }
     return '<div class="bdc-pg"><span>강사 ' + (st.n - st.empty) + ' / ' + st.n + '칸</span><i><b style="width:' + pct + '%"></b></i></div>';
@@ -2387,7 +2399,7 @@
       L.forEach(function(r){
         var key = r.p['과정+기수'], st = r.st, dd = dDay(r.p), pct = st.n ? Math.round((st.n - st.empty) / st.n * 100) : 0;
         if (r.paused) {
-          h += '<article class="bdc paused" data-card-resume="' + esc(key) + '"><span class="bdc-mv">멈춤</span><div><div class="bdc-t">' + esc(key) + '</div><div class="bdc-p">' + esc(ipgyo(r.p)) + (dd ? ' · ' + dd : '') + '</div></div>' +
+          h += '<article class="bdc paused" data-card-resume="' + esc(key) + '"><span class="bdc-mv">멈춤</span><div><div class="bdc-t">' + esc(key) + '</div><div class="bdc-p">' + esc(ipgyo(r.p)) + (dd ? ' ' + ddBadge(dd) : '') + '</div></div>' +
             (st.n ? bdcPg(st, pct) : '') +
             '<div class="bdc-x">' + esc(st.nx.x) + '</div>' + (st.n && st.lane !== 1 && gapOf(r.p) ? '<div class="bdc-gap">빈 교시 ' + gapOf(r.p) + '칸 남음</div>' : '') +
             (canEdit ? '<div class="bdc-pb"><button type="button" class="btn" data-bdres="' + esc(key) + '">이어서 하기</button>' + (st.lane === 1 && st.n ? '<button type="button" class="bdc-re" data-bdzero="' + esc(key) + '">이 과정 초기화</button>' : '<button type="button" class="bdc-re" data-bsre="' + esc(key) + '">처음부터</button>') + '</div>' : '') + '</article>';
@@ -2401,7 +2413,7 @@
         var enterSt = enter ? ' style="animation-delay:-' + enterMs + 'ms"' : '';
         if (hot && !mv.shown) { mv.shown = true; mv.visit = boardVisit; }
         if (r.fin) { h += '<article class="bdc fin moved' + (enter ? ' enter' : '') + '"' + enterSt + ' data-card-open="' + esc(key) + '"><span class="bdc-mv">완료</span><div><div class="bdc-t">' + esc(key) + '</div><div class="bdc-p">' + esc(ipgyo(r.p)) + '</div></div><div class="bdc-x bdc-fin">' + ic('check', 'l') + esc(st.nx.x) + ' · 곧 \'진행한 과정\'으로 옮겨집니다</div></article>'; return; }
-        h += '<article class="bdc' + (hot ? ' moved' : '') + (enter ? ' enter' : '') + '"' + enterSt + ' data-card-open="' + esc(key) + '">' + (hot ? '<span class="bdc-mv">' + (mv.resumed ? '이어서' : mv.added ? '방금 올림' : '방금 이동') + '</span>' : '') + '<div><div class="bdc-t">' + esc(key) + '</div><div class="bdc-p">' + esc(ipgyo(r.p)) + (dd ? ' · ' + dd : '') + '</div></div>' +
+        h += '<article class="bdc' + (hot ? ' moved' : '') + (enter ? ' enter' : '') + '"' + enterSt + ' data-card-open="' + esc(key) + '">' + (hot ? '<span class="bdc-mv">' + (mv.resumed ? '이어서' : mv.added ? '방금 올림' : '방금 이동') + '</span>' : '') + '<div><div class="bdc-t">' + esc(key) + '</div><div class="bdc-p">' + esc(ipgyo(r.p)) + (dd ? ' ' + ddBadge(dd) : '') + '</div></div>' +
           (st.n ? bdcPg(st, pct) : '') +
           '<div class="bdc-x">' + (st.nx.ai ? '<span class="ai-badge">AI 도움</span>' : '') + esc(st.nx.x) + '</div>' + (st.n && st.lane !== 1 && gapOf(r.p) ? '<div class="bdc-gap">빈 교시 ' + gapOf(r.p) + '칸 남음</div>' : '') +
           (restartedByOther(key, 'ab') ? '<div class="bdc-warn">다른 평가관이 ' + hmText(restartedByOther(key, 'ab')) + '에 처음부터 다시 시작했습니다</div>' : '') +
@@ -7718,7 +7730,7 @@
   /* ===== d4a: AI 배정 도우미(챗봇) 연결 =====
      도우미 화면은 cb-chat.js(처음 열 때만 불러옴). 도우미는 아래 window.__cbApi로만 읽고 저장함.
      저장은 기존 saveSession에 챗봇 표시(챗봇:1)를 붙여 서버가 겹침을 다시 검사하게 함. AI는 해석·근거만, 확정은 담당자 */
-  var CB_VER = 'd4g';
+  var CB_VER = 'd4h';
   function cbInstrReady(){
     ensureInstructors();
     return new Promise(function(res){ var t0 = Date.now(); (function w(){ if ((instructors !== null && !instrLoading) || Date.now() - t0 > 15000) res(); else setTimeout(w, 150); })(); });
