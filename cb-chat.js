@@ -70,6 +70,7 @@
       '.cb-src{display:block;margin-top:6px;font-size:11px;color:#98A2B3}' +
       '.cb-ways{padding-left:18px !important}.cb-ways li{margin:6px 0 !important}.cb-rec{display:inline-block;font-size:11px;font-weight:800;color:#fff;background:#2F6FB2;border-radius:4px;padding:0 5px;margin-left:2px;vertical-align:1px}.cb-na{font-size:11px;color:#667085;font-weight:600}' +
       '.cb-ex{margin-top:3px;font-size:12px;color:#475467;background:#F8FAFC;border-left:3px solid #B9CCE4;padding:3px 7px;border-radius:0 6px 6px 0}' +
+      '.cb-last{margin-top:8px;padding:7px 9px;border-radius:8px;background:#EEF4FB;font-size:12.5px;color:#1B3A5F}' +
       '.cb-tel{margin-top:8px;padding:7px 9px;border-radius:8px;background:#F2F4F7;font-size:12.5px;color:#344054;line-height:1.5}.cb-tel b{color:#1B3A5F}.cb-tel span{color:#98A2B3;font-size:11px}' +
       '.cb-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}' +
       '.cb-chip{border:1px solid #B9CCE4;background:#F3F8FE;color:#1B3A5F;border-radius:999px;padding:5px 11px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;transition:background-color .15s ease-out}' +
@@ -296,6 +297,7 @@
     var c = ctx(); if (!c) return;
     S.turn = sig();
     if (quick(t)) { act(ruleParse(t), t, ''); return; }
+    if ((UNASSIGN.test(t) || (/방금|아까|조금\s*전/.test(t) && /취소|되돌|무르|물러|지워|빼/.test(t))) && !/교과목만|과목만|강사\s*(없이|빼고|는\s*나중|미정)|넣어|넣고|추천|찾아/.test(t)) { unassignHelp(''); return; }   // d4r: 배정 취소·강사 빼기 질문은 방법 안내
     if (offTopic(t)) return;   // d4c: 개인정보·인사·다른 과정·주제 밖 질문
     if (STAGE_Q.test(t)) { stageNow(''); return; }
     if (NEXT_Q.test(t) && !/할\s*일|해야/.test(t)) { stageNext(''); return; }
@@ -330,6 +332,22 @@
       if (/반나절|시간|교시|\d|시\b|요일|오전|오후|내내|짜리|강사|선생님|수업|아침|점심|까지|부터|관련|다음\s*주|내일|모레/.test(extra)) I.subject = R.subject;
     }
     return I;
+  }
+  // d4r: 배정 취소 — 도우미는 대신 지우지 않고, 방법 안내 + (방금 도우미로 배정한 칸이면) 그 칸 수정 창 열기
+  var UNASSIGN = /(배정|강사|교과목|강의|수업|편성).{0,10}(취소|빼|되돌|철회|해제|없애|지우|지워|삭제|무르|물러)|(취소|되돌리|되돌려|무르|물러).{0,8}(배정|강사|교과목|편성)|잘못\s*(배정|넣|잡)|배정\s*(안\s*할|안할|안\s*하)/;
+  function unassignHelp(src){
+    var c = ctx(), L = S.last && S.last.key === c.key ? S.last : null, ch = [];
+    var li = function(arr){ return '<ol>' + arr.map(function(x){ return '<li>' + x + '</li>'; }).join('') + '</ol>'; };
+    var h = '배정 취소는 <b>시간표에서 직접</b> 합니다. 저장된 배정을 도우미가 대신 지우지는 않습니다.' +
+      li(['취소할 칸을 시간표에서 누릅니다 — <b>교과목 수정</b> 창이 열립니다', '<b>강사만 빼려면</b>: 강사 이름 옆 <b>×</b>를 눌러 빼고 <b>[수정 저장]</b>', '<b>교과목까지 없애려면</b>: 창 아래 <b>[이 교과목 삭제]</b>를 누르고 확인']) +
+      '이미 지난 강의는 실적으로 남아 지울 수 없습니다. 4단계에서 강사 안내를 이미 보냈다면 취소 사실은 그 강사에게 따로 연락해 주세요.';
+    if (L) {
+      h += '<div class="cb-last">방금 도우미로 배정한 칸: <b>' + esc(dl(L.d) + ' ' + pl(L.s, L.e) + ' ' + L.subj) + '</b>' + (L.iname ? ' · ' + esc(L.iname) + ' 강사' : '') + '</div>';
+      ch.push({ t: '그 칸 수정 창 열기', fn: function(){ if (A.openRow(L.id)) say('수정 창을 열었습니다. 강사만 빼려면 강사 이름 옆 <b>×</b>를 누르고 <b>[수정 저장]</b>, 교과목까지 없애려면 <b>[이 교과목 삭제]</b>를 누르세요.'); else say('그 칸을 찾지 못했습니다. 이미 지웠거나 화면이 바뀌었을 수 있습니다. 시간표에서 칸을 직접 눌러 주세요.' + contactLine(true)); } });
+    } else ch.push(guideChip('시간표 보기', '#sGridWrap', '취소할 칸을 누르면 <i>교과목 수정</i> 창이 열립니다'));
+    ch.push({ t: '앞으로 할 일', a: { intent: 'help_next' } });
+    S.turn = null;
+    say(h, ch, src);
   }
   function onBodyClick(ev){
     var b = ev.target.closest ? ev.target.closest('button') : null; if (!b) return;
@@ -593,6 +611,8 @@
         if (nx) ch.push({ t: '다음 빈 시간 ' + dl(nx.d) + ' ' + pl(nx.s, nx.e) + ' 채우기', a: { intent: 'time', date: nx.d, start: nx.s, end: nx.e } });
         if (st.lane === 3) ch.push({ t: '[4단계로 넘기기] 위치 보기', fn: function(){ A.guide('[data-handoff]', '<i>4단계로 넘기기</i> — 보드 4단계에서 최종 확인하고 발송합니다'); say('화면 맨 아래 버튼을 강조했습니다.'); } });
         ch.push({ t: '앞으로 할 일', a: { intent: 'help_next' } });
+        try { var sid = res.data && res.data['편성ID']; if (sid) S.last = { key: c.key, id: String(sid), d: o.d, s: o.s, e: o.e, subj: o.subj, iname: o.iid ? sl.iname : '' }; } catch (e3) {}
+        ch.push({ t: '방금 배정 취소하려면?', fn: function(){ unassignHelp(''); } });
         S.slot = blank(); S.cands = null; S.wait = '';
         say('배정했습니다: <b>' + esc(dl(o.d) + ' ' + pl(o.s, o.e) + ' ' + o.subj) + '</b> · ' + esc(who) + '<br>' + esc(next) + warns, ch);
         if (nx) S.slot = blank();
@@ -696,6 +716,7 @@
     ['최종 확인하고 발송', /최종\s*확인/, '보드 4단계 카드에 있습니다. 강사별로 교과목·일시를 묶어 다시 보여 주고, [발송]을 누르면 강사 1명에게 문자·메일이 1통씩 갑니다(시연 모드에서는 기록).', ''],
     ['+ 과정 올리기', /과정\s*올리기|올리기\s*버튼/, '보드 1단계 칸의 버튼입니다. 시연할 과정을 골라 1단계에 올립니다. 진행 중이던 과정은 \'진행한 과정\'에 저장됩니다.', ''],
     ['올리기 취소', /올리기\s*취소/, '교과목이 아직 없는 1단계 카드에 있습니다. 보드에서 내리고, 그 전에 올라 있던 과정이 있으면 다시 올립니다.', ''],
+    ['이 교과목 삭제', /이\s*교과목\s*삭제|교과목\s*삭제\s*버튼/, '시간표에서 칸을 눌러 여는 교과목 수정 창 맨 아래에 있습니다. 그 칸의 교과목과 강사 배정을 함께 지웁니다. 강사만 빼려면 삭제 대신 강사 이름 옆 ×를 누르고 [수정 저장]을 누릅니다.', ''],
     ['처음부터 다시 짜기', /처음부터\s*다시\s*짜/, '편성 화면 맨 아래와 보드 2·3·4단계 카드에 있습니다. 이 과정의 교과목·강사를 모두 지우고 1단계 \'교과목 편성\'으로 되돌립니다. 과정은 보드에 남습니다. 되돌릴 수 없고, 이미 보낸 강사 안내는 취소되지 않습니다.', '.db-redo'],
     ['이 과정 초기화', /초기화/, '1단계 카드에 있습니다. 이 과정의 교과목·강사를 모두 지우고 보드에서 내려 과정 목록으로 돌려보냅니다. 되돌릴 수 없습니다.', ''],
     ['이어서 하기 / 처음부터', /이어서\s*하기|처음부터\s*버튼/, '멈춤 카드의 버튼입니다. [이어서 하기]는 멈춘 단계부터 다시 열고, [처음부터]는 그 과정을 처음 상태로 되돌려 다시 올립니다.', ''],

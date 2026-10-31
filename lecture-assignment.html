@@ -1091,6 +1091,7 @@
   @media print{ .clink{text-decoration:none;color:#000;} }
   #fBackdrop{display:none;position:fixed;inset:0;background:rgba(20,20,19,.45);z-index:80;}
   #sFormPanel .fclose{display:none;}
+  @media (min-width:1001px){ body.cb-open #sFormPanel.fmodal{left:calc(50% - 192px);} }   /* d4r: 도우미 창이 열려 있으면 수정 창을 왼쪽으로 비켜 띄움 */
   #sFormPanel.fmodal{position:fixed;z-index:85;top:50%;left:50%;transform:translate(-50%,-50%);width:min(760px,94vw);max-height:92vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,.3);margin:0;}
   #sFormPanel.fmodal .fclose{display:flex;align-items:center;justify-content:center;position:absolute;top:10px;right:12px;width:30px;height:30px;border:1px solid var(--border-input);border-radius:6px;background:#fff;font-size:14px;cursor:pointer;color:var(--text-sub);}
   .gbox{max-width:960px;margin:0 auto;}
@@ -1140,6 +1141,7 @@
   .gc{border-radius:6px;padding:5px 7px;height:100%;font-size:13px;line-height:1.4;background:var(--info-bg);border:1px solid #C9D8EC;overflow:hidden;}
   .gc.ed{cursor:pointer;} .gc.ed:hover{filter:brightness(.97);}
   .gc .s{font-weight:800;color:var(--navy);word-break:keep-all;}
+  @media screen{ body.simple .gc{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;box-sizing:border-box;} body.simple .gc .i{justify-content:center;} body.simple .gc > *{max-width:100%;} }   /* d4r: 시간표 칸 내용 가운데·중앙 정렬(화면만, 인쇄는 그대로) */
   .gc .t{font-size:11px;color:var(--text-muted);}
   .gc .i{margin-top:2px;display:flex;align-items:center;gap:3px;flex-wrap:wrap;}
   .gc .r{margin-top:2px;font-size:12px;color:var(--text-sub);}
@@ -1466,7 +1468,7 @@
 <div id="bOverlay"><div id="bCard" role="dialog" aria-modal="true" aria-label="강사 찾아보기"></div></div>
 <div id="cOverlay"><div id="cCard" role="dialog" aria-modal="true" aria-label="연간계획 변경"></div></div>
 <div id="pOverlay"><div id="pCard" role="dialog" aria-modal="true" aria-label="지난 기수 편성 불러오기"></div></div>
-<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-31 배정 d4q</div>
+<div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:14px 0 22px;">화면 버전 2026-10-31 배정 d4r</div>
 <div id="iOverlay"><div id="iCard" role="dialog" aria-modal="true" aria-label="강사 상세"></div></div>
 
 <script>
@@ -7779,7 +7781,7 @@
   /* ===== d4a: AI 배정 도우미(챗봇) 연결 =====
      도우미 화면은 cb-chat.js(처음 열 때만 불러옴). 도우미는 아래 window.__cbApi로만 읽고 저장함.
      저장은 기존 saveSession에 챗봇 표시(챗봇:1)를 붙여 서버가 겹침을 다시 검사하게 함. AI는 해석·근거만, 확정은 담당자 */
-  var CB_VER = 'd4q';
+  var CB_VER = 'd4r';
   function cbInstrReady(){
     ensureInstructors();
     return new Promise(function(res){ var t0 = Date.now(); (function w(){ if ((instructors !== null && !instrLoading) || Date.now() - t0 > 15000) res(); else setTimeout(w, 150); })(); });
@@ -7910,6 +7912,15 @@
     reload: function(){ return loadAll(getPw(), true); },
     highlight: cbHighlight,
     save: cbSave,
+    openRow: function(id){   // d4r: 도우미 '배정 취소 방법' — 그 칸의 수정 창만 열어 줌(취소·삭제는 담당자가 창에서 직접)
+      var r = allSessions.filter(function(x){ return String(x['편성ID']) === String(id); })[0]; if (!r) return false;
+      if (viewMode !== 'grid') setView('grid');
+      if (gridScope !== 'one') { gridScope = 'one'; try { sessionStorage.setItem('jsfa_la_gscope', 'one'); } catch (e2) {} }
+      var d = normYmd(r['일자']); gridWeek = mondayOf(d); gridWantDate = d; renderSessionList();
+      var el = document.querySelector('#sGridWrap [data-act="edit"][data-id="' + String(id).replace(/"/g, '') + '"]'); if (!el) return false;
+      if (window.innerWidth <= 1000 && window.__cbChat) window.__cbChat.close();
+      el.click(); return true;
+    },
     parse: function(text, c){ return api({ action: 'chatParse', password: getPw(), 문장: text, 맥락: c }); },
     guide: function(sel, txt){ if (window.cxGuide) window.cxGuide('', txt || '', sel || ''); },
     md: md, periodLabel: function(s, e){ return s === e ? s + '교시' : s + '~' + e + '교시'; }
