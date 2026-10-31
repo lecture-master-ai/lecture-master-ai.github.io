@@ -273,7 +273,7 @@
   /* 저장된 로그인이 있으면 로그인 화면(배경)을 보여주지 않고 바로 불러오기 */
   #boot{display:none;}
   html.autologin #loginScreen{display:none !important;}
-  html.autologin #boot{display:block;padding:90px 20px;text-align:center;color:var(--text-muted);font-size:14px;}
+  html.autologin #boot{display:flex;align-items:center;justify-content:center;position:fixed;inset:0;z-index:9000;background:#E3E8EF;color:var(--text-muted);font-size:14px;}   /* d4p: 화면 위를 덮는 방식 — 불러오기가 끝나도 아래 내용이 밀려 올라가지 않음 */
   .cdesc{font-size:13px;color:var(--text-muted);margin:-2px 0 10px;}
   .go{font-weight:400;font-size:12px;color:var(--text-muted);margin-left:6px;white-space:nowrap;}
 </style>
@@ -344,7 +344,7 @@
   </div>
 
   <section class="card" id="cYear" style="display:none;margin-top:16px;"></section>
-  <div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:18px 0 0;">화면 버전 2026-10-29 홈 81</div>
+  <div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:18px 0 0;">화면 버전 2026-10-31 홈 82</div>
 </div>
 </div>
 

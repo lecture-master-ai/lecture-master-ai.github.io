@@ -311,7 +311,7 @@
   /* 저장된 로그인이 있으면 로그인 화면(배경)을 보여주지 않고 바로 불러오기 */
   #boot{display:none;}
   html.autologin #loginScreen{display:none !important;}
-  html.autologin #boot{display:block;padding:90px 20px;text-align:center;color:var(--text-muted);font-size:14px;}
+  html.autologin #boot{display:flex;align-items:center;justify-content:center;position:fixed;inset:0;z-index:9000;background:#E3E8EF;color:var(--text-muted);font-size:14px;}   /* d4p: 화면 위를 덮는 방식 — 불러오기가 끝나도 아래 내용이 밀려 올라가지 않음 */
 
   .crumb{display:flex;flex-wrap:wrap;align-items:center;gap:2px 0;font-size:16px;color:var(--text-muted);margin:2px 0 12px;font-weight:600;}
   .crumb a{color:var(--navy);text-decoration:none;font-weight:800;padding:5px 9px;border-radius:8px;}
@@ -515,7 +515,7 @@
       <div id="schoolMsg" style="margin-top:12px;font-size:13px;display:none;"></div>
     </form>
   </div>
-  <div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:18px 0 0;">화면 버전 2026-10-25 강사관리 d2m</div>
+  <div id="verStamp" style="text-align:center;font-size:11px;color:#9AA3AF;padding:18px 0 0;">화면 버전 2026-10-31 강사관리 d2n</div>
 </div>
 
 <script>
